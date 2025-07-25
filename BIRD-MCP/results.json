@@ -1,0 +1,26 @@
+[
+    {
+        "question_id": 1471,
+        "question": "What is the ratio of customers who pay in EUR against customers who pay in CZK?",
+        "generated_sql": "SELECT \n       (SELECT COUNT(*) FROM customers WHERE Currency = 'EUR') / \n       (SELECT COUNT(*) FROM customers WHERE Currency = 'CZK') AS Ratio_EUR_to_CZK;",
+        "answer": "[ratio_value]",
+        "db_result": "Ratio_EUR_to_CZK\n0.0657",
+        "llm_output": "SQL: SELECT \n       (SELECT COUNT(*) FROM customers WHERE Currency = 'EUR') / \n       (SELECT COUNT(*) FROM customers WHERE Currency = 'CZK') AS Ratio_EUR_to_CZK;\nAnswer: [ratio_value]"
+    },
+    {
+        "question_id": 1472,
+        "question": "In 2012, who had the least consumption in LAM?",
+        "generated_sql": "SELECT c.CustomerID, c.Segment, SUM(y.Consumption) AS TotalConsumption \nFROM customers c \nJOIN yearmonth y ON c.CustomerID = y.CustomerID \nWHERE c.Currency = 'LAM' AND y.Date LIKE '2012%' \nGROUP BY c.CustomerID, c.Segment \nORDER BY TotalConsumption ASC \nLIMIT 1;",
+        "answer": "[CustomerID], [Segment], [TotalConsumption]",
+        "db_result": "数据库查询成功，但无结果",
+        "llm_output": "SQL: SELECT c.CustomerID, c.Segment, SUM(y.Consumption) AS TotalConsumption \nFROM customers c \nJOIN yearmonth y ON c.CustomerID = y.CustomerID \nWHERE c.Currency = 'LAM' AND y.Date LIKE '2012%' \nGROUP BY c.CustomerID, c.Segment \nORDER BY TotalConsumption ASC \nLIMIT 1;\n\nAnswer: [CustomerID], [Segment], [TotalConsumption]"
+    },
+    {
+        "question_id": 1473,
+        "question": "What was the average monthly consumption of customers in SME for the year 2013?",
+        "generated_sql": "SELECT AVG(Consumption) AS AverageMonthlyConsumption \nFROM yearmonth ym\nJOIN customers c ON ym.CustomerID = c.CustomerID\nWHERE c.Segment = 'SME' AND ym.Date LIKE '2013%';",
+        "answer": "[基于查询结果的简洁答案]",
+        "db_result": "AverageMonthlyConsumption\n5519.475171445273",
+        "llm_output": "SQL: SELECT AVG(Consumption) AS AverageMonthlyConsumption \nFROM yearmonth ym\nJOIN customers c ON ym.CustomerID = c.CustomerID\nWHERE c.Segment = 'SME' AND ym.Date LIKE '2013%';\n\nAnswer: [基于查询结果的简洁答案]"
+    }
+]

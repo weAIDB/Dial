@@ -1,0 +1,11 @@
+name: alignment
+source:
+  type: mysql
+  connection:
+    host: localhost
+    port: 3306
+    database: BIRD
+    user: root
+    password: xuhongming3410
+  table: alignment
+description: 'BIRD database table: alignment'

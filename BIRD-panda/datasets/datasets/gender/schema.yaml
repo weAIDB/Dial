@@ -1,0 +1,11 @@
+name: gender
+source:
+  type: mysql
+  connection:
+    host: localhost
+    port: 3306
+    database: BIRD
+    user: root
+    password: xuhongming3410
+  table: gender
+description: 'BIRD database table: gender'
