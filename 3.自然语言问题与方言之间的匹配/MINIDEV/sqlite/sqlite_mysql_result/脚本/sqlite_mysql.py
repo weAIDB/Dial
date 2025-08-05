@@ -924,7 +924,7 @@
 # #     # 配置API参数（参考Deepseek官方文档）
 # #     API_URL = "https://api.deepseek.com/chat/completions"
 # #     MODEL_NAME = "deepseek-chat"  # 模型名称必须指定
-# #     API_KEY = "sk-578f63b08e74438692e3ebdb42b49934"  # 替换为你的有效密钥
+# #     API_KEY = ""  # 替换为你的有效密钥
     
 # #     # 构建提示词（明确格式要求，减少模型输出错误）
 # #     prompt = f"""
@@ -1580,7 +1580,7 @@ def query_diff_analyzer(question, mysql_sql, sqlite_sql, max_retries=3):
     """调用模型分析MySQL和SQLite语法差异，明确每个差异项的字段结构"""
     API_URL = "https://api.deepseek.com/chat/completions"
     MODEL_NAME = "deepseek-chat"  # 模型名称
-    API_KEY = "sk-578f63b08e74438692e3ebdb42b49934"  # 替换为有效密钥
+    API_KEY = ""  # 替换为有效密钥
 
     # 构建提示词（明确每个差异项的5个字段 + 示例引导）
     prompt = f"""

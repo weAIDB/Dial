@@ -29,7 +29,7 @@
 # # # # # # # # # #     # 配置API参数（参考Deepseek官方文档）
 # # # # # # # # # #     API_URL = "https://api.deepseek.com/chat/completions"
 # # # # # # # # # #     MODEL_NAME = "deepseek-chat"  # 模型名称必须指定
-# # # # # # # # # #     API_KEY = "sk-578f63b08e74438692e3ebdb42b49934"  # 替换为你的有效密钥
+# # # # # # # # # #     API_KEY = ""  # 替换为你的有效密钥
     
 # # # # # # # # # #     # 构建提示词（明确格式要求，减少模型输出错误）
 # # # # # # # # # #     prompt = f"""
@@ -373,7 +373,7 @@
 # # # # # # # # #     """调用 deepseek-reasoner 模型分析语法差异（要求不返回位置信息）"""
 # # # # # # # # #     API_URL = "https://api.deepseek.com/chat/completions"
 # # # # # # # # #     MODEL_NAME = "deepseek-chat"
-# # # # # # # # #     API_KEY = "sk-578f63b08e74438692e3ebdb42b49934"  # 替换为你的有效密钥
+# # # # # # # # #     API_KEY = ""  # 替换为你的有效密钥
 
 # # # # # # # # #     prompt = f"""
 # # # # # # # # #     任务：分析 PostgreSQL 和 MySQL 语句的语法差异、对应的自然语言原因，以及问题、SQL 中涉及差异的具体子字符串。
@@ -563,7 +563,7 @@
 # # # # # # # #     """调用deepseek-reasoner模型分析PostgreSQL和MySQL语法差异，明确每个差异项的字段结构"""
 # # # # # # # #     API_URL = "https://api.deepseek.com/chat/completions"
 # # # # # # # #     MODEL_NAME = "deepseek-chat"  # 模型名称必须指定
-# # # # # # # #     API_KEY = "sk-578f63b08e74438692e3ebdb42b49934"  # 替换为有效密钥
+# # # # # # # #     API_KEY = ""  # 替换为有效密钥
 
 # # # # # # # #     # 构建提示词（明确每个差异项的5个字段 + 示例引导）
 # # # # # # # #     prompt = f"""
