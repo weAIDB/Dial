@@ -1,0 +1,3550 @@
+SELECT
+  T1.CustomerID
+FROM customers AS T1
+INNER JOIN yearmonth AS T2
+  ON T1.CustomerID = T2.CustomerID
+WHERE
+  T1.Segment = 'LAM' AND SUBSTRING(T2.Date, 1, 4) = '2012'
+GROUP BY
+  T1.CustomerID
+ORDER BY
+  SUM(T2.Consumption) ASC
+LIMIT 1;
+
+SELECT
+  SUM(CASE WHEN T1.Currency = 'CZK' THEN CAST(T2.Consumption AS DOUBLE) ELSE 0 END) - SUM(CASE WHEN T1.Currency = 'EUR' THEN CAST(T2.Consumption AS DOUBLE) ELSE 0 END)
+FROM customers AS T1
+INNER JOIN yearmonth AS T2
+  ON T1.CustomerID = T2.CustomerID
+WHERE
+  SUBSTRING(T2.Date, 1, 4) = '2012';
+
+SELECT
+  SUBSTRING(T2.Date, 1, 4)
+FROM customers AS T1
+INNER JOIN yearmonth AS T2
+  ON T1.CustomerID = T2.CustomerID
+WHERE
+  T1.Currency = 'CZK'
+GROUP BY
+  SUBSTRING(T2.Date, 1, 4)
+ORDER BY
+  SUM(T2.Consumption) DESC
+LIMIT 1;
+
+SELECT
+  SUBSTRING(T2.Date, 5, 2)
+FROM customers AS T1
+INNER JOIN yearmonth AS T2
+  ON T1.CustomerID = T2.CustomerID
+WHERE
+  SUBSTRING(T2.Date, 1, 4) = '2013' AND T1.Segment = 'SME'
+GROUP BY
+  SUBSTRING(T2.Date, 5, 2)
+ORDER BY
+  SUM(T2.Consumption) DESC
+LIMIT 1;
+
+SELECT
+  CAST(SUM(CASE WHEN T1.Segment = 'SME' THEN T2.Consumption ELSE 0 END) AS FLOAT) / NULLIF(COUNT(T1.CustomerID), 0) - CAST(SUM(CASE WHEN T1.Segment = 'LAM' THEN T2.Consumption ELSE 0 END) AS FLOAT) / NULLIF(COUNT(T1.CustomerID), 0),
+  CAST(SUM(CASE WHEN T1.Segment = 'LAM' THEN T2.Consumption ELSE 0 END) AS FLOAT) / NULLIF(COUNT(T1.CustomerID), 0) - CAST(SUM(CASE WHEN T1.Segment = 'KAM' THEN T2.Consumption ELSE 0 END) AS FLOAT) / NULLIF(COUNT(T1.CustomerID), 0),
+  CAST(SUM(CASE WHEN T1.Segment = 'KAM' THEN T2.Consumption ELSE 0 END) AS FLOAT) / NULLIF(COUNT(T1.CustomerID), 0) - CAST(SUM(CASE WHEN T1.Segment = 'SME' THEN T2.Consumption ELSE 0 END) AS FLOAT) / NULLIF(COUNT(T1.CustomerID), 0)
+FROM customers AS T1
+INNER JOIN yearmonth AS T2
+  ON T1.CustomerID = T2.CustomerID
+WHERE
+  T1.Currency = 'CZK'
+  AND T2.Consumption = (
+    SELECT
+      MIN(Consumption)
+    FROM yearmonth
+  )
+  AND CAST(T2.Date AS CHAR) BETWEEN '201301' AND '201312';
+
+SELECT
+  SUM(Consumption)
+FROM yearmonth
+WHERE
+  CustomerID = 6 AND Date BETWEEN '201308' AND '201311';
+
+SELECT
+  SUM(CASE WHEN Currency = 'CZK' THEN 1 ELSE 0 END) - SUM(CASE WHEN Currency = 'EUR' THEN 1 ELSE 0 END)
+FROM customers
+WHERE
+  Segment = 'SME';
+
+SELECT
+  CAST(SUM(CASE WHEN Consumption > 528.3 THEN 1 ELSE 0 END) AS FLOAT) * 100 / NULLIF(COUNT(CustomerID), 0)
+FROM yearmonth
+WHERE
+  Date = '201202';
+
+SELECT
+  SUM(CAST(Consumption AS DOUBLE))
+FROM yearmonth
+WHERE
+  SUBSTRING(Date, 1, 4) = '2012'
+GROUP BY
+  SUBSTRING(Date, 5, 2)
+ORDER BY
+  SUM(Consumption) DESC
+LIMIT 1;
+
+SELECT DISTINCT
+  T2.Country
+FROM transactions_1k AS T1
+INNER JOIN gasstations AS T2
+  ON T1.GasStationID = T2.GasStationID
+INNER JOIN yearmonth AS T3
+  ON T1.CustomerID = T3.CustomerID
+WHERE
+  T3.Date = '201306';
+
+SELECT DISTINCT
+  T3.Description
+FROM transactions_1k AS T1
+INNER JOIN gasstations AS T2
+  ON T1.GasStationID = T2.GasStationID
+INNER JOIN products AS T3
+  ON T1.ProductID = T3.ProductID
+WHERE
+  T2.Country = 'CZE';
+
+SELECT
+  COUNT(T1.TransactionID)
+FROM transactions_1k AS T1
+INNER JOIN gasstations AS T2
+  ON T1.GasStationID = T2.GasStationID
+WHERE
+  T2.Country = 'CZE' AND DATE_FORMAT(CAST(T1.Date AS DATETIME), '%Y') >= '2012';
+
+SELECT
+  T2.Segment
+FROM transactions_1k AS T1
+INNER JOIN customers AS T2
+  ON T1.CustomerID = T2.CustomerID
+WHERE
+  T1.date = '2012-08-23' AND T1.time = '21:20:00';
+
+SELECT
+  T2.Country
+FROM transactions_1k AS T1
+INNER JOIN gasstations AS T2
+  ON T1.GasStationID = T2.GasStationID
+WHERE
+  T1.Date = '2012-08-24' AND T1.Price = '548.4';
+
+SELECT
+  CAST(SUM(CASE WHEN SUBSTRING(Date, 1, 4) = '2012' THEN Consumption ELSE 0 END) - SUM(CASE WHEN SUBSTRING(Date, 1, 4) = '2013' THEN Consumption ELSE 0 END) AS FLOAT) / NULLIF(SUM(CASE WHEN SUBSTRING(Date, 1, 4) = '2012' THEN Consumption ELSE 0 END), 0)
+FROM yearmonth
+WHERE
+  CustomerID = (
+    SELECT
+      T1.CustomerID
+    FROM transactions_1k AS T1
+    INNER JOIN gasstations AS T2
+      ON T1.GasStationID = T2.GasStationID
+    WHERE
+      T1.Date = '2012-08-25' AND T1.Price = 1513.12
+  );
+
+SELECT
+  SUM(T1.Price),
+  SUM(CASE WHEN T3.Date = '201201' THEN T1.Price ELSE 0 END)
+FROM transactions_1k AS T1
+INNER JOIN gasstations AS T2
+  ON T1.GasStationID = T2.GasStationID
+INNER JOIN yearmonth AS T3
+  ON T1.CustomerID = T3.CustomerID
+WHERE
+  T1.CustomerID = '38508';
+
+SELECT
+  T2.CustomerID,
+  SUM(T2.Price / NULLIF(T2.Amount, 0)),
+  T1.Currency
+FROM customers AS T1
+INNER JOIN transactions_1k AS T2
+  ON T1.CustomerID = T2.CustomerID
+WHERE
+  T2.CustomerID = (
+    SELECT
+      CustomerID
+    FROM yearmonth
+    ORDER BY
+      Consumption DESC
+    LIMIT 1
+  )
+GROUP BY
+  T2.CustomerID,
+  T1.Currency;
+
+SELECT
+  T2.major_name
+FROM member AS T1
+INNER JOIN major AS T2
+  ON T1.link_to_major = T2.major_id
+WHERE
+  T1.first_name = 'Angela' AND T1.last_name = 'Sanders';
+
+SELECT
+  COUNT(DISTINCT T1.event_id)
+FROM event AS T1
+INNER JOIN attendance AS T2
+  ON T1.event_id = T2.link_to_event
+WHERE
+  T1.type = 'Meeting'
+GROUP BY
+  T1.event_id
+HAVING
+  COUNT(T2.link_to_event) > 10;
+
+SELECT
+  T2.amount
+FROM member AS T1
+INNER JOIN income AS T2
+  ON T1.member_id = T2.link_to_member
+WHERE
+  T1.position = 'Vice President';
+
+SELECT
+  T3.approved
+FROM event AS T1
+INNER JOIN budget AS T2
+  ON T1.event_id = T2.link_to_event
+INNER JOIN expense AS T3
+  ON T2.budget_id = T3.link_to_budget
+WHERE
+  T1.event_name = 'October Meeting' AND T1.event_date LIKE '2019-10-08%';
+
+SELECT
+  SUM(CASE WHEN SUBSTRING(T1.event_date, 1, 4) = '2019' THEN T2.spent ELSE 0 END) - SUM(CASE WHEN SUBSTRING(T1.event_date, 1, 4) = '2020' THEN T2.spent ELSE 0 END) AS num
+FROM event AS T1
+INNER JOIN budget AS T2
+  ON T1.event_id = T2.link_to_event;
+
+SELECT
+  phone
+FROM member
+WHERE
+  first_name = 'Carlo' AND last_name = 'Jacobs';
+
+SELECT
+  T2.major_name
+FROM member AS T1
+INNER JOIN major AS T2
+  ON T1.link_to_major = T2.major_id
+WHERE
+  T1.first_name = 'Brent' AND T1.last_name = 'Thomason';
+
+SELECT
+  T2.department
+FROM member AS T1
+INNER JOIN major AS T2
+  ON T1.link_to_major = T2.major_id
+WHERE
+  T1.position = 'President';
+
+SELECT
+  CAST(SUM(CASE WHEN T2.event_name = 'Yearly Kickoff' THEN T1.amount ELSE 0 END) AS FLOAT) / NULLIF(SUM(CASE WHEN T2.event_name = 'October Meeting' THEN T1.amount ELSE 0 END), 0)
+FROM budget AS T1
+INNER JOIN event AS T2
+  ON T1.link_to_event = T2.event_id
+WHERE
+  T1.category = 'Advertisement' AND T2.type = 'Meeting';
+
+SELECT
+  COUNT(city)
+FROM zip_code
+WHERE
+  county = 'Orange County' AND state = 'Virginia';
+
+SELECT
+  COUNT(T2.link_to_member)
+FROM event AS T1
+INNER JOIN attendance AS T2
+  ON T1.event_id = T2.link_to_event
+WHERE
+  T1.event_name = 'Women''s Soccer';
+
+SELECT
+  T2.event_name
+FROM budget AS T1
+INNER JOIN event AS T2
+  ON T1.link_to_event = T2.event_id
+WHERE
+  T2.status = 'Closed'
+ORDER BY
+  T1.spent / NULLIF(T1.amount, 0) DESC
+LIMIT 1;
+
+SELECT
+  SUM(spent)
+FROM budget
+WHERE
+  category = 'Food';
+
+SELECT
+  T4.first_name,
+  T4.last_name
+FROM event AS T1
+INNER JOIN budget AS T2
+  ON T1.event_id = T2.link_to_event
+INNER JOIN expense AS T3
+  ON T2.budget_id = T3.link_to_budget
+INNER JOIN member AS T4
+  ON T3.link_to_member = T4.member_id
+WHERE
+  T1.event_name = 'Yearly Kickoff';
+
+SELECT
+  T1.event_name
+FROM event AS T1
+INNER JOIN budget AS T2
+  ON T1.event_id = T2.link_to_event
+INNER JOIN expense AS T3
+  ON T2.budget_id = T3.link_to_budget
+ORDER BY
+  T3.cost
+LIMIT 1;
+
+SELECT
+  source
+FROM income
+WHERE
+  date_received BETWEEN '2019-09-01' AND '2019-09-30'
+ORDER BY
+  source DESC
+LIMIT 1;
+
+SELECT
+  T2.event_name
+FROM budget AS T1
+INNER JOIN event AS T2
+  ON T1.link_to_event = T2.event_id
+WHERE
+  T1.category = 'Advertisement'
+ORDER BY
+  T1.spent DESC
+LIMIT 1;
+
+SELECT
+  T3.cost
+FROM event AS T1
+INNER JOIN budget AS T2
+  ON T1.event_id = T2.link_to_event
+INNER JOIN expense AS T3
+  ON T2.budget_id = T3.link_to_budget
+WHERE
+  T1.event_name = 'September Speaker' AND T3.expense_description = 'Posters';
+
+SELECT
+  T2.event_name
+FROM budget AS T1
+INNER JOIN event AS T2
+  ON T2.event_id = T1.link_to_event
+WHERE
+  T1.event_status = 'Closed' AND T1.remaining < 0
+ORDER BY
+  T1.remaining
+LIMIT 1;
+
+SELECT
+  T2.category,
+  SUM(T2.amount)
+FROM event AS T1
+INNER JOIN budget AS T2
+  ON T1.event_id = T2.link_to_event
+WHERE
+  T1.event_name = 'April Speaker'
+GROUP BY
+  T2.category
+ORDER BY
+  CASE WHEN SUM(T2.amount) IS NULL THEN 1 ELSE 0 END, SUM(T2.amount) ASC;
+
+SELECT
+  T1.first_name,
+  T1.last_name,
+  SUM(T2.cost)
+FROM member AS T1
+INNER JOIN expense AS T2
+  ON T1.member_id = T2.link_to_member
+WHERE
+  T1.member_id = 'rec4BLdZHS2Blfp4v'
+GROUP BY
+  T1.first_name,
+  T1.last_name;
+
+SELECT DISTINCT
+  T2.category
+FROM event AS T1
+INNER JOIN budget AS T2
+  ON T1.event_id = T2.link_to_event
+WHERE
+  T1.location = 'MU 215';
+
+SELECT DISTINCT
+  T2.category,
+  T1.type
+FROM event AS T1
+INNER JOIN budget AS T2
+  ON T1.event_id = T2.link_to_event
+WHERE
+  T1.location = 'MU 215' AND T2.spent = 0 AND T1.type = 'Guest Speaker';
+
+SELECT DISTINCT
+  event_name
+FROM event
+WHERE
+  type = 'Game'
+  AND DATE(SUBSTRING(event_date, 1, 10)) BETWEEN '2019-03-15' AND '2020-03-20'
+  AND status = 'Closed';
+
+SELECT
+  T2.first_name,
+  T2.last_name,
+  T1.cost
+FROM expense AS T1
+INNER JOIN member AS T2
+  ON T1.link_to_member = T2.member_id
+WHERE
+  T1.expense_description = 'Water, Veggie tray, supplies';
+
+SELECT
+  CAST(SUM(CASE WHEN Admission = '+' THEN 1 ELSE 0 END) AS FLOAT) * 100 / NULLIF(SUM(CASE WHEN Admission = '-' THEN 1 ELSE 0 END), 0)
+FROM Patient
+WHERE
+  SEX = 'M';
+
+SELECT
+  CAST(SUM(
+    CASE WHEN DATE_FORMAT(CAST(Birthday AS DATETIME), '%Y') > '1930' THEN 1 ELSE 0 END
+  ) AS FLOAT) * 100 / NULLIF(COUNT(*), 0)
+FROM Patient
+WHERE
+  SEX = 'F';
+
+SELECT
+  T1.Diagnosis,
+  T2.Date
+FROM Patient AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID
+WHERE
+  T1.ID = 30609;
+
+SELECT DISTINCT
+  T1.ID,
+  EXTRACT(YEAR FROM CURRENT_TIMESTAMP()) - EXTRACT(YEAR FROM T1.Birthday) AS Age
+FROM Patient AS T1
+INNER JOIN Examination AS T2
+  ON T1.ID = T2.ID
+WHERE
+  T2.RVVT = '+';
+
+SELECT
+  COUNT(*)
+FROM Patient
+WHERE
+  DATE_FORMAT(CAST(Description AS DATETIME), '%Y') = '1997'
+  AND SEX = 'F'
+  AND Admission = '-';
+
+SELECT
+  COUNT(*)
+FROM Patient AS T1
+INNER JOIN Examination AS T2
+  ON T1.ID = T2.ID
+WHERE
+  T1.SEX = 'F'
+  AND DATE_FORMAT(CAST(T2.`Examination Date` AS DATETIME), '%Y') = '1997'
+  AND T2.Thrombosis = 1;
+
+SELECT
+  T2.Symptoms,
+  T1.Diagnosis
+FROM Patient AS T1
+INNER JOIN Examination AS T2
+  ON T1.ID = T2.ID
+WHERE
+  NOT T2.Symptoms IS NULL
+ORDER BY
+  T1.Birthday DESC
+LIMIT 1;
+
+SELECT
+  T1.Date,
+  EXTRACT(YEAR FROM T2.`First Date`) - EXTRACT(YEAR FROM T2.Birthday) AS Age,
+  T2.Birthday
+FROM Laboratory AS T1
+INNER JOIN Patient AS T2
+  ON T1.ID = T2.ID
+WHERE
+  T2.Diagnosis = 'SJS' AND NOT T2.Birthday IS NULL
+ORDER BY
+  CASE WHEN T2.Birthday IS NULL THEN 1 ELSE 0 END, T2.Birthday ASC
+LIMIT 1;
+
+SELECT
+  COUNT(T1.ID)
+FROM Patient AS T1
+INNER JOIN Examination AS T2
+  ON T1.ID = T2.ID
+WHERE
+  EXTRACT(YEAR FROM T2.`Examination Date`) BETWEEN 1990 AND 1993
+  AND EXTRACT(YEAR FROM T2.`Examination Date`) - EXTRACT(YEAR FROM T1.Birthday) < 18;
+
+SELECT
+  `aCL IgA`,
+  `aCL IgG`,
+  `aCL IgM`
+FROM Examination
+WHERE
+  ID IN (
+    SELECT
+      ID
+    FROM Patient
+    WHERE
+      Diagnosis = 'SLE' AND Description = '1994-02-19'
+  )
+  AND `Examination Date` = '1993-11-12';
+
+SELECT
+  CAST((
+    SUM(CASE WHEN CAST(T2.date AS CHAR) LIKE '1981-11-%' THEN T2.`T-CHO` ELSE 0 END) - SUM(CASE WHEN CAST(T2.date AS CHAR) LIKE '1981-12-%' THEN T2.`T-CHO` ELSE 0 END)
+  ) AS FLOAT) / NULLIF(
+    SUM(CASE WHEN CAST(T2.date AS CHAR) LIKE '1981-12-%' THEN T2.`T-CHO` ELSE 0 END),
+    0
+  )
+FROM Patient AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID
+WHERE
+  T1.Birthday = '1959-02-18';
+
+SELECT
+  COUNT(*)
+FROM Examination
+WHERE
+  Thrombosis = 2
+  AND `ANA Pattern` = 'S'
+  AND `aCL IgM` > (
+    SELECT
+      AVG(`aCL IgM`) * 1.2
+    FROM Examination
+    WHERE
+      Thrombosis = 2 AND `ANA Pattern` = 'S'
+  );
+
+SELECT DISTINCT
+  T1.ID
+FROM Patient AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID
+WHERE
+  T1.Admission = '-' AND T2.`T-BIL` < 2.0 AND CAST(T2.Date AS CHAR) LIKE '1991-10-%';
+
+SELECT
+  COUNT(ID)
+FROM Patient
+WHERE
+  SEX = 'F' AND Diagnosis = 'APS';
+
+SELECT
+  CAST(SUM(CASE WHEN SEX = 'F' THEN 1 ELSE 0 END) AS FLOAT) * 100 / NULLIF(COUNT(ID), 0)
+FROM Patient
+WHERE
+  Diagnosis = 'RA' AND DATE_FORMAT(CAST(Birthday AS DATETIME), '%Y') = '1980';
+
+SELECT DISTINCT
+  T1.ID
+FROM Patient AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID
+WHERE
+  T1.SEX = 'M' AND T2.GPT >= 60;
+
+SELECT
+  Diagnosis
+FROM (
+  SELECT
+    T1.Diagnosis AS Diagnosis,
+    ROW_NUMBER() OVER (PARTITION BY T1.Birthday ORDER BY CASE WHEN T1.Birthday IS NULL THEN 1 ELSE 0 END, T1.Birthday ASC) AS _row_number
+  FROM Patient AS T1
+  INNER JOIN Laboratory AS T2
+    ON T1.ID = T2.ID
+  WHERE
+    T2.GPT > 60
+) AS _t
+WHERE
+  _row_number = 1;
+
+SELECT
+  T1.ID,
+  T1.SEX
+FROM Patient AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID
+WHERE
+  T2.`T-BIL` >= 2.0
+GROUP BY
+  T1.SEX,
+  T1.ID;
+
+SELECT
+  AVG(EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM T1.Birthday))
+FROM Patient AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID
+WHERE
+  T2.`T-CHO` >= 250 AND T1.SEX = 'M';
+
+SELECT
+  COUNT(DISTINCT T1.ID)
+FROM Patient AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID
+WHERE
+  DATE_FORMAT(CAST(T1.Birthday AS DATETIME), '%Y') BETWEEN '1936' AND '1956'
+  AND T1.SEX = 'M'
+  AND T2.CPK >= 250;
+
+SELECT DISTINCT
+  T1.ID,
+  T1.SEX,
+  EXTRACT(YEAR FROM CURRENT_TIMESTAMP()) - EXTRACT(YEAR FROM T1.Birthday) AS Age
+FROM Patient AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID
+WHERE
+  T2.GLU >= 180 AND T2.`T-CHO` < 250;
+
+SELECT
+  T1.ID,
+  T1.SEX
+FROM Patient AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID
+WHERE
+  T1.Diagnosis = 'SLE' AND T2.HGB > 10 AND T2.HGB < 17
+ORDER BY
+  T1.Birthday ASC
+LIMIT 1;
+
+SELECT
+  SUM(CASE WHEN T2.PLT <= 100 THEN 1 ELSE 0 END) - SUM(CASE WHEN T2.PLT >= 400 THEN 1 ELSE 0 END)
+FROM Patient AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID;
+
+SELECT
+  CAST(SUM(CASE WHEN T2.PT >= 14 AND T1.SEX = 'F' THEN 1 ELSE 0 END) AS FLOAT) * 100 / NULLIF(COUNT(CASE WHEN T2.PT >= 14 THEN 1 ELSE 0 END), 0)
+FROM Patient AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID
+WHERE
+  EXTRACT(YEAR FROM CURRENT_TIMESTAMP()) - EXTRACT(YEAR FROM T1.Birthday) > 55;
+
+SELECT
+  COUNT(DISTINCT T1.ID)
+FROM Patient AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID
+INNER JOIN Examination AS T3
+  ON T3.ID = T2.ID
+WHERE
+  T2.IGG >= 2000;
+
+SELECT
+  COUNT(T1.ID)
+FROM Patient AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID
+WHERE
+  T2.IGA BETWEEN 80 AND 500
+  AND DATE_FORMAT(CAST(T1.`First Date` AS DATETIME), '%Y') > '1990';
+
+SELECT
+  T1.Diagnosis
+FROM Patient AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID
+WHERE
+  NOT T2.IGM BETWEEN 40 AND 400
+GROUP BY
+  T1.Diagnosis
+ORDER BY
+  COUNT(T1.Diagnosis) DESC
+LIMIT 1;
+
+SELECT
+  COUNT(DISTINCT T1.ID)
+FROM Patient AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID
+WHERE
+  T2.CRE >= 1.5 AND EXTRACT(YEAR FROM AGE(CURRENT_DATE, T1.Birthday)) < 70;
+
+SELECT
+  COUNT(T1.ID)
+FROM Examination AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID
+WHERE
+  T2.SM IN ('negative', '0') AND T1.Thrombosis = 0;
+
+SELECT
+  COUNT(DISTINCT T1.ID)
+FROM Patient AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID
+WHERE
+  T2.CENTROMEA IN ('negative', '0') AND T2.SSB IN ('negative', '0') AND T1.SEX = 'M';
+
+SELECT
+  T1.Birthday
+FROM Patient AS T1
+INNER JOIN Laboratory AS T2
+  ON T1.ID = T2.ID
+WHERE
+  T2.GOT >= 60
+ORDER BY
+  T1.Birthday DESC
+LIMIT 1;
+
+SELECT
+  t2.name
+FROM `Match` AS t1
+INNER JOIN League AS t2
+  ON t1.league_id = t2.id
+WHERE
+  t1.season = '2015/2016'
+GROUP BY
+  t2.name
+ORDER BY
+  SUM(t1.home_team_goal + t1.away_team_goal) DESC
+LIMIT 1;
+
+SELECT
+  teamInfo.team_long_name
+FROM League AS leagueData
+INNER JOIN `Match` AS matchData
+  ON leagueData.id = matchData.league_id
+INNER JOIN Team AS teamInfo
+  ON matchData.away_team_api_id = teamInfo.team_api_id
+WHERE
+  leagueData.name = 'Scotland Premier League'
+  AND matchData.season = '2009/2010'
+  AND matchData.away_team_goal - matchData.home_team_goal > 0
+GROUP BY
+  teamInfo.team_long_name,
+  matchData.away_team_api_id
+ORDER BY
+  CASE WHEN COUNT(*) IS NULL THEN 1 ELSE 0 END DESC, COUNT(*) DESC
+LIMIT 1;
+
+SELECT
+  t1.buildUpPlaySpeed
+FROM Team_Attributes AS t1
+INNER JOIN Team AS t2
+  ON t1.team_api_id = t2.team_api_id
+ORDER BY
+  t1.buildUpPlaySpeed ASC
+LIMIT 4;
+
+SELECT
+  t2.name
+FROM `Match` AS t1
+INNER JOIN League AS t2
+  ON t1.league_id = t2.id
+WHERE
+  t1.season = '2015/2016' AND t1.home_team_goal = t1.away_team_goal
+GROUP BY
+  t2.name
+ORDER BY
+  COUNT(t1.id) DESC
+LIMIT 1;
+
+SELECT DISTINCT
+  EXTRACT(YEAR FROM AGE(CURRENT_TIMESTAMP(), CAST(t2.birthday AS DATETIME))) + (
+    CASE
+      WHEN EXTRACT(MONTH FROM AGE(CURRENT_TIMESTAMP(), CAST(t2.birthday AS DATETIME))) > 0
+      OR EXTRACT(DAY FROM AGE(CURRENT_TIMESTAMP(), CAST(t2.birthday AS DATETIME))) > 0
+      THEN 1
+      ELSE 0
+    END
+  ) AS age
+FROM Player_Attributes AS t1
+INNER JOIN Player AS t2
+  ON t1.player_api_id = t2.player_api_id
+WHERE
+  EXTRACT(YEAR FROM CAST(t1.date AS DATE)) BETWEEN 2013 AND 2015
+  AND t1.sprint_speed >= 97;
+
+SELECT
+  t2.name,
+  t1.max_count
+FROM League AS t2
+JOIN (
+  SELECT
+    league_id,
+    MAX(cnt) AS max_count
+  FROM (
+    SELECT
+      league_id,
+      COUNT(id) AS cnt
+    FROM `Match`
+    GROUP BY
+      league_id
+  ) AS subquery
+  GROUP BY
+    league_id
+  ORDER BY
+    CASE WHEN MAX(cnt) IS NULL THEN 1 ELSE 0 END DESC, MAX(cnt) DESC
+  LIMIT 1
+) AS t1
+  ON t1.league_id = t2.id;
+
+SELECT DISTINCT
+  t4.team_long_name
+FROM Team_Attributes AS t3
+INNER JOIN Team AS t4
+  ON t3.team_api_id = t4.team_api_id
+WHERE
+  SUBSTRING(t3.`date`, 1, 4) = '2012'
+  AND t3.buildUpPlayPassing > (
+    SELECT
+      CAST(SUM(t2.buildUpPlayPassing) AS FLOAT) / NULLIF(COUNT(t1.id), 0)
+    FROM Team AS t1
+    INNER JOIN Team_Attributes AS t2
+      ON t1.team_api_id = t2.team_api_id
+    WHERE
+      DATE_FORMAT(CAST(t2.`date` AS DATETIME), '%Y') = '2012'
+  );
+
+SELECT
+  CAST(SUM(t2.long_shots) AS FLOAT) / NULLIF(COUNT(t2.`date`), 0)
+FROM Player AS t1
+INNER JOIN Player_Attributes AS t2
+  ON t1.player_api_id = t2.player_api_id
+WHERE
+  t1.player_name = 'Ahmed Samir Farag';
+
+SELECT
+  t1.player_name
+FROM Player AS t1
+INNER JOIN Player_Attributes AS t2
+  ON t1.player_api_id = t2.player_api_id
+WHERE
+  t1.height > 180
+GROUP BY
+  t1.id
+ORDER BY
+  CAST(SUM(t2.heading_accuracy) AS FLOAT) / NULLIF(COUNT(t2.`player_fifa_api_id`), 0) DESC
+LIMIT 10;
+
+SELECT
+  t1.name
+FROM League AS t1
+INNER JOIN `Match` AS t2
+  ON t1.id = t2.league_id
+WHERE
+  t2.season = '2009/2010'
+GROUP BY
+  t1.name
+HAVING
+  (
+    CAST(SUM(t2.home_team_goal) AS FLOAT) / NULLIF(COUNT(DISTINCT t2.id), 0)
+  ) - (
+    CAST(SUM(t2.away_team_goal) AS FLOAT) / NULLIF(COUNT(DISTINCT t2.id), 0)
+  ) > 0;
+
+SELECT
+  t2.overall_rating
+FROM Player AS t1
+INNER JOIN Player_Attributes AS t2
+  ON t1.player_api_id = t2.player_api_id
+WHERE
+  t1.player_name = 'Gabriel Tamas'
+  AND DATE_FORMAT(CAST(t2.date AS DATETIME), '%Y') = '2011';
+
+SELECT
+  CAST(SUM(t2.home_team_goal) AS FLOAT) / NULLIF(COUNT(t2.id), 0)
+FROM Country AS t1
+INNER JOIN `Match` AS t2
+  ON t1.id = t2.country_id
+WHERE
+  t1.name = 'Poland' AND t2.season = '2010/2011';
+
+SELECT
+  CAST(SUM(t2.overall_rating) AS FLOAT) / NULLIF(COUNT(t2.id), 0)
+FROM Player AS t1
+INNER JOIN Player_Attributes AS t2
+  ON t1.player_api_id = t2.player_api_id
+WHERE
+  t1.height > 170
+  AND DATE_FORMAT(CAST(t2.`date` AS DATETIME), '%Y') >= '2010'
+  AND DATE_FORMAT(CAST(t2.`date` AS DATETIME), '%Y') <= '2015';
+
+SELECT
+  player_name
+FROM Player
+WHERE
+  player_name IN ('Aaron Lennon', 'Abdelaziz Barrada')
+ORDER BY
+  birthday ASC
+LIMIT 1;
+
+SELECT
+  player_name
+FROM Player
+ORDER BY
+  height DESC
+LIMIT 1;
+
+SELECT
+  COUNT(DISTINCT t1.player_name)
+FROM Player AS t1
+INNER JOIN Player_Attributes AS t2
+  ON t1.player_api_id = t2.player_api_id
+WHERE
+  DATE_FORMAT(CAST(t1.birthday AS DATETIME), '%Y') < '1986'
+  AND t2.defensive_work_rate = 'high';
+
+SELECT
+  COUNT(t2.id)
+FROM League AS t1
+INNER JOIN `Match` AS t2
+  ON t1.id = t2.league_id
+WHERE
+  t1.name = 'Belgium Jupiler League' AND SUBSTRING(t2.`date`, 1, 7) = '2009-04';
+
+SELECT
+  t1.name
+FROM League AS t1
+JOIN `Match` AS t2
+  ON t1.id = t2.league_id
+WHERE
+  t2.season = '2008/2009'
+GROUP BY
+  t1.name
+HAVING
+  COUNT(t2.id) = (
+    SELECT
+      MAX(match_count)
+    FROM (
+      SELECT
+        COUNT(t2.id) AS match_count
+      FROM `Match` AS t2
+      WHERE
+        t2.season = '2008/2009'
+      GROUP BY
+        t2.league_id
+    ) AS subquery
+  );
+
+SELECT
+  CAST(SUM(t2.overall_rating) AS FLOAT) / NULLIF(COUNT(t2.id), 0)
+FROM Player AS t1
+INNER JOIN Player_Attributes AS t2
+  ON t1.player_api_id = t2.player_api_id
+WHERE
+  t1.player_name = 'Pietro Marino';
+
+SELECT
+  t2.chanceCreationPassing,
+  t2.chanceCreationPassingClass
+FROM Team AS t1
+INNER JOIN Team_Attributes AS t2
+  ON t1.team_api_id = t2.team_api_id
+WHERE
+  t1.team_long_name = 'Ajax'
+ORDER BY
+  t2.chanceCreationPassing DESC
+LIMIT 1;
+
+SELECT
+  t1.player_name
+FROM Player AS t1
+INNER JOIN Player_Attributes AS t2
+  ON t1.player_api_id = t2.player_api_id
+WHERE
+  SUBSTRING(t2.`date`, 1, 10) = '2016-06-23' AND t2.overall_rating = 77
+ORDER BY
+  t1.birthday ASC
+LIMIT 1;
+
+SELECT
+  t2.overall_rating
+FROM Player AS t1
+INNER JOIN Player_Attributes AS t2
+  ON t1.player_api_id = t2.player_api_id
+WHERE
+  SUBSTRING(t2.`date`, 1, 10) = '2016-02-04' AND t1.player_name = 'Aaron Mooy';
+
+SELECT
+  t2.attacking_work_rate
+FROM Player AS t1
+INNER JOIN Player_Attributes AS t2
+  ON t1.player_api_id = t2.player_api_id
+WHERE
+  t2.`date` LIKE '2015-05-01%' AND t1.player_name = 'Francesco Migliore';
+
+SELECT
+  `date`
+FROM (
+  SELECT
+    t2.crossing,
+    t2.`date`
+  FROM Player AS t1
+  INNER JOIN Player_Attributes AS t2
+    ON t1.player_fifa_api_id = t2.player_fifa_api_id
+  WHERE
+    t1.player_name = 'Kevin Constant'
+  ORDER BY
+    CASE WHEN t2.crossing IS NULL THEN 1 ELSE 0 END DESC, t2.crossing DESC
+) AS subquery
+ORDER BY
+  CASE WHEN `date` IS NULL THEN 1 ELSE 0 END DESC, `date` DESC
+LIMIT 1;
+
+SELECT
+  t2.buildUpPlayPassingClass
+FROM Team AS t1
+INNER JOIN Team_Attributes AS t2
+  ON t1.team_api_id = t2.team_api_id
+WHERE
+  t1.team_long_name = 'FC Lorient' AND t2.`date` LIKE '2010-02-22%';
+
+SELECT
+  t2.defenceAggressionClass
+FROM Team AS t1
+INNER JOIN Team_Attributes AS t2
+  ON t1.team_api_id = t2.team_api_id
+WHERE
+  t1.team_long_name = 'Hannover 96' AND t2.`date` LIKE '2015-09-10%';
+
+SELECT
+  CAST(SUM(t2.overall_rating) AS FLOAT) / NULLIF(COUNT(t2.id), 0)
+FROM Player AS t1
+INNER JOIN Player_Attributes AS t2
+  ON t1.player_fifa_api_id = t2.player_fifa_api_id
+WHERE
+  t1.player_name = 'Marko Arnautovic'
+  AND SUBSTRING(t2.`date`, 1, 10) BETWEEN '2007-02-22' AND '2016-04-21';
+
+SELECT
+  (
+    SUM(CASE WHEN t1.player_name = 'Landon Donovan' THEN t2.overall_rating ELSE 0 END) * 1.0 - SUM(CASE WHEN t1.player_name = 'Jordan Bowery' THEN t2.overall_rating ELSE 0 END)
+  ) * 100 / NULLIF(
+    SUM(CASE WHEN t1.player_name = 'Landon Donovan' THEN t2.overall_rating ELSE 0 END),
+    0
+  ) AS LvsJ_percent
+FROM Player AS t1
+INNER JOIN Player_Attributes AS t2
+  ON t1.player_fifa_api_id = t2.player_fifa_api_id
+WHERE
+  SUBSTRING(t2.`date`, 1, 10) = '2013-07-12';
+
+SELECT
+  player_name
+FROM (
+  SELECT
+    player_name,
+    height,
+    DENSE_RANK() OVER (ORDER BY CASE WHEN height IS NULL THEN 1 ELSE 0 END DESC, height DESC) AS `rank`
+  FROM Player
+) AS subquery
+WHERE
+  `rank` = 1;
+
+SELECT DISTINCT
+  t1.player_name
+FROM Player AS t1
+INNER JOIN Player_Attributes AS t2
+  ON t1.player_api_id = t2.player_api_id
+WHERE
+  t2.attacking_work_rate = 'high';
+
+SELECT
+  COUNT(id)
+FROM Player
+WHERE
+  birthday > '1990' AND player_name LIKE 'Aaron%';
+
+SELECT
+  id
+FROM Player_Attributes
+WHERE
+  preferred_foot = 'right'
+ORDER BY
+  CASE WHEN potential IS NULL THEN 1 ELSE 0 END, potential ASC
+LIMIT 4;
+
+SELECT
+  t2.home_team_goal,
+  t2.away_team_goal
+FROM League AS t1
+INNER JOIN `Match` AS t2
+  ON t1.id = t2.league_id
+WHERE
+  t1.name = 'Belgium Jupiler League' AND t2.`date` LIKE '2008-09-24%';
+
+SELECT
+  id,
+  finishing,
+  curve
+FROM Player_Attributes
+WHERE
+  player_api_id = (
+    SELECT
+      player_api_id
+    FROM Player
+    ORDER BY
+      weight DESC
+    LIMIT 1
+  )
+LIMIT 1;
+
+SELECT
+  t1.name
+FROM League AS t1
+INNER JOIN `Match` AS t2
+  ON t1.id = t2.league_id
+WHERE
+  t2.season = '2015/2016'
+GROUP BY
+  t1.name
+ORDER BY
+  COUNT(t2.id) DESC
+LIMIT 4;
+
+SELECT
+  t2.team_long_name
+FROM `Match` AS t1
+INNER JOIN Team AS t2
+  ON t1.away_team_api_id = t2.team_api_id
+ORDER BY
+  t1.away_team_goal DESC
+LIMIT 1;
+
+SELECT
+  CAST(COUNT(CASE WHEN t2.overall_rating > 70 AND t1.height < 180 THEN t1.id ELSE NULL END) AS FLOAT) * 100 / NULLIF(COUNT(t1.id), 0) AS percent
+FROM Player AS t1
+INNER JOIN Player_Attributes AS t2
+  ON t1.player_api_id = t2.player_api_id;
+
+SELECT
+  T2.driverRef
+FROM qualifying AS T1
+INNER JOIN drivers AS T2
+  ON T2.driverId = T1.driverId
+WHERE
+  T1.raceId = 20
+ORDER BY
+  T1.q1 DESC
+LIMIT 5;
+
+SELECT
+  T2.surname
+FROM qualifying AS T1
+INNER JOIN drivers AS T2
+  ON T2.driverId = T1.driverId
+WHERE
+  T1.raceId = 19
+ORDER BY
+  T1.q2 ASC
+LIMIT 1;
+
+SELECT DISTINCT
+  T1.lat,
+  T1.lng
+FROM circuits AS T1
+INNER JOIN races AS T2
+  ON T2.circuitID = T1.circuitId
+WHERE
+  T2.name = 'Australian Grand Prix';
+
+SELECT
+  T1.q1
+FROM qualifying AS T1
+INNER JOIN drivers AS T2
+  ON T2.driverId = T1.driverId
+WHERE
+  T1.raceId = 354 AND T2.forename = 'Bruno' AND T2.surname = 'Senna';
+
+SELECT
+  COUNT(T3.driverId)
+FROM races AS T1
+INNER JOIN results AS T2
+  ON T2.raceId = T1.raceId
+INNER JOIN drivers AS T3
+  ON T3.driverId = T2.driverId
+WHERE
+  T1.year = 2007 AND T1.name = 'Bahrain Grand Prix' AND T2.time IS NULL;
+
+SELECT
+  T1.forename,
+  T1.surname
+FROM drivers AS T1
+INNER JOIN results AS T2
+  ON T2.driverId = T1.driverId
+WHERE
+  T2.raceId = 592 AND NOT T2.time IS NULL AND NOT T1.dob IS NULL
+ORDER BY
+  T1.dob ASC
+LIMIT 1;
+
+SELECT DISTINCT
+  T1.lat,
+  T1.lng
+FROM circuits AS T1
+INNER JOIN races AS T2
+  ON T2.circuitID = T1.circuitId
+WHERE
+  T2.name = 'Malaysian Grand Prix';
+
+SELECT
+  T2.url
+FROM constructorResults AS T1
+INNER JOIN constructors AS T2
+  ON T2.constructorId = T1.constructorId
+WHERE
+  T1.raceId = 9
+ORDER BY
+  T1.points DESC
+LIMIT 1;
+
+SELECT
+  T2.url
+FROM races AS T1
+INNER JOIN seasons AS T2
+  ON T2.year = T1.year
+WHERE
+  T1.raceId = 901;
+
+SELECT
+  T1.forename,
+  T1.surname
+FROM drivers AS T1
+INNER JOIN results AS T2
+  ON T2.driverId = T1.driverId
+WHERE
+  T2.raceId = 872 AND NOT T2.time IS NULL
+ORDER BY
+  T1.dob DESC
+LIMIT 1;
+
+SELECT
+  T1.nationality
+FROM drivers AS T1
+INNER JOIN results AS T2
+  ON T2.driverId = T1.driverId
+ORDER BY
+  T2.fastestLapSpeed DESC
+LIMIT 1;
+
+SELECT
+  (
+    SUM(CASE WHEN T2.raceId = 853 THEN CAST(T2.fastestLapSpeed AS DECIMAL) ELSE 0 END) - SUM(CASE WHEN T2.raceId = 854 THEN CAST(T2.fastestLapSpeed AS DECIMAL) ELSE 0 END)
+  ) * 100 / NULLIF(
+    SUM(CASE WHEN T2.raceId = 853 THEN CAST(T2.fastestLapSpeed AS DECIMAL) ELSE 0 END),
+    0
+  )
+FROM drivers AS T1
+INNER JOIN results AS T2
+  ON T2.driverId = T1.driverId
+WHERE
+  T1.forename = 'Paul' AND T1.surname = 'di Resta';
+
+SELECT
+  name
+FROM races
+WHERE
+  DATE_FORMAT(CAST(date AS DATETIME), '%Y') = (
+    SELECT
+      DATE_FORMAT(CAST(date AS DATETIME), '%Y')
+    FROM races
+    ORDER BY
+      date ASC
+    LIMIT 1
+  )
+  AND DATE_FORMAT(CAST(date AS DATETIME), '%m') = (
+    SELECT
+      DATE_FORMAT(CAST(date AS DATETIME), '%m')
+    FROM races
+    ORDER BY
+      date ASC
+    LIMIT 1
+  );
+
+SELECT
+  T3.forename,
+  T3.surname,
+  T2.points
+FROM races AS T1
+INNER JOIN driverStandings AS T2
+  ON T2.raceId = T1.raceId
+INNER JOIN drivers AS T3
+  ON T3.driverId = T2.driverId
+ORDER BY
+  T2.points DESC
+LIMIT 1;
+
+SELECT
+  T2.milliseconds,
+  T1.forename,
+  T1.surname,
+  T3.name
+FROM drivers AS T1
+INNER JOIN lapTimes AS T2
+  ON T1.driverId = T2.driverId
+INNER JOIN races AS T3
+  ON T2.raceId = T3.raceId
+ORDER BY
+  T2.milliseconds ASC
+LIMIT 1;
+
+SELECT
+  CAST(COUNT(CASE WHEN T2.position <> 1 THEN T2.position END) AS FLOAT) * 100 / NULLIF(COUNT(T2.driverStandingsId), 0)
+FROM races AS T1
+INNER JOIN driverStandings AS T2
+  ON T2.raceId = T1.raceId
+INNER JOIN drivers AS T3
+  ON T3.driverId = T2.driverId
+WHERE
+  T3.surname = 'Hamilton' AND T1.year >= 2010;
+
+SELECT
+  T1.forename,
+  T1.surname,
+  T1.nationality,
+  MAX(T2.points)
+FROM drivers AS T1
+INNER JOIN driverStandings AS T2
+  ON T2.driverId = T1.driverId
+WHERE
+  T2.wins >= 1
+GROUP BY
+  T1.forename,
+  T1.surname,
+  T1.nationality
+ORDER BY
+  COUNT(T2.wins) DESC
+LIMIT 1;
+
+SELECT DISTINCT
+  T2.name,
+  T1.name,
+  T1.location
+FROM circuits AS T1
+INNER JOIN races AS T2
+  ON T2.circuitID = T1.circuitId
+WHERE
+  T2.year = 2005 AND DATE_FORMAT(CAST(T2.date AS DATETIME), '%m') = '09';
+
+SELECT
+  T1.name,
+  T1.year
+FROM races AS T1
+INNER JOIN lapTimes AS T2
+  ON T2.raceId = T1.raceId
+INNER JOIN drivers AS T3
+  ON T3.driverId = T2.driverId
+WHERE
+  T3.forename = 'Michael' AND T3.surname = 'Schumacher'
+ORDER BY
+  T2.milliseconds ASC
+LIMIT 1;
+
+SELECT
+  T1.name,
+  T2.points
+FROM races AS T1
+INNER JOIN driverStandings AS T2
+  ON T2.raceId = T1.raceId
+INNER JOIN drivers AS T3
+  ON T3.driverId = T2.driverId
+WHERE
+  T3.forename = 'Lewis' AND T3.surname = 'Hamilton'
+ORDER BY
+  T1.year ASC
+LIMIT 1;
+
+SELECT
+  lat,
+  lng
+FROM circuits
+WHERE
+  name = 'Silverstone Circuit';
+
+SELECT
+  nationality
+FROM drivers
+WHERE
+  NOT dob IS NULL
+ORDER BY
+  dob ASC
+LIMIT 1;
+
+SELECT
+  name
+FROM races
+WHERE
+  raceId IN (
+    SELECT
+      raceId
+    FROM results
+    WHERE
+      `rank` = 1
+      AND driverId = (
+        SELECT
+          driverId
+        FROM drivers
+        WHERE
+          forename = 'Lewis' AND surname = 'Hamilton'
+      )
+  );
+
+SELECT
+  T2.fastestLapSpeed
+FROM races AS T1
+INNER JOIN results AS T2
+  ON T2.raceId = T1.raceId
+WHERE
+  T1.name = 'Spanish Grand Prix'
+  AND T1.year = 2009
+  AND NOT T2.fastestLapSpeed IS NULL
+ORDER BY
+  T2.fastestLapSpeed DESC
+LIMIT 1;
+
+SELECT
+  T1.time
+FROM results AS T1
+INNER JOIN races AS T2
+  ON T1.raceId = T2.raceId
+WHERE
+  T1.`rank` = 2 AND T2.name = 'Chinese Grand Prix' AND T2.year = 2008;
+
+WITH time_in_seconds AS (
+  SELECT
+    T1.positionOrder,
+    CASE
+      WHEN T1.positionOrder = 1
+      THEN (
+        CAST(SUBSTRING(T1.time, 1, 1) AS FLOAT) * 3600
+      ) + (
+        CAST(SUBSTRING(T1.time, 3, 2) AS FLOAT) * 60
+      ) + CAST(SUBSTRING(T1.time, 6) AS FLOAT)
+      ELSE CAST(SUBSTRING(T1.time, 2) AS FLOAT)
+    END AS time_seconds
+  FROM results AS T1
+  INNER JOIN races AS T2
+    ON T1.raceId = T2.raceId
+  WHERE
+    T2.name = 'Australian Grand Prix' AND NOT T1.time IS NULL AND T2.year = 2008
+), champion_time AS (
+  SELECT
+    time_seconds
+  FROM time_in_seconds
+  WHERE
+    positionOrder = 1
+), last_driver_incremental AS (
+  SELECT
+    time_seconds
+  FROM time_in_seconds
+  WHERE
+    positionOrder = (
+      SELECT
+        MAX(positionOrder)
+      FROM time_in_seconds
+    )
+)
+SELECT
+  (
+    CAST((
+      SELECT
+        time_seconds
+      FROM last_driver_incremental
+    ) AS FLOAT) * 100
+  ) / NULLIF(
+    (
+      SELECT
+        time_seconds + (
+          SELECT
+            time_seconds
+          FROM last_driver_incremental
+        )
+      FROM champion_time
+    ),
+    0
+  );
+
+SELECT
+  MAX(T1.points)
+FROM constructorStandings AS T1
+INNER JOIN constructors AS T2
+  ON T1.constructorId = T2.constructorId
+WHERE
+  T2.nationality = 'British';
+
+SELECT
+  COUNT(T1.raceId)
+FROM constructorStandings AS T1
+INNER JOIN constructors AS T2
+  ON T1.constructorId = T2.constructorId
+WHERE
+  T1.points = 0 AND T2.nationality = 'Japanese'
+GROUP BY
+  T1.constructorId
+HAVING
+  COUNT(raceId) = 2;
+
+WITH time_in_seconds AS (
+  SELECT
+    T2.year,
+    T2.raceId,
+    T1.positionOrder,
+    CASE
+      WHEN T1.positionOrder = 1
+      THEN (
+        CASE
+          WHEN SPLIT_PART(T1.time, ':', 1) <> ''
+          AND SPLIT_PART(T1.time, ':', 2) <> ''
+          AND SPLIT_PART(SPLIT_PART(T1.time, ':', 3), '.', 1) <> ''
+          THEN (
+            CAST(SPLIT_PART(T1.time, ':', 1) AS FLOAT) * 3600
+          ) + (
+            CAST(SPLIT_PART(T1.time, ':', 2) AS FLOAT) * 60
+          ) + CAST(SPLIT_PART(SPLIT_PART(T1.time, ':', 3), '.', 1) AS FLOAT) + CAST(SPLIT_PART(SPLIT_PART(T1.time, ':', 3), '.', 2) AS FLOAT) / 1000
+          ELSE 0
+        END
+      )
+      ELSE (
+        CASE
+          WHEN SUBSTRING(T1.time, 2) <> ''
+          THEN CAST(SUBSTRING(T1.time, 2) AS FLOAT)
+          ELSE 0
+        END
+      )
+    END AS time_seconds
+  FROM results AS T1
+  INNER JOIN races AS T2
+    ON T1.raceId = T2.raceId
+  WHERE
+    NOT T1.time IS NULL AND T1.time <> ''
+), champion_time AS (
+  SELECT
+    year,
+    raceId,
+    time_seconds
+  FROM time_in_seconds
+  WHERE
+    positionOrder = 1
+)
+SELECT
+  year,
+  AVG(time_seconds)
+FROM champion_time
+WHERE
+  year < 1975
+GROUP BY
+  year
+HAVING
+  NOT AVG(time_seconds) IS NULL;
+
+SELECT
+  AVG(CAST(T1.fastestLapSpeed AS DECIMAL))
+FROM results AS T1
+INNER JOIN races AS T2
+  ON T1.raceId = T2.raceId
+WHERE
+  T2.year = 2009 AND T2.name = 'Spanish Grand Prix';
+
+SELECT
+  CAST(SUM(
+    CASE
+      WHEN DATE_FORMAT(CAST(T3.dob AS DATETIME), '%Y') < '1985' AND T1.laps > 50
+      THEN 1
+      ELSE 0
+    END
+  ) AS FLOAT) * 100 / NULLIF(COUNT(*), 0)
+FROM results AS T1
+INNER JOIN races AS T2
+  ON T1.raceId = T2.raceId
+INNER JOIN drivers AS T3
+  ON T1.driverId = T3.driverId
+WHERE
+  T2.year BETWEEN 2000 AND 2005;
+
+SELECT
+  COUNT(T1.driverId)
+FROM drivers AS T1
+INNER JOIN lapTimes AS T2
+  ON T1.driverId = T2.driverId
+WHERE
+  T1.nationality = 'French'
+  AND (
+    EXTRACT(MINUTE FROM CAST(T2.time AS INTERVAL)) * 60 + EXTRACT(SECOND FROM CAST(T2.time AS INTERVAL))
+  ) < 120;
+
+SELECT
+  COUNT(*)
+FROM (
+  SELECT
+    nationality
+  FROM drivers
+  ORDER BY
+    CASE WHEN dob IS NULL THEN 1 ELSE 0 END DESC, dob DESC
+  LIMIT 3
+) AS T3
+WHERE
+  nationality = 'Dutch';
+
+SELECT
+  T2.driverId,
+  T2.code
+FROM results AS T1
+INNER JOIN drivers AS T2
+  ON T1.driverId = T2.driverId
+WHERE
+  DATE_FORMAT(CAST(T2.dob AS DATETIME), '%Y') = '1971'
+  AND NOT T1.fastestLapTime IS NULL;
+
+SELECT DISTINCT
+  location,
+  lat,
+  lng
+FROM circuits
+WHERE
+  country = 'Austria';
+
+SELECT
+  T3.year,
+  T3.name,
+  T3.date,
+  T3.time
+FROM qualifying AS T1
+INNER JOIN drivers AS T2
+  ON T1.driverId = T2.driverId
+INNER JOIN races AS T3
+  ON T1.raceId = T3.raceId
+WHERE
+  T1.driverId = (
+    SELECT
+      driverId
+    FROM drivers
+    ORDER BY
+      dob DESC
+    LIMIT 1
+  )
+ORDER BY
+  T3.date ASC
+LIMIT 1;
+
+SELECT
+  T2.forename,
+  T2.surname
+FROM pitStops AS T1
+INNER JOIN drivers AS T2
+  ON T1.driverId = T2.driverId
+WHERE
+  T2.nationality = 'German' AND EXTRACT(YEAR FROM T2.dob) BETWEEN 1980 AND 1985
+GROUP BY
+  T2.forename,
+  T2.surname
+ORDER BY
+  CASE WHEN AVG(CAST(T1.duration AS INTERVAL)) IS NULL THEN 1 ELSE 0 END, AVG(CAST(T1.duration AS INTERVAL))
+LIMIT 3;
+
+SELECT
+  T3.constructorRef,
+  T3.url
+FROM results AS T1
+INNER JOIN races AS T2
+  ON T1.raceId = T2.raceId
+INNER JOIN constructors AS T3
+  ON T1.constructorId = T3.constructorId
+WHERE
+  T2.name = 'Singapore Grand Prix' AND T2.year = 2009 AND T1.time LIKE '_:%:__.___';
+
+SELECT
+  SUM(T1.points),
+  T2.name,
+  T2.nationality
+FROM constructorResults AS T1
+INNER JOIN constructors AS T2
+  ON T1.constructorId = T2.constructorId
+INNER JOIN races AS T3
+  ON T3.raceid = T1.raceid
+WHERE
+  T3.name = 'Monaco Grand Prix' AND T3.year BETWEEN 1980 AND 2010
+GROUP BY
+  T2.name,
+  T2.nationality
+ORDER BY
+  CASE WHEN SUM(T1.points) IS NULL THEN 1 ELSE 0 END DESC, SUM(T1.points) DESC
+LIMIT 1;
+
+SELECT
+  T2.forename,
+  T2.surname
+FROM qualifying AS T1
+INNER JOIN drivers AS T2
+  ON T1.driverId = T2.driverId
+INNER JOIN races AS T3
+  ON T1.raceid = T3.raceid
+WHERE
+  NOT q3 IS NULL
+  AND T3.year = 2008
+  AND T3.circuitId IN (
+    SELECT
+      circuitId
+    FROM circuits
+    WHERE
+      name = 'Marina Bay Street Circuit'
+  )
+ORDER BY
+  CASE WHEN CAST(SPLIT_PART(q3, ':', 1) AS SIGNED) * 60 + CAST(SPLIT_PART(SPLIT_PART(q3, ':', 2), '.', 1) AS FLOAT) + CAST(SPLIT_PART(q3, '.', 2) AS FLOAT) / 1000 IS NULL THEN 1 ELSE 0 END, CAST(SPLIT_PART(q3, ':', 1) AS SIGNED) * 60 + CAST(SPLIT_PART(SPLIT_PART(q3, ':', 2), '.', 1) AS FLOAT) + CAST(SPLIT_PART(q3, '.', 2) AS FLOAT) / 1000 ASC
+LIMIT 1;
+
+SELECT
+  T1.forename,
+  T1.surname,
+  T1.nationality,
+  T3.name
+FROM drivers AS T1
+INNER JOIN driverStandings AS T2
+  ON T1.driverId = T2.driverId
+INNER JOIN races AS T3
+  ON T2.raceId = T3.raceId
+WHERE
+  NOT T1.dob IS NULL
+ORDER BY
+  CASE WHEN T1.dob IS NULL THEN 1 ELSE 0 END DESC, T1.dob DESC
+LIMIT 1;
+
+SELECT
+  COUNT(T1.driverId)
+FROM results AS T1
+INNER JOIN races AS T2
+  ON T1.raceId = T2.raceId
+INNER JOIN status AS T3
+  ON T1.statusId = T3.statusId
+WHERE
+  T3.statusId = 3 AND T2.name = 'Canadian Grand Prix'
+GROUP BY
+  T1.driverId
+ORDER BY
+  COUNT(T1.driverId) DESC
+LIMIT 1;
+
+WITH lap_times_in_seconds AS (
+  SELECT
+    driverId,
+    (
+      CASE
+        WHEN SPLIT_PART(time, ':', 1) <> ''
+        THEN CAST(SPLIT_PART(time, ':', 1) AS DOUBLE) * 60
+        ELSE 0
+      END + CASE
+        WHEN SPLIT_PART(SPLIT_PART(time, ':', 2), '.', 1) <> ''
+        THEN CAST(SPLIT_PART(SPLIT_PART(time, ':', 2), '.', 1) AS DOUBLE)
+        ELSE 0
+      END + CASE
+        WHEN SPLIT_PART(SPLIT_PART(time, ':', 2), '.', 2) <> ''
+        THEN CAST(SPLIT_PART(SPLIT_PART(time, ':', 2), '.', 2) AS DOUBLE) / 1000
+        ELSE 0
+      END
+    ) AS time_in_seconds
+  FROM lapTimes
+)
+SELECT
+  T2.forename,
+  T2.surname,
+  T1.driverId
+FROM (
+  SELECT
+    driverId,
+    MIN(time_in_seconds) AS min_time_in_seconds
+  FROM lap_times_in_seconds
+  GROUP BY
+    driverId
+) AS T1
+INNER JOIN drivers AS T2
+  ON T1.driverId = T2.driverId
+ORDER BY
+  CASE WHEN T1.min_time_in_seconds IS NULL THEN 1 ELSE 0 END, T1.min_time_in_seconds ASC
+LIMIT 20;
+
+WITH fastest_lap_times AS (
+  SELECT
+    T1.raceId,
+    T1.FastestLapTime,
+    (
+      CAST(SPLIT_PART(T1.FastestLapTime, ':', 1) AS FLOAT) * 60
+    ) + (
+      CAST(SPLIT_PART(SPLIT_PART(T1.FastestLapTime, ':', 2), '.', 1) AS FLOAT)
+    ) + (
+      CAST(SPLIT_PART(T1.FastestLapTime, '.', 2) AS FLOAT) / 1000
+    ) AS time_in_seconds
+  FROM results AS T1
+  WHERE
+    NOT T1.FastestLapTime IS NULL
+)
+SELECT
+  T1.FastestLapTime AS lap_record
+FROM results AS T1
+INNER JOIN races AS T2
+  ON T1.raceId = T2.raceId
+INNER JOIN circuits AS T3
+  ON T2.circuitId = T3.circuitId
+INNER JOIN (
+  SELECT
+    MIN(fastest_lap_times.time_in_seconds) AS min_time_in_seconds
+  FROM fastest_lap_times
+  INNER JOIN races AS T2
+    ON fastest_lap_times.raceId = T2.raceId
+  INNER JOIN circuits AS T3
+    ON T2.circuitId = T3.circuitId
+  WHERE
+    T3.country = 'Italy'
+) AS T4
+  ON (
+    CAST(SPLIT_PART(T1.FastestLapTime, ':', 1) AS FLOAT) * 60
+  ) + (
+    CAST(SPLIT_PART(SPLIT_PART(T1.FastestLapTime, ':', 2), '.', 1) AS FLOAT)
+  ) + (
+    CAST(SPLIT_PART(T1.FastestLapTime, '.', 2) AS FLOAT) / 1000
+  ) = T4.min_time_in_seconds
+LIMIT 1;
+
+SELECT
+  COUNT(T1.id)
+FROM superhero AS T1
+INNER JOIN hero_power AS T2
+  ON T1.id = T2.hero_id
+INNER JOIN superpower AS T3
+  ON T2.power_id = T3.id
+INNER JOIN colour AS T4
+  ON T1.eye_colour_id = T4.id
+WHERE
+  T3.power_name = 'Agility' AND T4.colour = 'Blue';
+
+SELECT
+  superhero_name,
+  height_cm,
+  RANK() OVER (ORDER BY height_cm DESC) AS HeightRank
+FROM superhero
+INNER JOIN publisher
+  ON superhero.publisher_id = publisher.id
+WHERE
+  publisher.publisher_name = 'Marvel Comics';
+
+SELECT
+  colour.colour AS EyeColor,
+  COUNT(superhero.id) AS Count,
+  RANK() OVER (ORDER BY COUNT(superhero.id) DESC) AS PopularityRank
+FROM superhero
+INNER JOIN colour
+  ON superhero.eye_colour_id = colour.id
+INNER JOIN publisher
+  ON superhero.publisher_id = publisher.id
+WHERE
+  publisher.publisher_name = 'Marvel Comics'
+GROUP BY
+  colour.colour;
+
+SELECT
+  T2.publisher_name
+FROM superhero AS T1
+INNER JOIN publisher AS T2
+  ON T1.publisher_id = T2.id
+INNER JOIN hero_attribute AS T3
+  ON T1.id = T3.hero_id
+INNER JOIN attribute AS T4
+  ON T3.attribute_id = T4.id
+WHERE
+  T4.attribute_name = 'Speed'
+ORDER BY
+  T3.attribute_value
+LIMIT 1;
+
+SELECT
+  T1.superhero_name
+FROM superhero AS T1
+INNER JOIN hero_attribute AS T2
+  ON T1.id = T2.hero_id
+INNER JOIN attribute AS T3
+  ON T2.attribute_id = T3.id
+WHERE
+  T3.attribute_name = 'Intelligence'
+ORDER BY
+  T2.attribute_value
+LIMIT 1;
+
+SELECT
+  superhero_name
+FROM superhero AS T1
+WHERE
+  EXISTS(
+    SELECT
+      1
+    FROM hero_attribute AS T2
+    INNER JOIN attribute AS T3
+      ON T2.attribute_id = T3.id
+    WHERE
+      T3.attribute_name = 'Durability'
+      AND T2.attribute_value < 50
+      AND T1.id = T2.hero_id
+  );
+
+SELECT
+  COUNT(T1.id)
+FROM superhero AS T1
+INNER JOIN hero_attribute AS T2
+  ON T1.id = T2.hero_id
+INNER JOIN attribute AS T3
+  ON T2.attribute_id = T3.id
+INNER JOIN gender AS T4
+  ON T1.gender_id = T4.id
+WHERE
+  T3.attribute_name = 'Strength'
+  AND T2.attribute_value = 100
+  AND T4.gender = 'Female';
+
+SELECT
+  SUM(CASE WHEN T2.publisher_name = 'Marvel Comics' THEN 1 ELSE 0 END) - SUM(CASE WHEN T2.publisher_name = 'DC Comics' THEN 1 ELSE 0 END)
+FROM superhero AS T1
+INNER JOIN publisher AS T2
+  ON T1.publisher_id = T2.id;
+
+SELECT
+  COUNT(id)
+FROM superhero
+WHERE
+  full_name IS NULL;
+
+SELECT
+  T3.power_name
+FROM superhero AS T1
+INNER JOIN hero_power AS T2
+  ON T1.id = T2.hero_id
+INNER JOIN superpower AS T3
+  ON T3.id = T2.power_id
+INNER JOIN gender AS T4
+  ON T4.id = T1.gender_id
+WHERE
+  T4.gender = 'Male'
+LIMIT 5;
+
+SELECT DISTINCT
+  T3.colour
+FROM superhero AS T1
+INNER JOIN race AS T2
+  ON T1.race_id = T2.id
+INNER JOIN colour AS T3
+  ON T1.hair_colour_id = T3.id
+WHERE
+  T1.height_cm = 185 AND T2.race = 'Human';
+
+SELECT
+  T1.superhero_name
+FROM superhero AS T1
+INNER JOIN gender AS T2
+  ON T1.gender_id = T2.id
+WHERE
+  T2.gender = 'Male'
+  AND T1.weight_kg * 100 > (
+    SELECT
+      AVG(weight_kg)
+    FROM superhero
+  ) * 79;
+
+SELECT
+  COUNT(T1.hero_id)
+FROM hero_power AS T1
+INNER JOIN superpower AS T2
+  ON T1.power_id = T2.id
+WHERE
+  T2.power_name = 'Stealth';
+
+SELECT
+  T1.full_name
+FROM superhero AS T1
+INNER JOIN hero_attribute AS T2
+  ON T1.id = T2.hero_id
+INNER JOIN attribute AS T3
+  ON T2.attribute_id = T3.id
+WHERE
+  T3.attribute_name = 'Strength'
+ORDER BY
+  T2.attribute_value DESC
+LIMIT 1;
+
+SELECT
+  T1.superhero_name
+FROM superhero AS T1
+INNER JOIN hero_attribute AS T2
+  ON T1.id = T2.hero_id
+INNER JOIN attribute AS T3
+  ON T3.id = T2.attribute_id
+INNER JOIN publisher AS T4
+  ON T4.id = T1.publisher_id
+WHERE
+  T4.publisher_name = 'Dark Horse Comics' AND T3.attribute_name = 'Durability'
+ORDER BY
+  T2.attribute_value DESC
+LIMIT 1;
+
+SELECT
+  T1.superhero_name,
+  T2.publisher_name
+FROM superhero AS T1
+INNER JOIN publisher AS T2
+  ON T1.publisher_id = T2.id
+WHERE
+  T1.eye_colour_id = T1.hair_colour_id AND T1.eye_colour_id = T1.skin_colour_id;
+
+SELECT
+  COUNT(T1.power_id)
+FROM hero_power AS T1
+INNER JOIN superhero AS T2
+  ON T1.hero_id = T2.id
+WHERE
+  T2.superhero_name = 'Amazo';
+
+SELECT
+  T1.superhero_name
+FROM superhero AS T1
+INNER JOIN colour AS T2
+  ON T1.eye_colour_id = T2.id AND T1.hair_colour_id = T2.id
+WHERE
+  T2.colour = 'Black';
+
+SELECT
+  COUNT(T1.hero_id)
+FROM hero_attribute AS T1
+INNER JOIN attribute AS T2
+  ON T1.attribute_id = T2.id
+WHERE
+  T2.attribute_name = 'Strength'
+  AND T1.attribute_value = (
+    SELECT
+      MAX(attribute_value)
+    FROM hero_attribute
+  );
+
+SELECT
+  (
+    SELECT
+      weight_kg
+    FROM superhero
+    WHERE
+      full_name LIKE 'Emil Blonsky'
+  ) - (
+    SELECT
+      weight_kg
+    FROM superhero
+    WHERE
+      full_name LIKE 'Charles Chandler'
+  ) AS CALCULATE;
+
+SELECT
+  T3.power_name
+FROM superhero AS T1
+INNER JOIN hero_power AS T2
+  ON T1.id = T2.hero_id
+INNER JOIN superpower AS T3
+  ON T2.power_id = T3.id
+WHERE
+  T1.superhero_name = 'Abomination';
+
+SELECT
+  T1.superhero_name
+FROM superhero AS T1
+INNER JOIN hero_attribute AS T2
+  ON T1.id = T2.hero_id
+INNER JOIN attribute AS T3
+  ON T2.attribute_id = T3.id
+WHERE
+  T3.attribute_name = 'Speed'
+ORDER BY
+  T2.attribute_value DESC
+LIMIT 1;
+
+SELECT
+  T1.superhero_name
+FROM superhero AS T1
+INNER JOIN colour AS T2
+  ON T1.eye_colour_id = T2.id
+INNER JOIN colour AS T3
+  ON T1.hair_colour_id = T3.id
+WHERE
+  T2.colour = 'Blue' AND T3.colour = 'Brown';
+
+SELECT
+  CAST(COUNT(CASE WHEN T2.colour = 'Blue' THEN 1 ELSE NULL END) AS FLOAT) * 100 / NULLIF(COUNT(T1.id), 0)
+FROM superhero AS T1
+INNER JOIN colour AS T2
+  ON T1.eye_colour_id = T2.id;
+
+SELECT
+  T2.colour
+FROM superhero AS T1
+INNER JOIN colour AS T2
+  ON T1.eye_colour_id = T2.id
+WHERE
+  T1.full_name = 'Karen Beecher-Duncan';
+
+SELECT
+  COUNT(T1.id)
+FROM superhero AS T1
+INNER JOIN alignment AS T2
+  ON T1.alignment_id = T2.id
+INNER JOIN colour AS T3
+  ON T1.skin_colour_id = T3.id
+WHERE
+  T2.alignment = 'Bad' AND T3.colour = 'Green';
+
+SELECT
+  T1.superhero_name
+FROM superhero AS T1
+INNER JOIN hero_power AS T2
+  ON T1.id = T2.hero_id
+INNER JOIN superpower AS T3
+  ON T2.power_id = T3.id
+WHERE
+  T3.power_name = 'Wind Control'
+ORDER BY
+  T1.superhero_name;
+
+SELECT
+  SUM(CASE WHEN T2.publisher_name = 'DC Comics' THEN 1 ELSE 0 END) - SUM(CASE WHEN T2.publisher_name = 'Marvel Comics' THEN 1 ELSE 0 END)
+FROM superhero AS T1
+INNER JOIN publisher AS T2
+  ON T1.publisher_id = T2.id;
+
+SELECT
+  DisplayName
+FROM users
+WHERE
+  DATE_FORMAT(CAST(CreationDate AS DATETIME), '%Y') = '2011';
+
+SELECT
+  T2.DisplayName
+FROM posts AS T1
+INNER JOIN users AS T2
+  ON T1.OwnerUserId = T2.Id
+WHERE
+  T1.Title = 'Eliciting priors from experts';
+
+SELECT
+  T2.DisplayName
+FROM posts AS T1
+INNER JOIN users AS T2
+  ON T1.LastEditorUserId = T2.Id
+WHERE
+  T1.Title = 'Examples for teaching: Correlation does not mean causation';
+
+SELECT
+  T2.Body
+FROM tags AS T1
+INNER JOIN posts AS T2
+  ON T2.Id = T1.ExcerptPostId
+WHERE
+  T1.TagName = 'bayesian';
+
+SELECT
+  CAST(SUM(CASE WHEN T2.Age > 65 THEN 1 ELSE 0 END) AS FLOAT) * 100 / NULLIF(COUNT(T1.Id), 0)
+FROM posts AS T1
+INNER JOIN users AS T2
+  ON T1.OwnerUserId = T2.Id
+WHERE
+  T1.Score > 5;
+
+SELECT
+  CASE WHEN T2.ClosedDate IS NULL THEN 'NOT well-finished' ELSE 'well-finished' END AS resylt
+FROM comments AS T1
+INNER JOIN posts AS T2
+  ON T1.PostId = T2.Id
+WHERE
+  T1.UserId = 23853 AND T1.CreationDate = '2013-07-12 09:08:18.0';
+
+SELECT
+  T1.DisplayName
+FROM users AS T1
+INNER JOIN votes AS T2
+  ON T1.Id = T2.UserId
+WHERE
+  T2.Id = 6347;
+
+SELECT
+  ViewCount
+FROM posts
+WHERE
+  Title = 'Integration of Weka and/or RapidMiner into Informatica PowerCenter/Developer';
+
+SELECT
+  T1.DisplayName
+FROM users AS T1
+INNER JOIN comments AS T2
+  ON T1.Id = T2.UserId
+WHERE
+  T2.Text = 'thank you user93!';
+
+SELECT
+  T2.DisplayName
+FROM posts AS T1
+INNER JOIN users AS T2
+  ON T1.OwnerUserId = T2.Id
+WHERE
+  T1.Title = 'Open source tools for visualizing multi-dimensional data?';
+
+SELECT
+  T3.DisplayName,
+  T1.Title
+FROM posts AS T1
+INNER JOIN votes AS T2
+  ON T1.Id = T2.PostId
+INNER JOIN users AS T3
+  ON T3.Id = T2.UserId
+WHERE
+  T2.BountyAmount = 50 AND T1.Title LIKE '%variance%';
+
+SELECT
+  COUNT(UserId)
+FROM (
+  SELECT
+    UserId,
+    COUNT(Name) AS num
+  FROM badges
+  GROUP BY
+    UserId
+) AS T
+WHERE
+  T.num > 5;
+
+SELECT
+  CAST(SUM(CASE WHEN DATE_FORMAT(CAST(Date AS DATETIME), '%Y') = '2010' THEN 1 ELSE 0 END) AS FLOAT) * 100 / NULLIF(COUNT(Id), 0) - CAST(SUM(CASE WHEN DATE_FORMAT(CAST(Date AS DATETIME), '%Y') = '2011' THEN 1 ELSE 0 END) AS FLOAT) * 100 / NULLIF(COUNT(Id), 0)
+FROM badges
+WHERE
+  Name = 'Student';
+
+SELECT
+  CAST(SUM(
+    CASE
+      WHEN DATE_FORMAT(CAST(CreationDate AS DATETIME), '%Y') = '2010'
+      THEN 1
+      ELSE 0
+    END
+  ) AS FLOAT) / NULLIF(
+    SUM(
+      CASE
+        WHEN DATE_FORMAT(CAST(CreationDate AS DATETIME), '%Y') = '2011'
+        THEN 1
+        ELSE 0
+      END
+    ),
+    0
+  )
+FROM votes;
+
+SELECT
+  T2.PostId
+FROM users AS T1
+INNER JOIN postHistory AS T2
+  ON T1.Id = T2.UserId
+INNER JOIN posts AS T3
+  ON T2.PostId = T3.Id
+WHERE
+  T1.DisplayName = 'slashnick'
+ORDER BY
+  T3.AnswerCount DESC
+LIMIT 1;
+
+SELECT
+  T1.DisplayName
+FROM users AS T1
+INNER JOIN postHistory AS T2
+  ON T1.Id = T2.UserId
+INNER JOIN posts AS T3
+  ON T2.PostId = T3.Id
+WHERE
+  T1.DisplayName = 'Harvey Motulsky' OR T1.DisplayName = 'Noah Snyder'
+GROUP BY
+  T1.DisplayName
+ORDER BY
+  SUM(T3.ViewCount) DESC
+LIMIT 1;
+
+SELECT
+  CAST(SUM(CASE WHEN T3.TagName = 'r' THEN 1 ELSE 0 END) AS FLOAT) * 100 / NULLIF(COUNT(T1.Id), 0)
+FROM users AS T1
+INNER JOIN postHistory AS T2
+  ON T1.Id = T2.UserId
+INNER JOIN tags AS T3
+  ON T3.ExcerptPostId = T2.PostId
+WHERE
+  T1.DisplayName = 'Community';
+
+SELECT
+  CAST(COUNT(T1.Id) AS FLOAT) / NULLIF(12, 0)
+FROM postLinks AS T1
+INNER JOIN posts AS T2
+  ON T1.PostId = T2.Id
+WHERE
+  T2.AnswerCount <= 2
+  AND DATE_FORMAT(CAST(T1.CreationDate AS DATETIME), '%Y') = '2010';
+
+SELECT
+  T2.CreationDate
+FROM users AS T1
+INNER JOIN votes AS T2
+  ON T1.Id = T2.UserId
+WHERE
+  T1.DisplayName = 'chl'
+ORDER BY
+  T2.CreationDate
+LIMIT 1;
+
+SELECT
+  COUNT(T1.Id)
+FROM users AS T1
+INNER JOIN posts AS T2
+  ON T1.Id = T2.OwnerUserId
+WHERE
+  T1.Location = 'United Kingdom' AND T2.FavoriteCount >= 4;
+
+SELECT
+  T2.Id,
+  T2.Title
+FROM users AS T1
+INNER JOIN posts AS T2
+  ON T1.Id = T2.OwnerUserId
+WHERE
+  T1.DisplayName = 'Harvey Motulsky'
+ORDER BY
+  T2.ViewCount DESC
+LIMIT 1;
+
+SELECT
+  T2.OwnerUserId,
+  T1.DisplayName
+FROM users AS T1
+INNER JOIN posts AS T2
+  ON T1.Id = T2.OwnerUserId
+WHERE
+  DATE_FORMAT(CAST(T1.CreationDate AS DATETIME), '%Y') = '2010'
+ORDER BY
+  T2.FavoriteCount DESC
+LIMIT 1;
+
+SELECT
+  CAST(SUM(
+    CASE
+      WHEN DATE_FORMAT(CAST(T2.CreaionDate AS DATETIME), '%Y') = '2011'
+      AND T1.Reputation > 1000
+      THEN 1
+      ELSE 0
+    END
+  ) AS FLOAT) * 100 / NULLIF(COUNT(T1.Id), 0)
+FROM users AS T1
+INNER JOIN posts AS T2
+  ON T1.Id = T2.OwnerUserId;
+
+SELECT
+  COUNT(T2.Id)
+FROM posts AS T1
+INNER JOIN comments AS T2
+  ON T1.Id = T2.PostId
+GROUP BY
+  T1.Id
+ORDER BY
+  T1.Score DESC
+LIMIT 1;
+
+SELECT
+  T3.Text,
+  T1.DisplayName
+FROM users AS T1
+INNER JOIN posts AS T2
+  ON T1.Id = T2.OwnerUserId
+INNER JOIN comments AS T3
+  ON T2.Id = T3.PostId
+WHERE
+  T2.Title = 'Analysing wind data with R'
+ORDER BY
+  T1.CreationDate DESC
+LIMIT 10;
+
+SELECT
+  ExcerptPostId,
+  WikiPostId
+FROM tags
+WHERE
+  TagName = 'sample';
+
+SELECT
+  Text
+FROM comments
+WHERE
+  PostId IN (
+    SELECT
+      Id
+    FROM posts
+    WHERE
+      ViewCount BETWEEN 100 AND 150
+  )
+ORDER BY
+  Score DESC
+LIMIT 1;
+
+SELECT
+  CAST(SUM(CASE WHEN T1.UpVotes = 0 THEN 1 ELSE 0 END) AS FLOAT) * 100 / NULLIF(COUNT(T1.Id), 0) AS per
+FROM users AS T1
+INNER JOIN comments AS T2
+  ON T1.Id = T2.UserId
+WHERE
+  T2.Score BETWEEN 5 AND 10;
+
+SELECT
+  id
+FROM cards
+WHERE
+  borderColor = 'borderless'
+  AND (
+    cardKingdomId IS NULL OR cardKingdomId IS NULL
+  );
+
+SELECT DISTINCT
+  T2.status
+FROM cards AS T1
+INNER JOIN legalities AS T2
+  ON T1.uuid = T2.uuid
+WHERE
+  T1.type = 'Artifact' AND T2.format = 'vintage' AND T1.side IS NULL;
+
+SELECT
+  T1.id,
+  T2.text,
+  T1.hasContentWarning
+FROM cards AS T1
+INNER JOIN rulings AS T2
+  ON T1.uuid = T2.uuid
+WHERE
+  T1.artist = 'Stephen Daniele';
+
+SELECT
+  CAST(SUM(CASE WHEN T2.language = 'Chinese Simplified' THEN 1 ELSE 0 END) AS FLOAT) * 100 / NULLIF(COUNT(T1.id), 0)
+FROM cards AS T1
+INNER JOIN foreign_data AS T2
+  ON T1.uuid = T2.uuid;
+
+SELECT DISTINCT
+  borderColor
+FROM cards
+WHERE
+  name = 'Ancestor''s Chosen';
+
+SELECT
+  CAST(SUM(CASE WHEN borderColor = 'borderless' THEN 1 ELSE 0 END) AS FLOAT) * 100 / NULLIF(COUNT(id), 0)
+FROM cards;
+
+SELECT
+  COUNT(id)
+FROM cards
+WHERE
+  originalType = 'Summon - Angel' AND subtypes <> 'Angel';
+
+SELECT
+  COUNT(T1.id)
+FROM cards AS T1
+INNER JOIN legalities AS T2
+  ON T1.uuid = T2.uuid
+WHERE
+  T2.status = 'Banned' AND T1.borderColor = 'white';
+
+SELECT
+  manaCost
+FROM cards
+WHERE
+  availability = 'mtgo,paper'
+  AND borderColor = 'black'
+  AND frameVersion = '2003'
+  AND layout = 'normal';
+
+SELECT
+  COUNT(T1.id)
+FROM sets AS T1
+INNER JOIN set_translations AS T2
+  ON T1.code = T2.setCode
+WHERE
+  T2.language = 'Portuguese (Brazil)' AND T1.block = 'Commander';
+
+SELECT
+  COUNT(DISTINCT T1.id)
+FROM cards AS T1
+INNER JOIN rulings AS T2
+  ON T1.uuid = T2.uuid
+WHERE
+  (
+    T1.power IS NULL OR T1.power = '*'
+  ) AND T2.text LIKE '%triggered ability%';
+
+SELECT
+  name
+FROM foreign_data
+WHERE
+  uuid IN (
+    SELECT
+      uuid
+    FROM cards
+    WHERE
+      types = 'Creature'
+      AND layout = 'normal'
+      AND borderColor = 'black'
+      AND artist = 'Matthew D. Wilson'
+  )
+  AND language = 'French';
+
+SELECT
+  CAST(SUM(CASE WHEN T1.hasContentWarning = 0 THEN 1 ELSE 0 END) AS FLOAT) * 100 / NULLIF(COUNT(T1.id), 0)
+FROM cards AS T1
+INNER JOIN legalities AS T2
+  ON T1.uuid = T2.uuid
+WHERE
+  T2.format = 'commander' AND T2.status = 'Legal';
+
+SELECT
+  language
+FROM foreign_data
+WHERE
+  multiverseid = 149934;
+
+SELECT
+  T2.language
+FROM sets AS T1
+INNER JOIN set_translations AS T2
+  ON T1.code = T2.setCode
+WHERE
+  T1.mcmName = 'Archenemy' AND T2.setCode = 'ARC';
+
+SELECT
+  name
+FROM cards
+WHERE
+  name IN ('Serra Angel', 'Shrine Keeper')
+ORDER BY
+  convertedManaCost DESC
+LIMIT 1;
+
+SELECT
+  CASE
+    WHEN SUM(
+      CASE WHEN T2.language = 'Korean' AND NOT T2.translation IS NULL THEN 1 ELSE 0 END
+    ) > 0
+    THEN 'YES'
+    ELSE 'NO'
+  END
+FROM cards AS T1
+INNER JOIN set_translations AS T2
+  ON T2.setCode = T1.setCode
+WHERE
+  T1.name = 'Ancestor''s Chosen';
+
+SELECT
+  T2.translation
+FROM sets AS T1
+INNER JOIN set_translations AS T2
+  ON T2.setCode = T1.code
+WHERE
+  T1.name = 'Eighth Edition' AND T2.language = 'Chinese Simplified';
+
+SELECT
+  COUNT(DISTINCT T1.id)
+FROM sets AS T1
+INNER JOIN set_translations AS T2
+  ON T2.setCode = T1.code
+WHERE
+  T1.block = 'Ice Age' AND T2.language = 'Italian' AND NOT T2.translation IS NULL;
+
+SELECT
+  COUNT(T1.id)
+FROM sets AS T1
+INNER JOIN set_translations AS T2
+  ON T2.setCode = T1.code
+WHERE
+  NOT T2.translation IS NULL AND T1.baseSetSize < 100 AND T2.language = 'Italian';
+
+SELECT
+  SUM(CASE WHEN T1.power = '*' OR T1.power IS NULL THEN 1 ELSE 0 END)
+FROM cards AS T1
+INNER JOIN sets AS T2
+  ON T2.code = T1.setCode
+WHERE
+  T2.name = 'Coldsnap' AND T1.convertedManaCost > 5;
+
+SELECT DISTINCT
+  T1.text
+FROM foreign_data AS T1
+INNER JOIN cards AS T2
+  ON T2.uuid = T1.uuid
+INNER JOIN sets AS T3
+  ON T3.code = T2.setCode
+WHERE
+  T3.name = 'Coldsnap' AND T1.language = 'Italian';
+
+SELECT
+  T2.name
+FROM foreign_data AS T1
+INNER JOIN cards AS T2
+  ON T2.uuid = T1.uuid
+INNER JOIN sets AS T3
+  ON T3.code = T2.setCode
+WHERE
+  T3.name = 'Coldsnap' AND T1.language = 'Italian'
+ORDER BY
+  T2.convertedManaCost DESC;
+
+SELECT
+  CAST(SUM(
+    CASE
+      WHEN NOT T1.cardKingdomFoilId IS NULL AND NOT T1.cardKingdomId IS NULL
+      THEN 1
+      ELSE 0
+    END
+  ) AS FLOAT) * 100 / NULLIF(COUNT(T1.id), 0)
+FROM cards AS T1
+INNER JOIN sets AS T2
+  ON T2.code = T1.setCode
+WHERE
+  T2.name = 'Coldsnap';
+
+SELECT
+  T1.name,
+  T2.format
+FROM cards AS T1
+INNER JOIN legalities AS T2
+  ON T2.uuid = T1.uuid
+WHERE
+  T1.edhrecRank = 1 AND T2.status = 'Banned'
+GROUP BY
+  T1.name,
+  T2.format;
+
+SELECT
+  name
+FROM sets
+WHERE
+  code IN (
+    SELECT
+      setCode
+    FROM set_translations
+    WHERE
+      language = 'Korean' AND NOT language LIKE '%Japanese%'
+  );
+
+SELECT
+  T.bond_type
+FROM (
+  SELECT
+    bond_type,
+    COUNT(bond_id)
+  FROM bond
+  GROUP BY
+    bond_type
+  ORDER BY
+    COUNT(bond_id) DESC
+  LIMIT 1
+) AS T;
+
+SELECT
+  AVG(single_bond_count)
+FROM (
+  SELECT
+    T3.molecule_id,
+    COUNT(T1.bond_type) AS single_bond_count
+  FROM bond AS T1
+  INNER JOIN atom AS T2
+    ON T1.molecule_id = T2.molecule_id
+  INNER JOIN molecule AS T3
+    ON T3.molecule_id = T2.molecule_id
+  WHERE
+    T1.bond_type = '-' AND T3.label = '+'
+  GROUP BY
+    T3.molecule_id
+) AS subquery;
+
+SELECT
+  CAST(COUNT(DISTINCT CASE WHEN T1.element = 'c' THEN T1.atom_id ELSE NULL END) AS FLOAT) * 100 / NULLIF(COUNT(DISTINCT T1.atom_id), 0)
+FROM atom AS T1
+INNER JOIN bond AS T2
+  ON T1.molecule_id = T2.molecule_id
+WHERE
+  T2.bond_type = '=';
+
+SELECT DISTINCT
+  T1.element
+FROM atom AS T1
+INNER JOIN bond AS T2
+  ON T1.molecule_id = T2.molecule_id
+INNER JOIN connected AS T3
+  ON T1.atom_id = T3.atom_id
+WHERE
+  T2.bond_type = '=';
+
+SELECT
+  T.label
+FROM (
+  SELECT
+    T2.label,
+    COUNT(T2.molecule_id)
+  FROM atom AS T1
+  INNER JOIN molecule AS T2
+    ON T1.molecule_id = T2.molecule_id
+  WHERE
+    T1.element = 'h'
+  GROUP BY
+    T2.label
+  ORDER BY
+    COUNT(T2.molecule_id) DESC
+  LIMIT 1
+) AS t;
+
+SELECT
+  T.element
+FROM (
+  SELECT
+    T1.element,
+    COUNT(DISTINCT T1.molecule_id)
+  FROM atom AS T1
+  INNER JOIN molecule AS T2
+    ON T1.molecule_id = T2.molecule_id
+  WHERE
+    T2.label = '-'
+  GROUP BY
+    T1.element
+  ORDER BY
+    COUNT(DISTINCT T1.molecule_id) ASC
+  LIMIT 1
+) AS t;
+
+SELECT
+  COUNT(DISTINCT CASE WHEN T1.element = 'i' THEN T1.atom_id ELSE NULL END) AS iodine_nums,
+  COUNT(DISTINCT CASE WHEN T1.element = 's' THEN T1.atom_id ELSE NULL END) AS sulfur_nums
+FROM atom AS T1
+INNER JOIN connected AS T2
+  ON T1.atom_id = T2.atom_id
+INNER JOIN bond AS T3
+  ON T2.bond_id = T3.bond_id
+WHERE
+  T3.bond_type = '-';
+
+SELECT
+  CAST(COUNT(DISTINCT CASE WHEN T2.label = '+' THEN T2.molecule_id ELSE NULL END) AS FLOAT) * 100 / NULLIF(COUNT(DISTINCT T2.molecule_id), 0)
+FROM atom AS T1
+INNER JOIN molecule AS T2
+  ON T1.molecule_id = T2.molecule_id
+INNER JOIN bond AS T3
+  ON T2.molecule_id = T3.molecule_id
+WHERE
+  T3.bond_type = '#';
+
+SELECT DISTINCT
+  T.element
+FROM atom AS T
+WHERE
+  T.molecule_id = 'TR000'
+ORDER BY
+  T.element
+LIMIT 3;
+
+SELECT
+  ROUND(
+    CAST(COUNT(CASE WHEN T.bond_type = '=' THEN T.bond_id ELSE NULL END) AS DECIMAL) * 100 / CAST(COUNT(T.bond_id) AS DECIMAL),
+    5
+  ) AS percentage
+FROM bond AS T
+WHERE
+  T.molecule_id = 'TR008';
+
+SELECT
+  ROUND(
+    CAST((
+      CAST(COUNT(CASE WHEN t.label = '+' THEN t.molecule_id ELSE NULL END) AS FLOAT) / NULLIF(COUNT(t.molecule_id), 0) * 100
+    ) AS DECIMAL),
+    3
+  ) AS percentage
+FROM molecule AS t;
+
+SELECT
+  ROUND(
+    CAST((
+      CAST(COUNT(CASE WHEN T.element = 'h' THEN T.atom_id ELSE NULL END) AS FLOAT) * 100 / NULLIF(COUNT(T.atom_id), 0)
+    ) AS DECIMAL),
+    4
+  ) AS percentage
+FROM atom AS T
+WHERE
+  T.molecule_id = 'TR206';
+
+SELECT
+  T.bond_type
+FROM (
+  SELECT
+    T1.bond_type,
+    COUNT(T1.molecule_id)
+  FROM bond AS T1
+  WHERE
+    T1.molecule_id = 'TR010'
+  GROUP BY
+    T1.bond_type
+  ORDER BY
+    COUNT(T1.molecule_id) DESC
+  LIMIT 1
+) AS T;
+
+SELECT DISTINCT
+  T2.molecule_id
+FROM bond AS T1
+INNER JOIN molecule AS T2
+  ON T1.molecule_id = T2.molecule_id
+WHERE
+  T1.bond_type = '-' AND T2.label = '-'
+ORDER BY
+  T2.molecule_id
+LIMIT 3;
+
+SELECT
+  T1.bond_type,
+  T2.atom_id,
+  T2.atom_id2
+FROM bond AS T1
+INNER JOIN connected AS T2
+  ON T1.bond_id = T2.bond_id
+WHERE
+  T2.bond_id = 'TR001_6_9';
+
+SELECT DISTINCT
+  T.element
+FROM atom AS T
+WHERE
+  T.molecule_id = 'TR004';
+
+SELECT
+  T2.bond_id
+FROM atom AS T1
+INNER JOIN connected AS T2
+  ON T1.atom_id = T2.atom_id
+WHERE
+  T2.bond_id IN (
+    SELECT
+      T3.bond_id
+    FROM connected AS T3
+    INNER JOIN atom AS T4
+      ON T3.atom_id = T4.atom_id
+    WHERE
+      T4.element = 'p'
+  )
+  AND T1.element = 'n';
+
+SELECT
+  T1.label
+FROM molecule AS T1
+INNER JOIN (
+  SELECT
+    T.molecule_id,
+    COUNT(T.bond_type)
+  FROM bond AS T
+  WHERE
+    T.bond_type = '='
+  GROUP BY
+    T.molecule_id
+  ORDER BY
+    COUNT(T.bond_type) DESC
+  LIMIT 1
+) AS T2
+  ON T1.molecule_id = T2.molecule_id;
+
+SELECT DISTINCT
+  T.element
+FROM atom AS T
+WHERE
+  NOT T.element IN (
+    SELECT DISTINCT
+      T1.element
+    FROM atom AS T1
+    INNER JOIN connected AS T2
+      ON T1.atom_id = T2.atom_id
+  );
+
+SELECT
+  T2.element
+FROM connected AS T1
+INNER JOIN atom AS T2
+  ON T1.atom_id = T2.atom_id
+WHERE
+  T1.bond_id = 'TR144_8_19';
+
+SELECT
+  ROUND(
+    CAST((
+      CAST(COUNT(CASE WHEN T2.label = '+' THEN T1.bond_id ELSE NULL END) AS FLOAT) * 100 / NULLIF(COUNT(T1.bond_id), 0)
+    ) AS DECIMAL),
+    5
+  ) AS percentage
+FROM bond AS T1
+INNER JOIN molecule AS T2
+  ON T1.molecule_id = T2.molecule_id
+WHERE
+  T1.bond_type = '-';
+
+SELECT
+  CAST(COUNT(CASE WHEN T.element = 'cl' THEN T.atom_id ELSE NULL END) AS FLOAT) * 100 / NULLIF(COUNT(T.atom_id), 0)
+FROM (
+  SELECT
+    T1.atom_id,
+    T1.element
+  FROM atom AS T1
+  INNER JOIN molecule AS T2
+    ON T1.molecule_id = T2.molecule_id
+  INNER JOIN bond AS T3
+    ON T2.molecule_id = T3.molecule_id
+  WHERE
+    T3.bond_type = '-'
+) AS T;
+
+SELECT
+  CAST(COUNT(CASE WHEN T1.element = 'cl' THEN T1.element ELSE NULL END) AS FLOAT) * 100 / NULLIF(COUNT(T1.element), 0)
+FROM atom AS T1
+INNER JOIN molecule AS T2
+  ON T1.molecule_id = T2.molecule_id
+WHERE
+  T2.label = '+';
+
+WITH SubQuery AS (
+  SELECT DISTINCT
+    T1.atom_id,
+    T1.element,
+    T1.molecule_id,
+    T2.label
+  FROM atom AS T1
+  INNER JOIN molecule AS T2
+    ON T1.molecule_id = T2.molecule_id
+  WHERE
+    T2.molecule_id = 'TR006'
+)
+SELECT
+  CAST(COUNT(CASE WHEN element = 'h' THEN atom_id ELSE NULL END) AS FLOAT) / NULLIF(COUNT(atom_id), 0) AS ratio,
+  label
+FROM SubQuery
+GROUP BY
+  label;
+
+SELECT
+  COUNT(DISTINCT T2.School)
+FROM satscores AS T1
+INNER JOIN schools AS T2
+  ON T1.cds = T2.CDSCode
+WHERE
+  T2.`Virtual` = 'F' AND T1.AvgScrMath > 400;
+
+SELECT
+  T2.CDSCode
+FROM schools AS T1
+INNER JOIN frpm AS T2
+  ON T1.CDSCode = T2.CDSCode
+WHERE
+  T2.`Enrollment (K-12)` + T2.`Enrollment (Ages 5-17)` > 500;
+
+SELECT
+  MAX(
+    CAST(T1.`Free Meal Count (Ages 5-17)` AS FLOAT) / NULLIF(T1.`Enrollment (Ages 5-17)`, 0)
+  )
+FROM frpm AS T1
+INNER JOIN satscores AS T2
+  ON T1.CDSCode = T2.cds
+WHERE
+  CAST(T2.NumGE1500 AS FLOAT) / NULLIF(T2.NumTstTakr, 0) > 0.3;
+
+SELECT
+  CharterNum,
+  AvgScrWrite,
+  RANK() OVER (ORDER BY AvgScrWrite DESC) AS WritingScoreRank
+FROM schools AS T1
+INNER JOIN satscores AS T2
+  ON T1.CDSCode = T2.cds
+WHERE
+  T2.AvgScrWrite > 499 AND NOT CharterNum IS NULL;
+
+SELECT
+  T1.School,
+  T1.Street
+FROM schools AS T1
+INNER JOIN frpm AS T2
+  ON T1.CDSCode = T2.CDSCode
+WHERE
+  T2.`Enrollment (K-12)` - T2.`Enrollment (Ages 5-17)` > 30;
+
+SELECT
+  T2.`School Name`
+FROM satscores AS T1
+INNER JOIN frpm AS T2
+  ON T1.cds = T2.CDSCode
+WHERE
+  CAST(T2.`Free Meal Count (K-12)` AS FLOAT) / NULLIF(T2.`Enrollment (K-12)`, 0) > 0.1
+  AND T1.NumGE1500 > 0;
+
+SELECT
+  T1.sname,
+  T2.`Charter Funding Type`
+FROM satscores AS T1
+INNER JOIN frpm AS T2
+  ON T1.cds = T2.CDSCode
+WHERE
+  T2.`District Name` LIKE 'Riverside%'
+GROUP BY
+  T1.sname,
+  T2.`Charter Funding Type`
+HAVING
+  CAST(SUM(T1.AvgScrMath) AS FLOAT) / NULLIF(COUNT(T1.cds), 0) > 400;
+
+SELECT
+  T1.`School Name`,
+  T2.Street,
+  T2.City,
+  T2.State,
+  T2.Zip
+FROM frpm AS T1
+INNER JOIN schools AS T2
+  ON T1.CDSCode = T2.CDSCode
+WHERE
+  T2.County = 'Monterey'
+  AND T1.`Free Meal Count (Ages 5-17)` > 800
+  AND T1.`School Type` = 'High Schools (Public)';
+
+SELECT
+  T2.School,
+  T1.AvgScrWrite,
+  T2.Phone
+FROM schools AS T2
+LEFT JOIN satscores AS T1
+  ON T2.CDSCode = T1.cds
+WHERE
+  DATE_FORMAT(CAST(T2.OpenDate AS DATETIME), '%Y') > '1991'
+  OR DATE_FORMAT(CAST(T2.ClosedDate AS DATETIME), '%Y') < '2000';
+
+SELECT
+  T2.School,
+  T2.DOC
+FROM frpm AS T1
+INNER JOIN schools AS T2
+  ON T1.CDSCode = T2.CDSCode
+WHERE
+  T2.FundingType = 'Locally funded'
+  AND (
+    T1.`Enrollment (K-12)` - T1.`Enrollment (Ages 5-17)`
+  ) > (
+    SELECT
+      AVG(T3.`Enrollment (K-12)` - T3.`Enrollment (Ages 5-17)`)
+    FROM frpm AS T3
+    INNER JOIN schools AS T4
+      ON T3.CDSCode = T4.CDSCode
+    WHERE
+      T4.FundingType = 'Locally funded'
+  );
+
+SELECT
+  CAST(`Free Meal Count (K-12)` AS FLOAT) / NULLIF(`Enrollment (K-12)`, 0)
+FROM frpm
+ORDER BY
+  `Enrollment (K-12)` DESC
+LIMIT 2
+OFFSET 9;
+
+SELECT
+  CAST(T1.`FRPM Count (K-12)` AS FLOAT) / NULLIF(T1.`Enrollment (K-12)`, 0)
+FROM frpm AS T1
+INNER JOIN schools AS T2
+  ON T1.CDSCode = T2.CDSCode
+WHERE
+  CAST(T2.SOC AS SIGNED) = 66
+ORDER BY
+  T1.`FRPM Count (K-12)` DESC
+LIMIT 5;
+
+SELECT
+  T2.Street,
+  T2.City,
+  T2.State,
+  T2.Zip
+FROM satscores AS T1
+INNER JOIN schools AS T2
+  ON T1.cds = T2.CDSCode
+ORDER BY
+  CAST(T1.NumGE1500 AS FLOAT) / NULLIF(T1.NumTstTakr, 0) ASC
+LIMIT 1;
+
+SELECT
+  T2.AdmFName1,
+  T2.AdmLName1,
+  T2.AdmFName2,
+  T2.AdmLName2,
+  T2.AdmFName3,
+  T2.AdmLName3
+FROM satscores AS T1
+INNER JOIN schools AS T2
+  ON T1.cds = T2.CDSCode
+ORDER BY
+  T1.NumGE1500 DESC
+LIMIT 1;
+
+SELECT
+  AVG(T1.NumTstTakr)
+FROM satscores AS T1
+INNER JOIN schools AS T2
+  ON T1.cds = T2.CDSCode
+WHERE
+  DATE_FORMAT(CAST(T2.OpenDate AS DATETIME), '%Y') = '1980'
+  AND T2.County = 'Fresno';
+
+SELECT
+  T2.Phone
+FROM satscores AS T1
+INNER JOIN schools AS T2
+  ON T1.cds = T2.CDSCode
+WHERE
+  T2.District = 'Fresno Unified' AND NOT T1.AvgScrRead IS NULL
+ORDER BY
+  T1.AvgScrRead ASC
+LIMIT 1;
+
+SELECT
+  School
+FROM (
+  SELECT
+    T2.School,
+    T1.AvgScrRead,
+    RANK() OVER (PARTITION BY T2.County ORDER BY T1.AvgScrRead DESC) AS rnk
+  FROM satscores AS T1
+  INNER JOIN schools AS T2
+    ON T1.cds = T2.CDSCode
+  WHERE
+    T2.`Virtual` = 'F'
+) AS ranked_schools
+WHERE
+  rnk <= 5;
+
+SELECT
+  T2.School
+FROM frpm AS T1
+INNER JOIN schools AS T2
+  ON T1.CDSCode = T2.CDSCode
+WHERE
+  T2.DOC = '31'
+ORDER BY
+  CASE WHEN T1.`Enrollment (K-12)` IS NULL THEN 1 ELSE 0 END DESC, T1.`Enrollment (K-12)` DESC
+LIMIT 1;
+
+SELECT
+  CAST(SUM(CASE WHEN CAST(DOC AS SIGNED) = 54 THEN 1 ELSE 0 END) AS FLOAT) / NULLIF(SUM(CASE WHEN CAST(DOC AS SIGNED) = 52 THEN 1 ELSE 0 END), 0)
+FROM schools
+WHERE
+  StatusType = 'Merged' AND County = 'Orange';
+
+SELECT
+  T2.MailStreet,
+  T2.School
+FROM satscores AS T1
+INNER JOIN schools AS T2
+  ON T1.cds = T2.CDSCode
+ORDER BY
+  T1.AvgScrMath DESC
+LIMIT 1
+OFFSET 6;
+
+SELECT
+  COUNT(T2.School)
+FROM frpm AS T1
+INNER JOIN schools AS T2
+  ON T1.CDSCode = T2.CDSCode
+WHERE
+  T2.County = 'Los Angeles'
+  AND T2.Charter = 0
+  AND CAST(T1.`Free Meal Count (K-12)` AS FLOAT) * 100 / NULLIF(T1.`Enrollment (K-12)`, 0) < 0.18;
+
+SELECT
+  T1.`Enrollment (Ages 5-17)`
+FROM frpm AS T1
+INNER JOIN schools AS T2
+  ON T1.CDSCode = T2.CDSCode
+WHERE
+  T2.EdOpsCode = 'SSS' AND T2.City = 'Fremont' AND T1.`Academic Year` = '2014-2015';
+
+SELECT
+  T2.School,
+  T1.`FRPM Count (Ages 5-17)` * 100 / NULLIF(T1.`Enrollment (Ages 5-17)`, 0)
+FROM frpm AS T1
+INNER JOIN schools AS T2
+  ON T1.CDSCode = T2.CDSCode
+WHERE
+  T2.County = 'Los Angeles' AND T2.GSserved = 'K-9';
+
+SELECT
+  County,
+  COUNT(`Virtual`)
+FROM schools
+WHERE
+  (
+    County = 'San Diego' OR County = 'Santa Barbara'
+  ) AND `Virtual` = 'F'
+GROUP BY
+  County
+ORDER BY
+  COUNT(`Virtual`) DESC
+LIMIT 1;
+
+SELECT
+  GSoffered
+FROM schools
+ORDER BY
+  ABS(longitude) DESC
+LIMIT 1;
+
+SELECT
+  T2.City,
+  COUNT(T2.CDSCode)
+FROM frpm AS T1
+INNER JOIN schools AS T2
+  ON T1.CDSCode = T2.CDSCode
+WHERE
+  T2.Magnet = 1
+  AND T2.GSoffered = 'K-8'
+  AND T1.`NSLP Provision Status` = 'Multiple Provision Types'
+GROUP BY
+  T2.City;
+
+SELECT
+  T1.`Free Meal Count (K-12)` * 100 / NULLIF(T1.`Enrollment (K-12)`, 0),
+  T1.`District Code`
+FROM frpm AS T1
+INNER JOIN schools AS T2
+  ON T1.CDSCode = T2.CDSCode
+WHERE
+  T2.AdmFName1 = 'Alusine';
+
+SELECT
+  T2.AdmEmail1,
+  T2.AdmEmail2
+FROM frpm AS T1
+INNER JOIN schools AS T2
+  ON T1.CDSCode = T2.CDSCode
+WHERE
+  T2.County = 'San Bernardino'
+  AND T2.City = 'San Bernardino'
+  AND CAST(T2.DOC AS SIGNED) = 54
+  AND EXTRACT(YEAR FROM T2.OpenDate) BETWEEN 2009 AND 2010
+  AND CAST(T2.SOC AS SIGNED) = 62;
+
+SELECT
+  COUNT(DISTINCT T2.district_id)
+FROM client AS T1
+INNER JOIN district AS T2
+  ON T1.district_id = T2.district_id
+WHERE
+  T1.gender = 'F' AND T2.A11 BETWEEN 6000 AND 10000;
+
+SELECT
+  T1.account_id,
+  (
+    SELECT
+      MAX(A11) - MIN(A11)
+    FROM district
+  )
+FROM account AS T1
+INNER JOIN district AS T2
+  ON T1.district_id = T2.district_id
+INNER JOIN disp AS T3
+  ON T1.account_id = T3.account_id
+INNER JOIN client AS T4
+  ON T3.client_id = T4.client_id
+WHERE
+  T2.district_id = (
+    SELECT
+      district_id
+    FROM client
+    WHERE
+      gender = 'F'
+    ORDER BY
+      birth_date ASC
+    LIMIT 1
+  )
+ORDER BY
+  T2.A11 DESC
+LIMIT 1;
+
+SELECT
+  T1.account_id
+FROM account AS T1
+INNER JOIN disp AS T2
+  ON T1.account_id = T2.account_id
+INNER JOIN client AS T3
+  ON T2.client_id = T3.client_id
+INNER JOIN district AS T4
+  ON T4.district_id = T1.district_id
+WHERE
+  T2.client_id = (
+    SELECT
+      client_id
+    FROM client
+    ORDER BY
+      birth_date DESC
+    LIMIT 1
+  )
+GROUP BY
+  T4.A11,
+  T1.account_id;
+
+SELECT
+  T2.account_id
+FROM loan AS T1
+INNER JOIN account AS T2
+  ON T1.account_id = T2.account_id
+WHERE
+  DATE_FORMAT(CAST(T1.date AS DATETIME), '%Y') = '1997'
+  AND T2.frequency = 'POPLATEK TYDNE'
+ORDER BY
+  T1.amount
+LIMIT 1;
+
+SELECT
+  T1.account_id
+FROM loan AS T1
+INNER JOIN account AS T2
+  ON T1.account_id = T2.account_id
+WHERE
+  DATE_FORMAT(CAST(T2.date AS DATETIME), '%Y') = '1993' AND T1.duration > 12
+ORDER BY
+  T1.amount DESC
+LIMIT 1;
+
+SELECT
+  COUNT(T2.client_id)
+FROM district AS T1
+INNER JOIN client AS T2
+  ON T1.district_id = T2.district_id
+WHERE
+  T2.gender = 'F'
+  AND DATE_FORMAT(CAST(T2.birth_date AS DATETIME), '%Y') < '1950'
+  AND T1.A2 = 'Sokolov';
+
+SELECT
+  CAST(SUM(CASE WHEN T1.gender = 'M' THEN 1 ELSE 0 END) AS FLOAT) * 100 / NULLIF(COUNT(T1.client_id), 0)
+FROM client AS T1
+INNER JOIN district AS T2
+  ON T1.district_id = T2.district_id
+WHERE
+  T2.A3 = 'south Bohemia'
+GROUP BY
+  T2.A4
+ORDER BY
+  CASE WHEN T2.A4 IS NULL THEN 1 ELSE 0 END DESC, T2.A4 DESC
+LIMIT 1;
+
+SELECT
+  (
+    CAST(SUM(CASE WHEN status = 'A' THEN amount ELSE 0 END) AS FLOAT) * 100
+  ) / NULLIF(SUM(amount), 0)
+FROM loan;
+
+SELECT
+  CAST((
+    T3.A13 - T3.A12
+  ) AS FLOAT) * 100 / NULLIF(T3.A12, 0)
+FROM loan AS T1
+INNER JOIN account AS T2
+  ON T1.account_id = T2.account_id
+INNER JOIN district AS T3
+  ON T2.district_id = T3.district_id
+WHERE
+  T1.status = 'D';
+
+SELECT
+  T2.A2,
+  COUNT(T1.client_id)
+FROM client AS T1
+INNER JOIN district AS T2
+  ON T1.district_id = T2.district_id
+WHERE
+  T1.gender = 'F'
+GROUP BY
+  T2.district_id,
+  T2.A2
+ORDER BY
+  COUNT(T1.client_id) DESC
+LIMIT 9;
+
+SELECT
+  COUNT(T1.account_id)
+FROM account AS T1
+INNER JOIN district AS T2
+  ON T1.district_id = T2.district_id
+INNER JOIN loan AS T3
+  ON T1.account_id = T3.account_id
+WHERE
+  T1.district_id = 1 AND (
+    T3.status = 'C' OR T3.status = 'D'
+  );
+
+SELECT
+  COUNT(T1.client_id)
+FROM client AS T1
+INNER JOIN district AS T2
+  ON T1.district_id = T2.district_id
+WHERE
+  T1.gender = 'M'
+  AND T2.A15 = (
+    SELECT
+      T3.A15
+    FROM district AS T3
+    ORDER BY
+      T3.A15 DESC
+    LIMIT 1
+    OFFSET 1
+  );
+
+SELECT DISTINCT
+  T1.A2
+FROM district AS T1
+INNER JOIN account AS T2
+  ON T1.district_id = T2.district_id
+INNER JOIN trans AS T3
+  ON T2.account_id = T3.account_id
+WHERE
+  T3.type = 'VYDAJ' AND CAST(T3.date AS CHAR) LIKE '1996-01%'
+ORDER BY
+  CASE WHEN T1.A2 IS NULL THEN 1 ELSE 0 END, T1.A2 ASC
+LIMIT 10;
+
+SELECT
+  T1.account_id
+FROM trans AS T1
+INNER JOIN account AS T2
+  ON T1.account_id = T2.account_id
+WHERE
+  DATE_FORMAT(CAST(T1.date AS DATETIME), '%Y') = '1998'
+  AND T1.operation = 'VYBER KARTOU'
+  AND T1.amount < (
+    SELECT
+      AVG(amount)
+    FROM trans
+    WHERE
+      DATE_FORMAT(CAST(date AS DATETIME), '%Y') = '1998'
+  );
+
+SELECT
+  AVG(T1.A15)
+FROM district AS T1
+INNER JOIN account AS T2
+  ON T1.district_id = T2.district_id
+WHERE
+  DATE_FORMAT(CAST(T2.date AS DATETIME), '%Y') >= '1997' AND T1.A15 > 4000;
+
+SELECT
+  CAST(SUM(CASE WHEN T2.gender = 'F' THEN 1 ELSE 0 END) AS FLOAT) * 100 / NULLIF(COUNT(T2.client_id), 0)
+FROM district AS T1
+INNER JOIN client AS T2
+  ON T1.district_id = T2.district_id
+WHERE
+  T1.A11 > 10000;
+
+SELECT
+  CAST((
+    SUM(
+      CASE
+        WHEN DATE_FORMAT(CAST(T1.date AS DATETIME), '%Y') = '1997'
+        THEN T1.amount
+        ELSE 0
+      END
+    ) - SUM(
+      CASE
+        WHEN DATE_FORMAT(CAST(T1.date AS DATETIME), '%Y') = '1996'
+        THEN T1.amount
+        ELSE 0
+      END
+    )
+  ) AS FLOAT) * 100 / NULLIF(
+    SUM(
+      CASE
+        WHEN DATE_FORMAT(CAST(T1.date AS DATETIME), '%Y') = '1996'
+        THEN T1.amount
+        ELSE 0
+      END
+    ),
+    0
+  )
+FROM loan AS T1
+INNER JOIN account AS T2
+  ON T1.account_id = T2.account_id
+INNER JOIN disp AS T3
+  ON T3.account_id = T2.account_id
+INNER JOIN client AS T4
+  ON T4.client_id = T3.client_id
+WHERE
+  T4.gender = 'M' AND T3.type = 'OWNER';
+
+SELECT
+  T1.frequency,
+  T2.k_symbol
+FROM account AS T1
+INNER JOIN (
+  SELECT
+    account_id,
+    k_symbol,
+    SUM(amount) AS total_amount
+  FROM `order`
+  GROUP BY
+    account_id,
+    k_symbol
+) AS T2
+  ON T1.account_id = T2.account_id
+WHERE
+  T1.account_id = 3 AND T2.total_amount = 3539;
+
+SELECT
+  T3.account_id
+FROM client AS T1
+INNER JOIN district AS T2
+  ON T1.district_id = T2.district_id
+INNER JOIN account AS T3
+  ON T2.district_id = T3.district_id
+INNER JOIN disp AS T4
+  ON T1.client_id = T4.client_id AND T4.account_id = T3.account_id
+WHERE
+  T1.gender = 'F'
+ORDER BY
+  T1.birth_date ASC,
+  T2.A11 ASC
+LIMIT 1;
+
+SELECT
+  T1.client_id,
+  EXTRACT(YEAR FROM CURRENT_TIMESTAMP()) - EXTRACT(YEAR FROM T3.birth_date) AS age
+FROM disp AS T1
+INNER JOIN card AS T2
+  ON T2.disp_id = T1.disp_id
+INNER JOIN client AS T3
+  ON T1.client_id = T3.client_id
+WHERE
+  T2.type = 'gold' AND T1.type = 'OWNER';
+
+SELECT
+  T1.account_id,
+  T1.frequency
+FROM account AS T1
+INNER JOIN district AS T2
+  ON T1.district_id = T2.district_id
+WHERE
+  T2.A3 = 'east Bohemia' AND EXTRACT(YEAR FROM T1.date) BETWEEN 1995 AND 2000;

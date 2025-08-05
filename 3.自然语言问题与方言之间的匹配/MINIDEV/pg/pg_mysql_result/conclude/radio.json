@@ -1,0 +1,591 @@
+{
+    "extracted_data": [
+        {
+            "list_name": "NULL值排序[0]",
+            "ratio": "10.68%",
+            "count": 33
+        },
+        {
+            "list_name": "标识符引用[0]",
+            "ratio": "75.08%",
+            "count": 232
+        },
+        {
+            "list_name": "字符串截取函数[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "类型转换语法[0]",
+            "ratio": "1.29%",
+            "count": 4
+        },
+        {
+            "list_name": "NULL处理语法[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "数据类型转换[0]",
+            "ratio": "11.65%",
+            "count": 36
+        },
+        {
+            "list_name": "除零处理[0]",
+            "ratio": "16.5%",
+            "count": 51
+        },
+        {
+            "list_name": "日期比较[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "表名引用[0]",
+            "ratio": "5.83%",
+            "count": 18
+        },
+        {
+            "list_name": "列名引用[0]",
+            "ratio": "9.06%",
+            "count": 28
+        },
+        {
+            "list_name": "条件表达式语法[0]",
+            "ratio": "1.94%",
+            "count": 6
+        },
+        {
+            "list_name": "列引用符号[0]",
+            "ratio": "1.29%",
+            "count": 4
+        },
+        {
+            "list_name": "表别名引用[0]",
+            "ratio": "18.77%",
+            "count": 58
+        },
+        {
+            "list_name": "JOIN条件格式[0]",
+            "ratio": "1.94%",
+            "count": 6
+        },
+        {
+            "list_name": "JOIN条件引用[0]",
+            "ratio": "4.53%",
+            "count": 14
+        },
+        {
+            "list_name": "日期格式化函数[0]",
+            "ratio": "9.39%",
+            "count": 29
+        },
+        {
+            "list_name": "日期类型转换[0]",
+            "ratio": "5.5%",
+            "count": 17
+        },
+        {
+            "list_name": "标识符引用符号[0]",
+            "ratio": "13.92%",
+            "count": 43
+        },
+        {
+            "list_name": "日期时间处理[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "数值类型处理[0]",
+            "ratio": "0.65%",
+            "count": 2
+        },
+        {
+            "list_name": "列引用[0]",
+            "ratio": "6.47%",
+            "count": 20
+        },
+        {
+            "list_name": "排序空值处理[0]",
+            "ratio": "2.91%",
+            "count": 9
+        },
+        {
+            "list_name": "LIKE模式匹配[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "表引用[0]",
+            "ratio": "0.65%",
+            "count": 2
+        },
+        {
+            "list_name": "标识符引用语法[0]",
+            "ratio": "1.29%",
+            "count": 4
+        },
+        {
+            "list_name": "表别名引用语法[0]",
+            "ratio": "0.65%",
+            "count": 2
+        },
+        {
+            "list_name": "字符串常量语法[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "除零错误处理[0]",
+            "ratio": "2.59%",
+            "count": 8
+        },
+        {
+            "list_name": "NULL值排序处理[0]",
+            "ratio": "4.53%",
+            "count": 14
+        },
+        {
+            "list_name": "字符串比较[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "GROUP BY子句[0]",
+            "ratio": "1.29%",
+            "count": 4
+        },
+        {
+            "list_name": "WHERE条件引用[0]",
+            "ratio": "2.91%",
+            "count": 9
+        },
+        {
+            "list_name": "浮点数类型转换[0]",
+            "ratio": "5.5%",
+            "count": 17
+        },
+        {
+            "list_name": "年龄计算语法[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "表名/列名引用语法[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "当前时间戳函数[0]",
+            "ratio": "0.97%",
+            "count": 3
+        },
+        {
+            "list_name": "时间类型转换[0]",
+            "ratio": "1.29%",
+            "count": 4
+        },
+        {
+            "list_name": "标识符引用方式[0]",
+            "ratio": "1.29%",
+            "count": 4
+        },
+        {
+            "list_name": "列引用格式[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "日期提取函数[0]",
+            "ratio": "1.62%",
+            "count": 5
+        },
+        {
+            "list_name": "空值检查语法[0]",
+            "ratio": "0.65%",
+            "count": 2
+        },
+        {
+            "list_name": "日期计算语法[0]",
+            "ratio": "0.97%",
+            "count": 3
+        },
+        {
+            "list_name": "字符串转日期[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "表名引用符号[0]",
+            "ratio": "0.97%",
+            "count": 3
+        },
+        {
+            "list_name": "列名引用符号[0]",
+            "ratio": "0.65%",
+            "count": 2
+        },
+        {
+            "list_name": "列引用语法[0]",
+            "ratio": "1.29%",
+            "count": 4
+        },
+        {
+            "list_name": "日期格式处理[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "日期处理[0]",
+            "ratio": "0.65%",
+            "count": 2
+        },
+        {
+            "list_name": "DISTINCT语法[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "特殊列名引用语法[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "年龄计算方式[0]",
+            "ratio": "0.65%",
+            "count": 2
+        },
+        {
+            "list_name": "表名和列名引用[0]",
+            "ratio": "0.97%",
+            "count": 3
+        },
+        {
+            "list_name": "日期计算[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "表引用语法[0]",
+            "ratio": "0.97%",
+            "count": 3
+        },
+        {
+            "list_name": "表名引用语法[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "JOIN条件语法[0]",
+            "ratio": "0.65%",
+            "count": 2
+        },
+        {
+            "list_name": "WHERE条件语法[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "NULLS排序处理[0]",
+            "ratio": "0.65%",
+            "count": 2
+        },
+        {
+            "list_name": "年龄计算函数[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "当前日期函数[0]",
+            "ratio": "0.65%",
+            "count": 2
+        },
+        {
+            "list_name": "聚合查询结构[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "表别名引用方式[0]",
+            "ratio": "0.97%",
+            "count": 3
+        },
+        {
+            "list_name": "JOIN语法[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "NULL排序处理[0]",
+            "ratio": "3.56%",
+            "count": 11
+        },
+        {
+            "list_name": "时间戳类型转换[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "分析失败[0]",
+            "ratio": "1.62%",
+            "count": 5
+        },
+        {
+            "list_name": "ORDER BY子句[0]",
+            "ratio": "1.62%",
+            "count": 5
+        },
+        {
+            "list_name": "日期格式匹配[0]",
+            "ratio": "0.65%",
+            "count": 2
+        },
+        {
+            "list_name": "列别名引用方式[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "子查询别名命名[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "类型转换[0]",
+            "ratio": "1.29%",
+            "count": 4
+        },
+        {
+            "list_name": "日期格式化模式[0]",
+            "ratio": "0.65%",
+            "count": 2
+        },
+        {
+            "list_name": "NULL排序[0]",
+            "ratio": "0.97%",
+            "count": 3
+        },
+        {
+            "list_name": "NULL排序语法[0]",
+            "ratio": "0.97%",
+            "count": 3
+        },
+        {
+            "list_name": "条件值引用[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "HAVING子句[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "时间处理函数[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "子查询别名引用[0]",
+            "ratio": "0.65%",
+            "count": 2
+        },
+        {
+            "list_name": "引号风格[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "时间间隔处理[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "字符串分割函数[0]",
+            "ratio": "1.29%",
+            "count": 4
+        },
+        {
+            "list_name": "类型转换函数[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "表名引用方式[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "子查询中的标识符引用[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "条件表达式中的标识符引用[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "数值比较[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "LIMIT语法[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "条件列引用[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "聚合函数引用[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "WHERE条件列引用[0]",
+            "ratio": "0.65%",
+            "count": 2
+        },
+        {
+            "list_name": "LIKE子句的字符串匹配[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "排序与筛选方式[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "JOIN子句格式[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "年份格式字符串[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "列别名引用[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "浮点数类型[0]",
+            "ratio": "1.29%",
+            "count": 4
+        },
+        {
+            "list_name": "字符串常量[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "条件表达式[0]",
+            "ratio": "0.65%",
+            "count": 2
+        },
+        {
+            "list_name": "NULL检查语法[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "条件表达式中的列引用[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "GROUP BY子句格式[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "LIKE条件语法[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "标识符引用符[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "子查询列引用[0]",
+            "ratio": "0.97%",
+            "count": 3
+        },
+        {
+            "list_name": "连接条件引用[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "条件表达式引用[0]",
+            "ratio": "0.65%",
+            "count": 2
+        },
+        {
+            "list_name": "排序选项[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "WHERE子句引用[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "JOIN条件中的列引用[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "WHERE条件中的列引用[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "派生表别名语法[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "字符串与数字比较[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "列名引用语法[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "日期处理函数[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "ORDER BY子句NULL处理[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "ORDER BY引用[0]",
+            "ratio": "0.32%",
+            "count": 1
+        },
+        {
+            "list_name": "NULL值排序语法[0]",
+            "ratio": "0.32%",
+            "count": 1
+        }
+      
+    ],
+    "total_extracted": 117
+}
