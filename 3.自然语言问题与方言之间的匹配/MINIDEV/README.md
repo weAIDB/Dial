@@ -112,8 +112,14 @@ print(dataset["mini_dev_pg"][0])
 - 通用sql
 
     你可以在下面这3个文件中  
-        "MINIDEV\sqlite\sqlite_mysql_result\run_result\do.json",  "MINIDEV\sqlite\sqlite_pgsql_result\run_result\do.json",  
-        "MINIDEV\pg\pg_mysql_result\run_result\do.json"中分别找到找到mysql，sqlite,pgsql之间的通用sql语句,下面的是pgsql和mysql之间的通用sql语句的样例：  
+        "MINIDEV\sqlite\sqlite_mysql_result\run_result\do.json",  
+        "MINIDEV\sqlite\sqlite_pgsql_result\run_result\do.json",  
+        "MINIDEV\pg\pg_mysql_result\run_result\do.json"中分别找到找到mysql，sqlite,pgsql之间的通用sql语句,一共有三组:  
+  - mysql和pgsql之间：191个  
+  - pgsql和sqlite之间: 356个  
+  - mysql和sqlite之间: 219个  
+  
+    下面的是pgsql和mysql之间的通用sql语句的样例：  
 
     ```json
     [
@@ -141,9 +147,15 @@ print(dataset["mini_dev_pg"][0])
     ]
     ```
 
+ℹ️ **注意** :方言一共有三组:  
+
+- mysql和pgsql之间：309个  
+- pgsql和sqlite之间: 144个  
+- mysql和sqlite之间: 281个
+
 ### 3.3.方言和自然语言之间的对应关系(以mysql和pgsql之间为例)  
 
-你可以在"MINIDEV\pg\pg_mysql_result\conclude\postgres_mysql_difference.json"中找到可能引起方言问题的自然语言问题中的具体字段,产生的原因，以及对应于mysql,pgsql的哪一部分，案例如下。
+你可以在"MINIDEV\pg\pg_mysql_result\conclude\postgres_mysql_difference.json"中找到可能引起方言问题的所有自然语言问题，以及引起该问题的具体字段,产生的原因，和对应于mysql,pgsql的哪一部分，案例如下。
 
 ```json
     [
@@ -181,7 +193,7 @@ print(dataset["mini_dev_pg"][0])
 
 ### 3.4.归类
 
-- 在"MINIDEV\pg\pg_mysql_result\conclude\pg_mysql_conclusion.json"中，我们对所有的方言问题进行了分类并统计了所有出现的方言问题，并计算了在该问题在所有问题中的出现频率，一个简单的例子如下:
+- 在"MINIDEV\pg\pg_mysql_result\conclude\pg_mysql_conclusion.json"中，我们对所有的方言问题进行了分类并进行了统计，一共有117种方言问题，然后计算了各个问题在500个自然语言问题中的出现频率，将结果输出在了相关方言问题所在字典的开头，一个简单的例子如下:
 
     ```json
     {    "LIKE条件语法": [
@@ -205,5 +217,5 @@ print(dataset["mini_dev_pg"][0])
     }
     ```  
 
-- 我们对上述出现次数超过三个的方言问题的出现频率进行了绘图，并将剩余的方言问题放在了'其它'这一类中。
+- 我们对上述出现次数超过3个的方言问题的出现频率进行了绘图，一共有33种方言的出现次数超过了3次，并将剩余的方言问题放在了"其它"这一类中。
 ![语法问题比例统计（排序后）](pg/pg_mysql_result/conclude/语法问题比例统计（排序后）.png)
