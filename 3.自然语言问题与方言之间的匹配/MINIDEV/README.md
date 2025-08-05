@@ -65,12 +65,12 @@ print(dataset["mini_dev_pg"][0])
     mysql -u root -p BIRD < BIRD_dev.sql
     ```
 
-ℹ️ **注意** : 具体内容可从[https://github.com/bird-bench/mini_dev/blob/main/README.md中查询]
+ℹ️ **注意** : 具体内容可从[https://github.com/bird-bench/mini_dev/blob/main/README.md]中查询
 
 ### PostgreSQL
 
 1. 从官网下载并安装postgresql：[https://www.postgresql.org/download/]
-2. 从官网下载pgAdmin4：[https://www.pgadmin.org/download/]（推荐监控数据库）
+2. 从官网下载pgAdmin4：[https://www.pgadmin.org/download/]
 3. 在 pgADmin4/terminal 中创建一个名为BIRD
 4. 通过运行以下命令构建数据库（您可以在文件夹中找到 PostgreSQL 版本数据库： ）：BIRD_dev.sqlMINIDEV_postgresql
 
