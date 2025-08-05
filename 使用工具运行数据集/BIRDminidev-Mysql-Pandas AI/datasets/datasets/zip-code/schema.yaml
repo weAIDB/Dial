@@ -1,0 +1,11 @@
+name: zip_code
+source:
+  type: mysql
+  connection:
+    host: localhost
+    port: 3306
+    database: BIRD
+    user: root
+    password: xuhongming3410
+  table: zip_code
+description: 'BIRD database table: zip_code'

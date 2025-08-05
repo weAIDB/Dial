@@ -1,0 +1,11 @@
+name: hero_attribute
+source:
+  type: mysql
+  connection:
+    host: localhost
+    port: 3306
+    database: BIRD
+    user: root
+    password: xuhongming3410
+  table: hero_attribute
+description: 'BIRD database table: hero_attribute'

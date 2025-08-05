@@ -1,0 +1,11 @@
+name: team_attributes
+source:
+  type: mysql
+  connection:
+    host: localhost
+    port: 3306
+    database: BIRD
+    user: root
+    password: xuhongming3410
+  table: team_attributes
+description: 'BIRD database table: team_attributes'
