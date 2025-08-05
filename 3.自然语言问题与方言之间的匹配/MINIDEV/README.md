@@ -65,7 +65,7 @@ print(dataset["mini_dev_pg"][0])
     mysql -u root -p BIRD < BIRD_dev.sql
     ```
 
-ℹ️ **注意** : 具体内容可从[https://github.com/bird-bench/mini_dev/blob/main/README.md]中查询
+ℹ️ **注意** : 具体内容可从[https://github.com/bird-bench/mini_dev/blob/main/README.md]
 
 ### PostgreSQL
 
