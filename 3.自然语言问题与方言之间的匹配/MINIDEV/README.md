@@ -219,4 +219,4 @@ print(dataset["mini_dev_pg"][0])
 ### 3.6.绘图
 
 - 我们针对""MINIDEV\pg\pg_mysql_result\conclude\radio.json"中的所有平均值进行了绘图，绘制的结果如下：
-![各类型处理差异平均匹配度柱状图](pg\pg_mysql_result\conclude\各类型处理差异平均匹配度柱状图.png)
+![各类型处理差异平均匹配度柱状图](..\MINIDEV\pg\pg_mysql_result\conclude\各类型处理差异平均匹配度柱状图.png)
