@@ -19,8 +19,7 @@
 │   │   │   ├── pg_mysql_conclusion.json
 │   │   │   ├── postgres_mysql_difference.json
 │   │   │   ├── radio.json
-│   │   │   ├── radio2.json
-│   │   │   └── 语法问题比例统计（排序后）.png
+│   │   │   └── 各类型处理差异平均匹配度柱状图.png
 │   │   └── run_result
 │   │       ├── do.json
 │   │       ├── do.json.bak
@@ -34,6 +33,7 @@
 │   └── 脚本
 │       ├── pg.py
 │       └── pg_mysql.py
+│       └── pg_mysql_2.0.py
 └── sqlite
     ├── initial_code
     │   ├── dev_tables.json
@@ -45,6 +45,9 @@
     ├── sqlite_mysql_result
     │   ├── conclude
     │   │   └── sqlite_mysql_difference.json
+    │   │   └── sqlite_mysql_conclusion.json
+    │   │   └── radio.json
+    │   │   └── 各类型处理差异平均匹配度柱状图.png
     │   ├── run_result
     │   │   ├── do.json
     │   │   ├── do.json.bak
@@ -52,6 +55,7 @@
     │   │   └── undo.json.backup
     │   └── 脚本
     │       └── sqlite_mysql.py
+    │       └── sqlite_mysql_2.0.py
     └── sqlite_pgsql_result
         ├── conclude
         │   ├── sqlite_pgsql_difference(1).json

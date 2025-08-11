@@ -193,29 +193,30 @@ print(dataset["mini_dev_pg"][0])
 
 ### 3.4.归类
 
-- 在"MINIDEV\pg\pg_mysql_result\conclude\pg_mysql_conclusion.json"中，我们对所有的方言问题进行了分类并进行了统计，一共有117种方言问题，然后计算了各个问题在500个自然语言问题中的出现频率，将结果输出在了相关方言问题所在字典的开头，一个简单的例子如下:
+- 在"MINIDEV\pg\pg_mysql_result\conclude\pg_mysql_conclusion.json"中，我们对所有的方言问题进行了分类并进行了统计，然后计算了每一类中的所有问题的方言对应的自然语言问题部分占总体的比例，输出在了"substring_percentage"字段，一个简单的例子如下:
 
     ```json
-    {    "LIKE条件语法": [
-            {
-                "statistic": {
-                    "count": 1,
-                    "ratio": "0.32%"
-                }
-            },
-            {
-                "question": "Find and list the names of sets which doesn't have Japanese translation but have Korean translation.",
-                "postgres_sql": "SELECT name FROM sets WHERE code IN (SELECT setCode FROM set_translations WHERE language = 'Korean' AND NOT language LIKE '%Japanese%')",
-                "mysql_sql": "SELECT\n  `name`\nFROM `sets`\nWHERE\n  `code` IN (\n    SELECT\n      `setCode`\n    FROM `set_translations`\n    WHERE\n      `language` = 'Korean' AND NOT `language` LIKE '%Japanese%'\n  )",
-                "question_causing_substring": "doesn't have Japanese translation but have Korean translation",
-                "postgres_differing_substring": "NOT language LIKE '%Japanese%'",
-                "mysql_differing_substring": "NOT `language` LIKE '%Japanese%'",
-                "difference": "LIKE条件语法",
-                "detail": "PostgreSQL和MySQL在LIKE条件语法上相同，但实际查询逻辑有差异（PostgreSQL的NOT LIKE '%Japanese%'会排除所有包含Japanese的记录，而MySQL相同）"
-            }
-        ]
+    {       "分页（LIMIT）语法": [
+        {
+            "question": "List down at least five superpowers of male superheroes.",
+            "postgres_sql": "SELECT T3.power_name FROM superhero AS T1 INNER JOIN hero_power AS T2 ON T1.id = T2.hero_id INNER JOIN superpower AS T3 ON T3.id = T2.power_id INNER JOIN gender AS T4 ON T4.id = T1.gender_id WHERE T4.gender = 'Male' LIMIT 5",
+            "mysql_sql": "SELECT\n  `T3`.`power_name`\nFROM `superhero` AS `T1`\nINNER JOIN `hero_power` AS `T2`\n  ON `T1`.`id` = `T2`.`hero_id`\nINNER JOIN `superpower` AS `T3`\n  ON `T3`.`id` = `T2`.`power_id`\nINNER JOIN `gender` AS `T4`\n  ON `T4`.`id` = `T1`.`gender_id`\nWHERE\n  `T4`.`gender` = 'Male'\nLIMIT 5",
+            "question_causing_substring": "at least five",
+            "postgres_differing_substring": "LIMIT 5",
+            "mysql_differing_substring": "LIMIT 5",
+            "difference": "分页（LIMIT）语法",
+            "detail": "PostgreSQL和MySQL的LIMIT语法相同，但位置不同（PostgreSQL在一行，MySQL换行）",
+            "substring_percentage": "23.21%"
+        }
+    ]
     }
     ```  
 
-- 我们对上述出现次数超过3个的方言问题的出现频率进行了绘图，一共有33种方言的出现次数超过了3次，并将剩余的方言问题放在了"其它"这一类中。
-![语法问题比例统计（排序后）](pg/pg_mysql_result/conclude/语法问题比例统计（排序后）.png)
+### 3.5.计算平均值
+
+- 在"MINIDEV\pg\pg_mysql_result\conclude\radio.json"中，我们对每一类的方言问题中包含的所有问题的 "substring_percentage"计算了平均值。
+
+### 3.6.绘图
+
+- 我们针对""MINIDEV\pg\pg_mysql_result\conclude\radio.json"中的所有平均值进行了绘图，绘制的结果如下：
+![各类型处理差异平均匹配度柱状图](pg\pg_mysql_result\conclude\各类型处理差异平均匹配度柱状图.png)

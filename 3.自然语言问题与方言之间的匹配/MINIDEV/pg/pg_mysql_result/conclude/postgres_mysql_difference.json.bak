@@ -130,14 +130,14 @@
     "mysql_sql": "SELECT\n  SUM(`Currency` = 'CZK') - SUM(`Currency` = 'EUR')\nFROM `customers`\nWHERE\n  `Segment` = 'SME'",
     "syntax_differences": [
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL用CASE WHEN，MySQL用布尔表达式直接求和",
         "question_causing_substring": "more SMEs pay in Czech koruna than in euros",
         "postgres_differing_substring": "CASE WHEN Currency = 'CZK' THEN 1 ELSE 0 END",
         "mysql_differing_substring": "`Currency` = 'CZK'"
       }
     ],
-    "causing_part": "筛选条件（WHERE）相关"
+    "causing_part": "筛选条件相关"
   },
   {
     "question": "In February 2012, what percentage of customers consumed more than 528.3?",
@@ -314,7 +314,7 @@
     "mysql_sql": "SELECT\n  SUM(`T1`.`Price` ),\n  SUM(CASE WHEN `T3`.`Date` = '201201' THEN `T1`.`Price` ELSE 0 END)\nFROM `transactions_1k` AS `T1`\nINNER JOIN `gasstations` AS `T2`\n  ON `T1`.`GasStationID` = `T2`.`GasStationID`\nINNER JOIN `yearmonth` AS `T3`\n  ON `T1`.`CustomerID` = `T3`.`CustomerID`\nWHERE\n  `T1`.`CustomerID` = '38508'",
     "syntax_differences": [
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL和MySQL都使用CASE WHEN，但MySQL在条件表达式周围使用反引号",
         "question_causing_substring": "How much had the customer spent in January 2012?",
         "postgres_differing_substring": "CASE WHEN T3.Date = '201201' THEN T1.Price ELSE 0 END",
@@ -328,7 +328,7 @@
         "mysql_differing_substring": "`T1`.`Price`"
       }
     ],
-    "causing_part": "筛选条件（WHERE）相关、列与表引用规则"
+    "causing_part": "筛选条件相关、列与表引用规则"
   },
   {
     "question": "Who is the top spending customer and how much is the average price per single item purchased by this customer? What currency was being used?",
@@ -660,14 +660,14 @@
         "mysql_differing_substring": "`T1`.`event_id` = `T2`.`link_to_event`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL使用无引号列名，MySQL使用反引号引用列名",
         "question_causing_substring": "were held at MU 215",
         "postgres_differing_substring": "T1.location = 'MU 215'",
         "mysql_differing_substring": "`T1`.`location` = 'MU 215'"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件（WHERE）相关"
+    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "What are the budget category of the events located at MU 215 and a guest speaker type with a 0 budget spent?",
@@ -689,14 +689,14 @@
         "mysql_differing_substring": "`T1`.`event_id` = `T2`.`link_to_event`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL的WHERE条件无特殊符号，MySQL的WHERE条件使用反引号",
         "question_causing_substring": "What are the budget category of the events located at MU 215 and a guest speaker type with a 0 budget spent?",
         "postgres_differing_substring": "T1.location = 'MU 215' AND T2.spent = 0 AND T1.type = 'Guest Speaker'",
         "mysql_differing_substring": "`T1`.`location` = 'MU 215' AND `T2`.`spent` = 0 AND `T1`.`type` = 'Guest Speaker'"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件（WHERE）相关"
+    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "List the names of closed event as \"game\" that was closed from 3/15/2019 to 3/20/2020.",
@@ -1271,14 +1271,14 @@
         "mysql_differing_substring": "`T1`.`ID` = `T2`.`ID`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL使用无引号列名，MySQL使用反引号引用列名",
         "question_causing_substring": "Ig G higher than normal",
         "postgres_differing_substring": "T2.IGG >= 2000",
         "mysql_differing_substring": "`T2`.`IGG` >= 2000"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件（WHERE）相关"
+    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "How many patients with a normal Ig A level came to the hospital after 1990/1/1?",
@@ -2227,14 +2227,14 @@
         "mysql_differing_substring": "`T2`.`year` = `T1`.`year`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL使用无引号列名，MySQL使用反引号引用列名",
         "question_causing_substring": "race No. 901",
         "postgres_differing_substring": "T1.raceId = 901",
         "mysql_differing_substring": "`T1`.`raceId` = 901"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件（WHERE）相关"
+    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "For all the drivers who finished the game in race No. 872, who is the youngest?",
@@ -2544,14 +2544,14 @@
         "mysql_differing_substring": "`T1`.`constructorId` = `T2`.`constructorId`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL和MySQL在字符串值上都使用单引号，但MySQL在WHERE条件中也使用反引号包裹列名",
         "question_causing_substring": "British",
         "postgres_differing_substring": "T2.nationality = 'British'",
         "mysql_differing_substring": "`T2`.`nationality` = 'British'"
       }
     ],
-    "causing_part": "列与表引用规则、筛选条件（WHERE）相关"
+    "causing_part": "列与表引用规则、筛选条件相关"
   },
   {
     "question": "How many Japanese constructors have 0 points in 2 races?",
@@ -2582,49 +2582,49 @@
     ],
     "causing_part": "列与表引用规则、分组聚合（GROUP BY 子句）、分组后的筛选（HAVING 子句）"
   },
-    {
+  {
     "question": "What is the average time in seconds of champion for each year, before year 1975?",
     "postgres_sql": "WITH time_in_seconds AS (SELECT T2.year, T2.raceId, T1.positionOrder, CASE WHEN T1.positionOrder = 1 THEN (CASE WHEN SPLIT_PART (T1.time, ':', 1) <> '' AND SPLIT_PART (T1.time, ':', 2) <> '' AND SPLIT_PART (SPLIT_PART (T1.time, ':', 3), '.', 1) <> '' THEN (CAST (SPLIT_PART (T1.time, ':', 1) AS REAL) * 3600) + (CAST (SPLIT_PART (T1.time, ':', 2) AS REAL) * 60) + CAST (SPLIT_PART (SPLIT_PART (T1.time, ':', 3), '.', 1) AS REAL) + CAST (SPLIT_PART (SPLIT_PART (T1.time, ':', 3), '.', 2) AS REAL)/1000 ELSE 0 END) ELSE (CASE WHEN SUBSTRING (T1.time FROM 2) <> '' THEN CAST (SUBSTRING (T1.time FROM 2) AS REAL) ELSE 0 END) END AS time_seconds FROM results AS T1 INNER JOIN races AS T2 ON T1.raceId = T2.raceId WHERE T1.time IS NOT NULL AND T1.time != ''), champion_time AS (SELECT year, raceId, time_seconds FROM time_in_seconds WHERE positionOrder = 1) SELECT year, AVG (time_seconds) FROM champion_time WHERE year < 1975 GROUP BY year HAVING AVG (time_seconds) IS NOT NULL",
     "mysql_sql": "WITH time_in_seconds AS (SELECT T2.year, T2.raceId, T1.positionOrder, CASE WHEN T1.positionOrder = 1 THEN (CAST (SUBSTR (T1.time, 1, 1) AS FLOAT) * 3600) + (CAST (SUBSTR (T1.time, 3, 2) AS FLOAT) * 60) + CAST (SUBSTR (T1.time, 6, 2) AS FLOAT) + CAST (SUBSTR (T1.time, 9) AS FLOAT) / 1000 ELSE 0 END AS time_seconds FROM results AS T1 INNER JOIN races AS T2 ON T1.raceId = T2.raceId WHERE NOT T1.time IS NULL), champion_time AS (SELECT year, raceId, time_seconds FROM time_in_seconds WHERE positionOrder = 1) SELECT year, AVG (time_seconds) FROM champion_time WHERE year < 1975 GROUP BY year HAVING NOT AVG (time_seconds) IS NULL",
     "syntax_differences": [
-    {
-    "difference": "字符串处理",
-    "detail": "PostgreSQL 使用 SPLIT_PART 函数分割字符串，MySQL 使用 SUBSTR 函数截取字符串",
-    "question_causing_substring": "average time in seconds",
-    "postgres_differing_substring": "SPLIT_PART (T1.time, ':', 1), SPLIT_PART (T1.time, ':', 2), SPLIT_PART (SPLIT_PART (T1.time, ':', 3), '.', 1), SPLIT_PART (SPLIT_PART (T1.time, ':', 3), '.', 2)",
-    "mysql_differing_substring": "SUBSTR (T1.time, 1, 1), SUBSTR (T1.time, 3, 2), SUBSTR (T1.time, 6, 2), SUBSTR (T1.time, 9)"
-    },
-    {
-    "difference": "筛选条件（WHERE）相关",
-    "detail": "PostgreSQL 使用 <> 表示不等于，MySQL 中也可使用 <> 但此处 PostgreSQL 有额外的非空判断条件 T1.time != ''，MySQL 无此条件",
-    "question_causing_substring": "average time in seconds",
-    "postgres_differing_substring": "SPLIT_PART (T1.time, ':', 1) <> '' AND SPLIT_PART (T1.time, ':', 2) <> '' AND SPLIT_PART (SPLIT_PART (T1.time, ':', 3), '.', 1) <> '', T1.time != ''",
-    "mysql_differing_substring": ""
-    },
-    {
-    "difference": "字符串处理",
-    "detail": "PostgreSQL 使用 SUBSTRING 函数截取子串，MySQL 使用 SUBSTR 函数截取子串",
-    "question_causing_substring": "average time in seconds",
-    "postgres_differing_substring": "SUBSTRING (T1.time FROM 2)",
-    "mysql_differing_substring": ""
-    },
-    {
-    "difference": "类型转换",
-    "detail": "PostgreSQL 使用 CAST (xxx AS REAL) 进行类型转换，MySQL 使用 CAST (xxx AS FLOAT) 进行类型转换",
-    "question_causing_substring": "average time in seconds",
-    "postgres_differing_substring": "CAST (SPLIT_PART (T1.time, ':', 1) AS REAL), CAST (SPLIT_PART (T1.time, ':', 2) AS REAL), CAST (SUBSTRING (T1.time FROM 2) AS REAL)",
-    "mysql_differing_substring": "CAST (SUBSTR (T1.time, 1, 1) AS FLOAT), CAST (SUBSTR (T1.time, 3, 2) AS FLOAT), CAST (SUBSTR (T1.time, 6, 2) AS FLOAT), CAST (SUBSTR (T1.time, 9) AS FLOAT)"
-    },
-    {
-    "difference": "空值（NULL）处理",
-    "detail": "PostgreSQL 使用 T1.time IS NOT NULL 判断非空，MySQL 使用 NOT T1.time IS NULL 判断非空；HAVING 子句中 PostgreSQL 使用 AVG (time_seconds) IS NOT NULL，MySQL 使用 NOT AVG (time_seconds) IS NULL",
-    "question_causing_substring": "average time in seconds",
-    "postgres_differing_substring": "WHERE T1.time IS NOT NULL, HAVING AVG (time_seconds) IS NOT NULL",
-    "mysql_differing_substring": "WHERE NOT T1.time IS NULL, HAVING NOT AVG (time_seconds) IS NULL"
-    }
+      {
+        "difference": "字符串处理",
+        "detail": "PostgreSQL 使用 SPLIT_PART 函数分割字符串，MySQL 使用 SUBSTR 函数截取字符串",
+        "question_causing_substring": "average time in seconds",
+        "postgres_differing_substring": "SPLIT_PART (T1.time, ':', 1), SPLIT_PART (T1.time, ':', 2), SPLIT_PART (SPLIT_PART (T1.time, ':', 3), '.', 1), SPLIT_PART (SPLIT_PART (T1.time, ':', 3), '.', 2)",
+        "mysql_differing_substring": "SUBSTR (T1.time, 1, 1), SUBSTR (T1.time, 3, 2), SUBSTR (T1.time, 6, 2), SUBSTR (T1.time, 9)"
+      },
+      {
+        "difference": "筛选条件相关",
+        "detail": "PostgreSQL 使用 <> 表示不等于，MySQL 中也可使用 <> 但此处 PostgreSQL 有额外的非空判断条件 T1.time != ''，MySQL 无此条件",
+        "question_causing_substring": "average time in seconds",
+        "postgres_differing_substring": "SPLIT_PART (T1.time, ':', 1) <> '' AND SPLIT_PART (T1.time, ':', 2) <> '' AND SPLIT_PART (SPLIT_PART (T1.time, ':', 3), '.', 1) <> '', T1.time != ''",
+        "mysql_differing_substring": ""
+      },
+      {
+        "difference": "字符串处理",
+        "detail": "PostgreSQL 使用 SUBSTRING 函数截取子串，MySQL 使用 SUBSTR 函数截取子串",
+        "question_causing_substring": "average time in seconds",
+        "postgres_differing_substring": "SUBSTRING (T1.time FROM 2)",
+        "mysql_differing_substring": ""
+      },
+      {
+        "difference": "类型转换",
+        "detail": "PostgreSQL 使用 CAST (xxx AS REAL) 进行类型转换，MySQL 使用 CAST (xxx AS FLOAT) 进行类型转换",
+        "question_causing_substring": "average time in seconds",
+        "postgres_differing_substring": "CAST (SPLIT_PART (T1.time, ':', 1) AS REAL), CAST (SPLIT_PART (T1.time, ':', 2) AS REAL), CAST (SUBSTRING (T1.time FROM 2) AS REAL)",
+        "mysql_differing_substring": "CAST (SUBSTR (T1.time, 1, 1) AS FLOAT), CAST (SUBSTR (T1.time, 3, 2) AS FLOAT), CAST (SUBSTR (T1.time, 6, 2) AS FLOAT), CAST (SUBSTR (T1.time, 9) AS FLOAT)"
+      },
+      {
+        "difference": "空值（NULL）处理",
+        "detail": "PostgreSQL 使用 T1.time IS NOT NULL 判断非空，MySQL 使用 NOT T1.time IS NULL 判断非空；HAVING 子句中 PostgreSQL 使用 AVG (time_seconds) IS NOT NULL，MySQL 使用 NOT AVG (time_seconds) IS NULL",
+        "question_causing_substring": "average time in seconds",
+        "postgres_differing_substring": "WHERE T1.time IS NOT NULL, HAVING AVG (time_seconds) IS NOT NULL",
+        "mysql_differing_substring": "WHERE NOT T1.time IS NULL, HAVING NOT AVG (time_seconds) IS NULL"
+      }
     ],
-    "causing_part": "字符串处理,筛选条件（WHERE）相关,类型转换,空值（NULL）处理"
-    },
+    "causing_part": "字符串处理、筛选条件相关、字符串处理、类型转换、空值（NULL）处理"
+  },
   {
     "question": "What is the average of fastest lap speed in the 2009 Spanish Grand Prix race?",
     "postgres_sql": "SELECT AVG(CAST(T1.fastestLapSpeed AS NUMERIC)) FROM results AS T1 INNER JOIN races AS T2 ON T1.raceId = T2.raceId WHERE T2.year = 2009 AND T2.name = 'Spanish Grand Prix'",
@@ -2821,14 +2821,14 @@
         "mysql_differing_substring": "`T1`.`raceId` = `T2`.`raceId`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL使用无引号列名，MySQL使用反引号引用列名",
         "question_causing_substring": "What is the constructor reference name of the champion in the 2009 Singapore Grand Prix? Please give its website.",
         "postgres_differing_substring": "T2.name = 'Singapore Grand Prix'",
         "mysql_differing_substring": "`T2`.`name` = 'Singapore Grand Prix'"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件（WHERE）相关"
+    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "Which constructor scored most points from Monaco Grand Prix between 1980 and 2010? List the score, name and nationality of this team.",
@@ -2845,35 +2845,56 @@
     ],
     "causing_part": "分组聚合（GROUP BY 子句）"
   },
-  {
-    "question": "What is full name of the racer who ranked 1st in the 3rd qualifying race held in the Marina Bay Street Circuit in 2008?",
-    "postgres_sql": "SELECT T2.forename, T2.surname FROM qualifying AS T1 INNER JOIN drivers AS T2 ON T1.driverId = T2.driverId INNER JOIN races AS T3 ON T1.raceid = T3.raceid WHERE q3 IS NOT NULL AND T3.year = 2008 AND T3.circuitId IN (SELECT circuitId FROM circuits WHERE name = 'Marina Bay Street Circuit') ORDER BY CAST(SPLIT_PART(q3, ':', 1) AS INTEGER) * 60 + CAST(SPLIT_PART(SPLIT_PART(q3, ':', 2), '.', 1) AS REAL) + CAST(SPLIT_PART(q3, '.', 2) AS REAL) / 1000 ASC LIMIT 1",
-    "mysql_sql": "SELECT\n  `T2`.`forename`,\n  `T2`.`surname`\nFROM `qualifying` AS `T1`\nINNER JOIN `drivers` AS `T2`\n  ON `T1`.`driverId` = `T2`.`driverId`\nINNER JOIN `races` AS `T3`\n  ON `T1`.`raceid` = `T3`.`raceid`\nWHERE\n  NOT `q3` IS NULL\n  AND `T3`.`year` = 2008\n  AND `T3`.`circuitId` IN (\n    SELECT\n      `circuitId`\n    FROM `circuits`\n    WHERE\n      `name` = 'Marina Bay Street Circuit'\n  )\nORDER BY\n  CAST(SUBSTR(`q3`, 1, INSTR(`q3`, ':') - 1) AS SIGNED) * 60 + CAST(SUBSTR(`q3`, INSTR(`q3`, ':') + 1, INSTR(`q3`, '.') - INSTR(`q3`, ':') - 1) AS DOUBLE) + CAST(SUBSTR(`q3`, INSTR(`q3`, '.') + 1) AS DOUBLE) / 1000 ASC\nLIMIT 1",
-    "syntax_differences": [
-      {
-        "difference": "分析失败",
-        "detail": "",
-        "question_causing_substring": "",
-        "postgres_differing_substring": "",
-        "mysql_differing_substring": ""
-      }
-    ],
-    "causing_part": "分析失败"
-  },
+{
+  "question": "What is full name of the racer who ranked 1st in the 3rd qualifying race held in the Marina Bay Street Circuit in 2008?",
+  "postgres_sql": "SELECT T2.forename, T2.surname FROM qualifying AS T1 INNER JOIN drivers AS T2 ON T1.driverId = T2.driverId INNER JOIN races AS T3 ON T1.raceid = T3.raceid WHERE q3 IS NOT NULL AND T3.year = 2008 AND T3.circuitId IN (SELECT circuitId FROM circuits WHERE name = 'Marina Bay Street Circuit') ORDER BY CAST(SPLIT_PART(q3, ':', 1) AS INTEGER) * 60 + CAST(SPLIT_PART(SPLIT_PART(q3, ':', 2), '.', 1) AS REAL) + CAST(SPLIT_PART(q3, '.', 2) AS REAL) / 1000 ASC LIMIT 1",
+  "mysql_sql": "SELECT\n  `T2`.`forename`,\n  `T2`.`surname`\nFROM `qualifying` AS `T1`\nINNER JOIN `drivers` AS `T2`\n  ON `T1`.`driverId` = `T2`.`driverId`\nINNER JOIN `races` AS `T3`\n  ON `T1`.`raceid` = `T3`.`raceid`\nWHERE\n  NOT `q3` IS NULL\n  AND `T3`.`year` = 2008\n  AND `T3`.`circuitId` IN (\n    SELECT\n      `circuitId`\n    FROM `circuits`\n    WHERE\n      `name` = 'Marina Bay Street Circuit'\n  )\nORDER BY\n  CAST(SUBSTR(`q3`, 1, INSTR(`q3`, ':') - 1) AS SIGNED) * 60 + CAST(SUBSTR(`q3`, INSTR(`q3`, ':') + 1, INSTR(`q3`, '.') - INSTR(`q3`, ':') - 1) AS DOUBLE) + CAST(SUBSTR(`q3`, INSTR(`q3`, '.') + 1) AS DOUBLE) / 1000 ASC\nLIMIT 1",
+  "syntax_differences": [
+    {
+      "difference": "列与表引用规则",
+      "detail": "PostgreSQL使用无引号标识符（如T1.driverId），MySQL使用反引号包裹标识符（如`T1`.`driverId`）",
+      "question_causing_substring": "racer, qualifying race, Marina Bay Street Circuit",
+      "postgres_differing_substring": "T1.driverId = T2.driverId, T1.raceid = T3.raceid",
+      "mysql_differing_substring": "`T1`.`driverId` = `T2`.`driverId`, `T1`.`raceid` = `T3`.`raceid`"
+    },
+    {
+      "difference": "空值（NULL）处理",
+      "detail": "PostgreSQL使用`q3 IS NOT NULL`判断非空，MySQL使用`NOT q3 IS NULL`判断非空",
+      "question_causing_substring": "ranked 1st in the 3rd qualifying race",
+      "postgres_differing_substring": "q3 IS NOT NULL",
+      "mysql_differing_substring": "NOT `q3` IS NULL"
+    },
+    {
+      "difference": "字符串处理",
+      "detail": "PostgreSQL使用`SPLIT_PART`分割字符串，MySQL使用`SUBSTR`+`INSTR`组合分割字符串",
+      "question_causing_substring": "ranked 1st（基于q3时间排序）",
+      "postgres_differing_substring": "SPLIT_PART(q3, ':', 1), SPLIT_PART(SPLIT_PART(q3, ':', 2), '.', 1)",
+      "mysql_differing_substring": "SUBSTR(`q3`, 1, INSTR(`q3`, ':') - 1), SUBSTR(`q3`, INSTR(`q3`, ':') + 1, INSTR(`q3`, '.') - INSTR(`q3`, ':') - 1)"
+    },
+    {
+      "difference": "类型转换",
+      "detail": "PostgreSQL使用`CAST(... AS INTEGER/REAL)`转换类型，MySQL使用`CAST(... AS SIGNED/DOUBLE)`转换类型",
+      "question_causing_substring": "ranked 1st（基于时间数值计算排序）",
+      "postgres_differing_substring": "CAST(SPLIT_PART(...) AS INTEGER), CAST(SPLIT_PART(...) AS REAL)",
+      "mysql_differing_substring": "CAST(SUBSTR(...) AS SIGNED), CAST(SUBSTR(...) AS DOUBLE)"
+    }
+  ],
+  "causing_part": "列与表引用规则、空值（NULL）处理、字符串处理、类型转换"
+},
   {
     "question": "As of the present, what is the full name of the youngest racer? Indicate her nationality and the name of the race to which he/she first joined.",
     "postgres_sql": "SELECT T1.forename, T1.surname, T1.nationality, T3.name FROM drivers AS T1 INNER JOIN driverStandings AS T2 ON T1.driverId = T2.driverId INNER JOIN races AS T3 ON T2.raceId = T3.raceId WHERE T1.dob notnull ORDER BY T1.dob DESC LIMIT 1",
     "mysql_sql": "SELECT `T1`.`forename`, `T1`.`surname`, `T1`.`nationality`, `T3`.`name` FROM `drivers` AS `T1` INNER JOIN `driverStandings` AS `T2` ON `T1`.`driverId` = `T2`.`driverId` INNER JOIN `races` AS `T3` ON `T2`.`raceId` = `T3`.`raceId` ORDER BY `T1`.`dob` DESC LIMIT 1",
     "syntax_differences": [
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL使用WHERE子句过滤NULL值，MySQL未显式处理",
         "question_causing_substring": "what is the full name of the youngest racer",
         "postgres_differing_substring": "WHERE T1.dob notnull",
         "mysql_differing_substring": ""
       }
     ],
-    "causing_part": "筛选条件（WHERE）相关"
+    "causing_part": "筛选条件相关"
   },
   {
     "question": "How many accidents did the driver who had the highest number accidents in the Canadian Grand Prix have?",
@@ -3087,7 +3108,7 @@
         "mysql_differing_substring": "`T1`.`id` = `T2`.`hero_id`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL的WHERE条件无引号，MySQL的WHERE条件用反引号",
         "question_causing_substring": "male superheroes",
         "postgres_differing_substring": "T4.gender = 'Male'",
@@ -3101,7 +3122,7 @@
         "mysql_differing_substring": "LIMIT 5"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件（WHERE）相关、分页（LIMIT）语法"
+    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关、分页（LIMIT）语法"
   },
   {
     "question": "Provide the hair colour of the human superhero who is 185 cm tall.",
@@ -3138,7 +3159,7 @@
         "mysql_differing_substring": "`superhero` AS `T1`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL直接引用列名，MySQL用反引号包裹列名",
         "question_causing_substring": "weight greater than the 79% average weight",
         "postgres_differing_substring": "T1.weight_kg",
@@ -3152,7 +3173,7 @@
         "mysql_differing_substring": "AVG(`weight_kg`)"
       }
     ],
-    "causing_part": "列与表引用规则、筛选条件（WHERE）相关、聚合函数与引用"
+    "causing_part": "列与表引用规则、筛选条件相关、聚合函数与引用"
   },
   {
     "question": "What is the hero's full name with the highest attribute in strength?",
@@ -3197,14 +3218,14 @@
         "mysql_differing_substring": "`T1`.`publisher_id` = `T2`.`id`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL直接使用列名，MySQL使用反引号包裹列名",
         "question_causing_substring": "same eyes, hair and skin colour",
         "postgres_differing_substring": "T1.eye_colour_id = T1.hair_colour_id",
         "mysql_differing_substring": "`T1`.`eye_colour_id` = `T1`.`hair_colour_id`"
       }
     ],
-    "causing_part": "列与表引用规则、筛选条件（WHERE）相关"
+    "causing_part": "列与表引用规则、筛选条件相关"
   },
   {
     "question": "How many powers does Amazo hero have?",
@@ -3257,21 +3278,35 @@
     ],
     "causing_part": "列与表引用规则、表连接（JOIN）相关"
   },
-  {
+    {
     "question": "How many heroes have the highest attribute value in strength?",
     "postgres_sql": "SELECT COUNT(T1.hero_id) FROM hero_attribute AS T1 INNER JOIN attribute AS T2 ON T1.attribute_id = T2.id WHERE T2.attribute_name = 'Strength' AND T1.attribute_value = (SELECT MAX(attribute_value) FROM hero_attribute)",
-    "mysql_sql": "SELECT\n  COUNT(`T1`.`hero_id`)\nFROM `hero_attribute` AS `T1`\nINNER JOIN `attribute` AS `T2`\n  ON `T1`.`attribute_id` = `T2`.`id`\nWHERE\n  `T2`.`attribute_name` = 'Strength'\n  AND `T1`.`attribute_value` = (\n    SELECT\n      MAX(`attribute_value`)\n    FROM `hero_attribute`\n  )",
+    "mysql_sql": "SELECT\n COUNT(T1.hero_id)\nFROM hero_attribute AS T1\nINNER JOIN attribute AS T2\n ON T1.attribute_id = T2.id\nWHERE\n T2.attribute_name = 'Strength'\n AND T1.attribute_value = (\n SELECT\n MAX(attribute_value)\n FROM hero_attribute\n )",
     "syntax_differences": [
-      {
-        "difference": "分析失败",
-        "detail": "",
-        "question_causing_substring": "",
-        "postgres_differing_substring": "",
-        "mysql_differing_substring": ""
-      }
+    {
+    "difference": "列与表引用规则",
+    "detail": "PostgreSQL 直接使用表别名和列名（如 T1.hero_id、T1.attribute_id），MySQL 使用反引号包裹表别名和列名（如T1.hero_id、T1.attribute_id）",
+    "question_causing_substring": "heroes, attribute value, strength",
+    "postgres_differing_substring": "COUNT(T1.hero_id), T1.attribute_id = T2.id, T2.attribute_name, T1.attribute_value, MAX(attribute_value)",
+    "mysql_differing_substring": "COUNT(T1.hero_id), T1.attribute_id = T2.id, T2.attribute_name, T1.attribute_value, MAX(attribute_value)"
+    },
+    {
+    "difference": "聚合函数与引用",
+    "detail": "PostgreSQL 中聚合函数直接作用于列名（如 COUNT (T1.hero_id)、MAX (attribute_value)），MySQL 中聚合函数作用于带反引号的列名（如 COUNT (T1.hero_id)、MAX(attribute_value)）",
+    "question_causing_substring": "How many heroes, highest attribute value",
+    "postgres_differing_substring": "COUNT(T1.hero_id), MAX(attribute_value)",
+    "mysql_differing_substring": "COUNT(T1.hero_id), MAX(attribute_value)"
+    },
+    {
+    "difference": "表连接（JOIN）相关",
+    "detail": "PostgreSQL 在 JOIN 子句中直接使用表名和别名（如 INNER JOIN attribute AS T2），MySQL 使用反引号包裹表名和别名（如 INNER JOIN attribute AS T2），且连接条件的列引用方式不同 ",
+    "question_causing_substring": "heroes have the highest attribute value in strength",
+    "postgres_differing_substring": "INNER JOIN attribute AS T2 ON T1.attribute_id = T2.id",
+    "mysql_differing_substring": "INNER JOIN attribute AS T2 ON T1.attribute_id = T2.id"
+    }
     ],
-    "causing_part": "分析失败"
-  },
+    "causing_part": "列与表引用规则、聚合函数与引用、表连接（JOIN）相关"
+    },
   {
     "question": "Calculate the difference between Emil Blonsky's weight and Charles Chandler's weight.",
     "postgres_sql": "SELECT (SELECT weight_kg FROM superhero WHERE full_name LIKE 'Emil Blonsky') - (SELECT weight_kg FROM superhero WHERE full_name LIKE 'Charles Chandler') AS CALCULATE",
@@ -3359,14 +3394,14 @@
         "mysql_differing_substring": "`T1`.`eye_colour_id` = `T2`.`id`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL在WHERE条件中直接使用表别名，MySQL在WHERE条件中使用反引号引用表别名",
         "question_causing_substring": "Karen Beecher-Duncan as their full name",
         "postgres_differing_substring": "T1.full_name = 'Karen Beecher-Duncan'",
         "mysql_differing_substring": "`T1`.`full_name` = 'Karen Beecher-Duncan'"
       }
     ],
-    "causing_part": "列与表引用规则、筛选条件（WHERE）相关"
+    "causing_part": "列与表引用规则、筛选条件相关"
   },
   {
     "question": "How many green-skinned villains are there in the superhero universe?",
@@ -3491,14 +3526,14 @@
         "mysql_differing_substring": "`T2`.`Id` = `T1`.`ExcerptPostId`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL在WHERE条件中直接使用列名，MySQL在WHERE条件中使用反引号引用列名",
         "question_causing_substring": "tag \"bayesian\"",
         "postgres_differing_substring": "T1.TagName = 'bayesian'",
         "mysql_differing_substring": "`T1`.`TagName` = 'bayesian'"
       }
     ],
-    "causing_part": "列与表引用规则、筛选条件（WHERE）相关"
+    "causing_part": "列与表引用规则、筛选条件相关"
   },
   {
     "question": "Among the posts with a score of over 5, what is the percentage of them being owned by an elder user?",
@@ -3564,14 +3599,14 @@
         "mysql_differing_substring": "`T1`.`Id` = `T2`.`UserId`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL使用无引号或双引号列名，MySQL使用反引号列名",
         "question_causing_substring": "thank you user93!",
         "postgres_differing_substring": "T2.Text",
         "mysql_differing_substring": "`T2`.`Text`"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件（WHERE）相关"
+    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "What is the percentage difference of student badges given during 2010 and 2011?",
@@ -3981,14 +4016,14 @@
         "mysql_differing_substring": "`T1`.`uuid` = `T2`.`uuid`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL使用不带引号的列名，MySQL使用反引号引用列名",
         "question_causing_substring": "For artifact type of cards that do not have multiple faces on the same card, state its legalities status for vintage play format",
         "postgres_differing_substring": "T1.type = 'Artifact' AND T2.format = 'vintage' AND T1.side IS NULL",
         "mysql_differing_substring": "`T1`.`type` = 'Artifact' AND `T2`.`format` = 'vintage' AND `T1`.`side` IS NULL"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件（WHERE）相关"
+    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "Find all cards illustrated by Stephen Daniel and describe the text of the ruling of these cards. State if these cards have missing or degraded properties and values.",
@@ -4113,14 +4148,14 @@
         "mysql_differing_substring": "`T1`.`uuid` = `T2`.`uuid`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL直接使用表别名和列名，MySQL使用反引号包裹",
         "question_causing_substring": "How many of the banned cards are white border?",
         "postgres_differing_substring": "T2.status = 'Banned' AND T1.borderColor = 'white'",
         "mysql_differing_substring": "`T2`.`status` = 'Banned' AND `T1`.`borderColor` = 'white'"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件（WHERE）相关"
+    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "What is the mana cost of cards with a normal layout, a 2003 frame version, with a black border color, and available in paper and mtgo?",
@@ -4256,21 +4291,6 @@
     "causing_part": "空值（NULL）处理、列与表引用规则"
   },
   {
-    "question": "For the set of cards with \"Ancestor's Chosen\" in it, is there a Korean version of it?",
-    "postgres_sql": "SELECT CASE WHEN SUM(CASE WHEN T2.language = 'Korean' AND NOT T2.translation IS NULL THEN 1 ELSE 0 END) > 0 THEN 'YES' ELSE 'NO' END FROM cards AS T1 INNER JOIN set_translations AS T2 ON T2.setCode = T1.setCode WHERE T1.name = 'Ancestor''s Chosen'",
-    "mysql_sql": "SELECT\n  CASE\n    WHEN SUM(\n      CASE\n        WHEN `T2`.`language` = 'Korean' AND NOT `T2`.`translation` IS NULL\n        THEN 1\n        ELSE 0\n      END\n    ) > 0\n    THEN 'YES'\n    ELSE 'NO'\n  END\nFROM `cards` AS `T1`\nINNER JOIN `set_translations` AS `T2`\n  ON `T2`.`setCode` = `T1`.`setCode`\nWHERE\n  `T1`.`name` = 'Ancestor''s Chosen'",
-    "syntax_differences": [
-      {
-        "difference": "分析失败",
-        "detail": "",
-        "question_causing_substring": "",
-        "postgres_differing_substring": "",
-        "mysql_differing_substring": ""
-      }
-    ],
-    "causing_part": "分析失败"
-  },
-  {
     "question": "What is the Simplified Chinese translation of the name of the set \"Eighth Edition\"?",
     "postgres_sql": "SELECT T2.translation FROM sets AS T1 INNER JOIN set_translations AS T2 ON T2.setCode = T1.code WHERE T1.name = 'Eighth Edition' AND T2.language = 'Chinese Simplified'",
     "mysql_sql": "SELECT\n  `T2`.`translation`\nFROM `sets` AS `T1`\nINNER JOIN `set_translations` AS `T2`\n  ON `T2`.`setCode` = `T1`.`code`\nWHERE\n  `T1`.`name` = 'Eighth Edition' AND `T2`.`language` = 'Chinese Simplified'",
@@ -4349,14 +4369,14 @@
         "mysql_differing_substring": "`T2`.`uuid` = `T1`.`uuid`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL在WHERE子句中直接使用列名，MySQL使用反引号包裹的列名",
         "question_causing_substring": "Italian text ruling of all the cards",
         "postgres_differing_substring": "T3.name = 'Coldsnap'",
         "mysql_differing_substring": "`T3`.`name` = 'Coldsnap'"
       }
     ],
-    "causing_part": "列与表引用规则、筛选条件（WHERE）相关"
+    "causing_part": "列与表引用规则、筛选条件相关"
   },
   {
     "question": "Please list the Italian names of the cards in the set Coldsnap with the highest converted mana cost.",
@@ -4518,14 +4538,14 @@
         "mysql_differing_substring": "`T1`.`molecule_id` = `T2`.`molecule_id`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL不使用反引号引用条件表达式中的列，MySQL使用反引号引用条件表达式中的列",
         "question_causing_substring": "What elements are in a double type bond?",
         "postgres_differing_substring": "T2.bond_type = '='",
         "mysql_differing_substring": "`T2`.`bond_type` = '='"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件（WHERE）相关"
+    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "Which type of label is the most numerous in atoms with hydrogen?",
@@ -4774,21 +4794,21 @@
         "mysql_differing_substring": "`bond` AS `T1` INNER JOIN `connected` AS `T2`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL使用无引号列引用，MySQL使用反引号引用列",
         "question_causing_substring": "bond ID of TR001_6_9",
         "postgres_differing_substring": "T1.bond_id = T2.bond_id",
         "mysql_differing_substring": "`T1`.`bond_id` = `T2`.`bond_id`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL使用无引号列引用，MySQL使用反引号引用列",
         "question_causing_substring": "bond ID of TR001_6_9",
         "postgres_differing_substring": "T2.bond_id = 'TR001_6_9'",
         "mysql_differing_substring": "`T2`.`bond_id` = 'TR001_6_9'"
       }
     ],
-    "causing_part": "列与表引用规则、筛选条件（WHERE）相关、筛选条件（WHERE）相关"
+    "causing_part": "列与表引用规则、筛选条件相关、筛选条件相关"
   },
   {
     "question": "What are the bonds that have phosphorus and nitrogen as their atom elements?",
@@ -4869,14 +4889,14 @@
         "mysql_differing_substring": "`T1`.`atom_id` = `T2`.`atom_id`"
       },
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL不使用反引号引用列名，MySQL使用反引号引用列名",
         "question_causing_substring": "TR144_8_19",
         "postgres_differing_substring": "T1.bond_id = 'TR144_8_19'",
         "mysql_differing_substring": "`T1`.`bond_id` = 'TR144_8_19'"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件（WHERE）相关"
+    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "What proportion of single bonds are carcinogenic? Please provide your answer as a percentage with five decimal places.",
@@ -5426,14 +5446,14 @@
     "mysql_sql": "SELECT\n  `T1`.`Enrollment (Ages 5-17)`\nFROM `frpm` AS `T1`\nINNER JOIN `schools` AS `T2`\n  ON `T1`.`CDSCode` = `T2`.`CDSCode`\nWHERE\n  `T2`.`EdOpsCode` = 'SSS'\n  AND `T2`.`City` = 'Fremont'\n  AND `T1`.`Academic Year` BETWEEN 2014 AND 2015",
     "syntax_differences": [
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL使用等号进行精确匹配，MySQL使用BETWEEN进行范围匹配",
         "question_causing_substring": "2014-2015 academic year",
         "postgres_differing_substring": "T1.\"Academic Year\" = '2014-2015'",
         "mysql_differing_substring": "`T1`.`Academic Year` BETWEEN 2014 AND 2015"
       }
     ],
-    "causing_part": "筛选条件（WHERE）相关"
+    "causing_part": "筛选条件相关"
   },
   {
     "question": "Which schools served a grade span of Kindergarten to 9th grade in the county of Los Angeles and what is its Percent (%) Eligible FRPM (Ages 5-17)?",
@@ -5705,7 +5725,7 @@
     "mysql_sql": "SELECT\n  CAST(SUM(`T1`.`gender` = 'M') AS DOUBLE) * 100 / COUNT(`T1`.`client_id`)\nFROM `client` AS `T1`\nINNER JOIN `district` AS `T2`\n  ON `T1`.`district_id` = `T2`.`district_id`\nWHERE\n  `T2`.`A3` = 'south Bohemia'\nGROUP BY\n  `T2`.`A4`\nORDER BY\n  `T2`.`A4` DESC\nLIMIT 1",
     "syntax_differences": [
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL用CASE WHEN，MySQL用布尔表达式直接求和",
         "question_causing_substring": "what is the percentage of the male clients",
         "postgres_differing_substring": "CASE WHEN T1.gender = 'M' THEN 1 ELSE 0 END",
@@ -5726,7 +5746,7 @@
         "mysql_differing_substring": "COUNT(`T1`.`client_id`)"
       }
     ],
-    "causing_part": "筛选条件（WHERE）相关、类型转换、数值处理"
+    "causing_part": "筛选条件相关、类型转换、数值处理"
   },
   {
     "question": "What is the percentage of loan amount that has been fully paid with no issue.",
@@ -5903,7 +5923,7 @@
     "mysql_sql": "SELECT\n  CAST(SUM(`T2`.`gender` = 'F') AS DOUBLE) * 100 / COUNT(`T2`.`client_id`)\nFROM `district` AS `T1`\nINNER JOIN `client` AS `T2`\n  ON `T1`.`district_id` = `T2`.`district_id`\nWHERE\n  `T1`.`A11` > 10000",
     "syntax_differences": [
       {
-        "difference": "筛选条件（WHERE）相关",
+        "difference": "筛选条件相关",
         "detail": "PostgreSQL用CASE WHEN，MySQL用布尔表达式直接求和",
         "question_causing_substring": "are women",
         "postgres_differing_substring": "CASE WHEN T2.gender = 'F' THEN 1 ELSE 0 END",
@@ -5924,7 +5944,7 @@
         "mysql_differing_substring": "COUNT(`T2`.`client_id`)"
       }
     ],
-    "causing_part": "筛选条件（WHERE）相关、数值处理、数值处理"
+    "causing_part": "筛选条件相关、数值处理、数值处理"
   },
   {
     "question": "What was the growth rate of the total amount of loans across all accounts for a male client between 1996 and 1997?",

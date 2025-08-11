@@ -306,176 +306,176 @@ if __name__ == "__main__":
 # # # # # # #将问题归类
 
 
-# # # # # # import json
-# # # # # # import os
+# # # # # import json
+# # # # # import os
 
-# # # # # # def group_by_difference(input_file, output_file):
-# # # # # #     """
-# # # # # #     将JSON文件中的数据按"syntax_differences"数组中的"difference"字段分类，并保存到新的JSON文件
+# # # # # def group_by_difference(input_file, output_file):
+# # # # #     """
+# # # # #     将JSON文件中的数据按"syntax_differences"数组中的"difference"字段分类，并保存到新的JSON文件
     
-# # # # # #     参数:
-# # # # # #         input_file: 输入JSON文件路径
-# # # # # #         output_file: 输出JSON文件路径
-# # # # # #     """
-# # # # # #     try:
-# # # # # #         # 读取输入文件
-# # # # # #         with open(input_file, 'r', encoding='utf-8') as f:
-# # # # # #             data = json.load(f)
+# # # # #     参数:
+# # # # #         input_file: 输入JSON文件路径
+# # # # #         output_file: 输出JSON文件路径
+# # # # #     """
+# # # # #     try:
+# # # # #         # 读取输入文件
+# # # # #         with open(input_file, 'r', encoding='utf-8') as f:
+# # # # #             data = json.load(f)
         
-# # # # # #         # 确保输入数据是列表类型
-# # # # # #         if not isinstance(data, list):
-# # # # # #             raise ValueError("输入JSON文件的根元素必须是列表")
+# # # # #         # 确保输入数据是列表类型
+# # # # #         if not isinstance(data, list):
+# # # # #             raise ValueError("输入JSON文件的根元素必须是列表")
         
-# # # # # #         # 按"difference"分组
-# # # # # #         grouped = {}
-# # # # # #         skipped_items = 0  # 记录跳过的项目数量
-# # # # # #         total_processed = 0  # 记录处理的差异数量
+# # # # #         # 按"difference"分组
+# # # # #         grouped = {}
+# # # # #         skipped_items = 0  # 记录跳过的项目数量
+# # # # #         total_processed = 0  # 记录处理的差异数量
         
-# # # # # #         for item in data:
-# # # # # #             # 检查顶层必要字段
-# # # # # #             top_level_fields = ["question", "postgres_sql", "mysql_sql"]
-# # # # # #             missing_top_fields = [field for field in top_level_fields if field not in item]
+# # # # #         for item in data:
+# # # # #             # 检查顶层必要字段
+# # # # #             top_level_fields = ["question", "postgres_sql", "mysql_sql"]
+# # # # #             missing_top_fields = [field for field in top_level_fields if field not in item]
             
-# # # # # #             if missing_top_fields:
-# # # # # #                 skipped_items += 1
-# # # # # #                 print(f"警告: 跳过缺少顶层字段的数据项，缺少字段: {', '.join(missing_top_fields)}")
-# # # # # #                 continue
+# # # # #             if missing_top_fields:
+# # # # #                 skipped_items += 1
+# # # # #                 print(f"警告: 跳过缺少顶层字段的数据项，缺少字段: {', '.join(missing_top_fields)}")
+# # # # #                 continue
             
-# # # # # #             # 检查是否有syntax_differences字段且是列表
-# # # # # #             if "syntax_differences" not in item or not isinstance(item["syntax_differences"], list):
-# # # # # #                 skipped_items += 1
-# # # # # #                 print("警告: 跳过缺少有效的syntax_differences数组的数据项")
-# # # # # #                 continue
+# # # # #             # 检查是否有syntax_differences字段且是列表
+# # # # #             if "syntax_differences" not in item or not isinstance(item["syntax_differences"], list):
+# # # # #                 skipped_items += 1
+# # # # #                 print("警告: 跳过缺少有效的syntax_differences数组的数据项")
+# # # # #                 continue
             
-# # # # # #             # 处理每个syntax_difference
-# # # # # #             for diff in item["syntax_differences"]:
-# # # # # #                 # 检查差异项中的必要字段
-# # # # # #                 diff_fields = ["difference", "question_causing_substring", 
-# # # # # #                              "postgres_differing_substring", "mysql_differing_substring"]
-# # # # # #                 missing_diff_fields = [field for field in diff_fields if field not in diff]
+# # # # #             # 处理每个syntax_difference
+# # # # #             for diff in item["syntax_differences"]:
+# # # # #                 # 检查差异项中的必要字段
+# # # # #                 diff_fields = ["difference", "question_causing_substring", 
+# # # # #                              "postgres_differing_substring", "mysql_differing_substring"]
+# # # # #                 missing_diff_fields = [field for field in diff_fields if field not in diff]
                 
-# # # # # #                 if missing_diff_fields:
-# # # # # #                     skipped_items += 1
-# # # # # #                     print(f"警告: 跳过缺少字段的差异项，缺少字段: {', '.join(missing_diff_fields)}")
-# # # # # #                     continue
+# # # # #                 if missing_diff_fields:
+# # # # #                     skipped_items += 1
+# # # # #                     print(f"警告: 跳过缺少字段的差异项，缺少字段: {', '.join(missing_diff_fields)}")
+# # # # #                     continue
                 
-# # # # # #                 # 准备要保存的条目，包含顶层信息和当前差异信息
-# # # # # #                 entry = {
-# # # # # #                     "question": item["question"],
-# # # # # #                     "postgres_sql": item["postgres_sql"],
-# # # # # #                     "mysql_sql": item["mysql_sql"],
-# # # # # #                     "question_causing_substring": diff["question_causing_substring"],
-# # # # # #                     "postgres_differing_substring": diff["postgres_differing_substring"],
-# # # # # #                     "mysql_differing_substring": diff["mysql_differing_substring"],
-# # # # # #                     "difference": diff["difference"],
-# # # # # #                     "detail": diff.get("detail", "")  # 可选字段
-# # # # # #                 }
+# # # # #                 # 准备要保存的条目，包含顶层信息和当前差异信息
+# # # # #                 entry = {
+# # # # #                     "question": item["question"],
+# # # # #                     "postgres_sql": item["postgres_sql"],
+# # # # #                     "mysql_sql": item["mysql_sql"],
+# # # # #                     "question_causing_substring": diff["question_causing_substring"],
+# # # # #                     "postgres_differing_substring": diff["postgres_differing_substring"],
+# # # # #                     "mysql_differing_substring": diff["mysql_differing_substring"],
+# # # # #                     "difference": diff["difference"],
+# # # # #                     "detail": diff.get("detail", "")  # 可选字段
+# # # # #                 }
                 
-# # # # # #                 difference = diff["difference"]
-# # # # # #                 # 确保difference是字符串类型
-# # # # # #                 if not isinstance(difference, str):
-# # # # # #                     difference = str(difference)
+# # # # #                 difference = diff["difference"]
+# # # # #                 # 确保difference是字符串类型
+# # # # #                 if not isinstance(difference, str):
+# # # # #                     difference = str(difference)
                 
-# # # # # #                 # 按difference分组，允许重复项
-# # # # # #                 if difference not in grouped:
-# # # # # #                     grouped[difference] = []
-# # # # # #                 grouped[difference].append(entry)
-# # # # # #                 total_processed += 1
+# # # # #                 # 按difference分组，允许重复项
+# # # # #                 if difference not in grouped:
+# # # # #                     grouped[difference] = []
+# # # # #                 grouped[difference].append(entry)
+# # # # #                 total_processed += 1
         
-# # # # # #         # 确保输出目录存在
-# # # # # #         output_dir = os.path.dirname(output_file)
-# # # # # #         if not os.path.exists(output_dir):
-# # # # # #             os.makedirs(output_dir)
+# # # # #         # 确保输出目录存在
+# # # # #         output_dir = os.path.dirname(output_file)
+# # # # #         if not os.path.exists(output_dir):
+# # # # #             os.makedirs(output_dir)
         
-# # # # # #         # 保存结果到输出文件
-# # # # # #         with open(output_file, 'w', encoding='utf-8') as f:
-# # # # # #             json.dump(grouped, f, ensure_ascii=False, indent=4)
+# # # # #         # 保存结果到输出文件
+# # # # #         with open(output_file, 'w', encoding='utf-8') as f:
+# # # # #             json.dump(grouped, f, ensure_ascii=False, indent=4)
         
-# # # # # #         print(f"成功将数据按'difference'分类，结果已保存到: {output_file}")
-# # # # # #         print(f"共分为 {len(grouped)} 个不同的'difference'类别")
-# # # # # #         print(f"共处理了 {total_processed} 个差异项")
-# # # # # #         print(f"处理过程中跳过了 {skipped_items} 个有问题的数据项/差异项")
+# # # # #         print(f"成功将数据按'difference'分类，结果已保存到: {output_file}")
+# # # # #         print(f"共分为 {len(grouped)} 个不同的'difference'类别")
+# # # # #         print(f"共处理了 {total_processed} 个差异项")
+# # # # #         print(f"处理过程中跳过了 {skipped_items} 个有问题的数据项/差异项")
         
-# # # # # #     except FileNotFoundError:
-# # # # # #         print(f"错误: 找不到输入文件 {input_file}")
-# # # # # #     except json.JSONDecodeError:
-# # # # # #         print(f"错误: 输入文件 {input_file} 不是有效的JSON格式")
-# # # # # #     except Exception as e:
-# # # # # #         print(f"处理过程中发生错误: {str(e)}")
+# # # # #     except FileNotFoundError:
+# # # # #         print(f"错误: 找不到输入文件 {input_file}")
+# # # # #     except json.JSONDecodeError:
+# # # # #         print(f"错误: 输入文件 {input_file} 不是有效的JSON格式")
+# # # # #     except Exception as e:
+# # # # #         print(f"处理过程中发生错误: {str(e)}")
 
-# # # # # # if __name__ == "__main__":
-# # # # # #     # 输入文件路径
-# # # # # #     input_path = r"C:\copy\code\minidev\MINIDEV\pg\pg_mysql_result\conclude\postgres_mysql_difference.json"
-# # # # # #     # 输出文件路径
-# # # # # #     output_path = r"C:\copy\code\minidev\MINIDEV\pg\pg_mysql_result\conclude\pg_mysql_conclusion.json"
+# # # # # if __name__ == "__main__":
+# # # # #     # 输入文件路径
+# # # # #     input_path = r"C:\copy\code\minidev\MINIDEV\pg\pg_mysql_result\conclude\postgres_mysql_difference.json"
+# # # # #     # 输出文件路径
+# # # # #     output_path = r"C:\copy\code\minidev\MINIDEV\pg\pg_mysql_result\conclude\pg_mysql_conclusion.json"
     
-# # # # # #     # 执行分组操作
-# # # # # #     group_by_difference(input_path, output_path)
+# # # # #     # 执行分组操作
+# # # # #     group_by_difference(input_path, output_path)
 
-# # #计算方言部分占自然语言问题的百分比
+# #计算方言部分占自然语言问题的百分比
 
-# # import json
-# # import os
-# # import shutil
+# import json
+# import os
+# import shutil
 
-# # def calculate_substring_percentage(json_data):
-# #     """计算每个问题中question_causing_substring占整个question的百分比并添加到对应位置（带%）"""
-# #     # 遍历每个顶层大字典（如"空值(NULL)处理"）
-# #     for category, questions_list in json_data.items():
-# #         # 检查是否是列表类型（根据提供的格式，每个顶层键对应一个列表）
-# #         if isinstance(questions_list, list):
-# #             # 遍历列表中的每个问题
-# #             for question in questions_list:
-# #                 # 确保必要字段存在
-# #                 if "question" in question and "question_causing_substring" in question:
-# #                     full_question = question["question"]
-# #                     substring = question["question_causing_substring"]
+# def calculate_substring_percentage(json_data):
+#     """计算每个问题中question_causing_substring占整个question的百分比并添加到对应位置（带%）"""
+#     # 遍历每个顶层大字典（如"空值(NULL)处理"）
+#     for category, questions_list in json_data.items():
+#         # 检查是否是列表类型（根据提供的格式，每个顶层键对应一个列表）
+#         if isinstance(questions_list, list):
+#             # 遍历列表中的每个问题
+#             for question in questions_list:
+#                 # 确保必要字段存在
+#                 if "question" in question and "question_causing_substring" in question:
+#                     full_question = question["question"]
+#                     substring = question["question_causing_substring"]
                     
-# #                     # 计算百分比，避免除以零
-# #                     if len(full_question) > 0:
-# #                         percentage = (len(substring) / len(full_question)) * 100
-# #                         # 保留两位小数并添加百分号
-# #                         question["substring_percentage"] = f"{round(percentage, 2)}%"
-# #                     else:
-# #                         question["substring_percentage"] = "0.00%"
-# #     return json_data
+#                     # 计算百分比，避免除以零
+#                     if len(full_question) > 0:
+#                         percentage = (len(substring) / len(full_question)) * 100
+#                         # 保留两位小数并添加百分号
+#                         question["substring_percentage"] = f"{round(percentage, 2)}%"
+#                     else:
+#                         question["substring_percentage"] = "0.00%"
+#     return json_data
 
-# # def main():
-# #     # 文件路径
-# #     file_path = r"C:\copy\code\minidev\MINIDEV\pg\pg_mysql_result\conclude\pg_mysql_conclusion.json"
+# def main():
+#     # 文件路径
+#     file_path = r"C:\copy\code\minidev\MINIDEV\pg\pg_mysql_result\conclude\pg_mysql_conclusion.json"
     
-# #     # 检查文件是否存在
-# #     if not os.path.exists(file_path):
-# #         print(f"错误：文件不存在 - {file_path}")
-# #         return
+#     # 检查文件是否存在
+#     if not os.path.exists(file_path):
+#         print(f"错误：文件不存在 - {file_path}")
+#         return
     
-# #     try:
-# #         # 创建文件备份
-# #         backup_path = f"{file_path}.backup"
-# #         shutil.copy2(file_path, backup_path)
-# #         print(f"已创建文件备份: {backup_path}")
+#     try:
+#         # 创建文件备份
+#         backup_path = f"{file_path}.backup"
+#         shutil.copy2(file_path, backup_path)
+#         print(f"已创建文件备份: {backup_path}")
         
-# #         # 读取JSON文件
-# #         with open(file_path, 'r', encoding='utf-8') as f:
-# #             json_data = json.load(f)
+#         # 读取JSON文件
+#         with open(file_path, 'r', encoding='utf-8') as f:
+#             json_data = json.load(f)
         
-# #         # 计算并更新百分比
-# #         updated_data = calculate_substring_percentage(json_data)
+#         # 计算并更新百分比
+#         updated_data = calculate_substring_percentage(json_data)
         
-# #         # 保存更新后的JSON文件
-# #         with open(file_path, 'w', encoding='utf-8') as f:
-# #             # 确保中文正常显示且格式美观
-# #             json.dump(updated_data, f, ensure_ascii=False, indent=4)
+#         # 保存更新后的JSON文件
+#         with open(file_path, 'w', encoding='utf-8') as f:
+#             # 确保中文正常显示且格式美观
+#             json.dump(updated_data, f, ensure_ascii=False, indent=4)
         
-# #         print("处理完成，已更新文件并添加带百分号的substring_percentage字段")
+#         print("处理完成，已更新文件并添加带百分号的substring_percentage字段")
         
-# #     except json.JSONDecodeError:
-# #         print("错误：文件不是有效的JSON格式")
-# #     except Exception as e:
-# #         print(f"处理过程中发生错误: {str(e)}")
+#     except json.JSONDecodeError:
+#         print("错误：文件不是有效的JSON格式")
+#     except Exception as e:
+#         print(f"处理过程中发生错误: {str(e)}")
 
-# # if __name__ == "__main__":
-# #     main()
+# if __name__ == "__main__":
+#     main()
     
     
 # #计算平均值

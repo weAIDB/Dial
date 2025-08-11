@@ -122,7 +122,7 @@
         "mysql_differing_substring": "`Date`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Is it true that more SMEs pay in Czech koruna than in euros? If so, how many more?",
@@ -188,7 +188,7 @@
         "mysql_differing_substring": "`Consumption`"
       }
     ],
-    "causing_part": "类型转换、空值（NULL）处理、列与表引用规则"
+    "causing_part": "类型转换、空值（NULL）处理、列与列与表引用规则规则"
   },
   {
     "question": "Please list the countries of the gas stations with transactions taken place in June, 2013.",
@@ -210,7 +210,7 @@
         "mysql_differing_substring": "`T1`.`GasStationID` = `T2`.`GasStationID`"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关"
   },
   {
     "question": "Please list the product descriptions of the transactions taken place in the gas stations in the Czech Republic.",
@@ -232,7 +232,7 @@
         "mysql_differing_substring": "`T1`.`GasStationID` = `T2`.`GasStationID`"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关"
   },
   {
     "question": "Among the transactions made in the gas stations in the Czech Republic, how many of them are taken place after 2012/1/1?",
@@ -328,7 +328,7 @@
         "mysql_differing_substring": "`T1`.`Price`"
       }
     ],
-    "causing_part": "筛选条件相关、列与表引用规则"
+    "causing_part": "筛选条件相关、列与列与表引用规则规则"
   },
   {
     "question": "Who is the top spending customer and how much is the average price per single item purchased by this customer? What currency was being used?",
@@ -372,7 +372,7 @@
         "mysql_differing_substring": "`T1`.`link_to_major`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Was each expense in October Meeting on October 8, 2019 approved?",
@@ -402,7 +402,7 @@
         "mysql_differing_substring": "`T1`.`event_id` = `T2`.`link_to_event`"
       }
     ],
-    "causing_part": "列与表引用规则"
+    "causing_part": "列与列与表引用规则规则"
   },
   {
     "question": "What was Brent Thomason's major?",
@@ -424,7 +424,7 @@
         "mysql_differing_substring": "`T1`.`link_to_major`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Which department was the President of the club in?",
@@ -446,7 +446,7 @@
         "mysql_differing_substring": "'President'"
       }
     ],
-    "causing_part": "列与表引用规则、字符串处理"
+    "causing_part": "列与列与表引用规则规则、字符串处理"
   },
   {
     "question": "How many times was the budget in Advertisement for \"Yearly Kickoff\" meeting more than \"October Meeting\"?",
@@ -490,7 +490,7 @@
         "mysql_differing_substring": "`T1`.`event_id` = `T2`.`link_to_event`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Among all the closed events, which event has the highest spend-to-budget ratio?",
@@ -527,7 +527,7 @@
         "mysql_differing_substring": "`T4`.`first_name`"
       }
     ],
-    "causing_part": "列与表引用规则"
+    "causing_part": "列与列与表引用规则规则"
   },
   {
     "question": "Which event has the lowest cost?",
@@ -571,7 +571,7 @@
         "mysql_differing_substring": "`date_received`"
       }
     ],
-    "causing_part": "空值（NULL）处理、列与表引用规则、列与表引用规则"
+    "causing_part": "空值（NULL）处理、列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Name the event with the highest amount spent on advertisement.",
@@ -608,7 +608,7 @@
         "mysql_differing_substring": "ON `T1`.`event_id` = `T2`.`link_to_event`"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关"
   },
   {
     "question": "Indicate the name of the closed event whose cost has exceeded the budget the most.",
@@ -667,7 +667,7 @@
         "mysql_differing_substring": "`T1`.`location` = 'MU 215'"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "What are the budget category of the events located at MU 215 and a guest speaker type with a 0 budget spent?",
@@ -696,7 +696,7 @@
         "mysql_differing_substring": "`T1`.`location` = 'MU 215' AND `T2`.`spent` = 0 AND `T1`.`type` = 'Guest Speaker'"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "List the names of closed event as \"game\" that was closed from 3/15/2019 to 3/20/2020.",
@@ -732,7 +732,7 @@
         "mysql_differing_substring": "`status`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则、列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则、列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Are there more in-patient or outpatient who were male? What is the deviation in percentage?",
@@ -819,7 +819,7 @@
         "mysql_differing_substring": "CURRENT_TIMESTAMP()"
       }
     ],
-    "causing_part": "日期时间处理、列与表引用规则、日期时间处理"
+    "causing_part": "日期时间处理、列与列与表引用规则规则、日期时间处理"
   },
   {
     "question": "How many female patients who came at the hospital in 1997 was immediately followed at the outpatient clinic?",
@@ -848,7 +848,7 @@
         "mysql_differing_substring": "`SEX`"
       }
     ],
-    "causing_part": "日期时间处理、日期时间处理、列与表引用规则"
+    "causing_part": "日期时间处理、日期时间处理、列与列与表引用规则规则"
   },
   {
     "question": "How many of the patients with the most serious thrombosis cases examined in 1997 are women?",
@@ -892,7 +892,7 @@
         "mysql_differing_substring": "`T2`.`Symptoms`"
       }
     ],
-    "causing_part": "空值（NULL）处理、列与表引用规则"
+    "causing_part": "空值（NULL）处理、列与列与表引用规则规则"
   },
   {
     "question": "The oldest SJS patient's medical laboratory work was completed on what date, and what age was the patient when they initially arrived at the hospital?",
@@ -965,7 +965,7 @@
         "mysql_differing_substring": "`Examination Date`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "For the patient who was born on 1959/2/18, what is the decrease rate for his/her total cholesterol from November to December in 1981?",
@@ -1001,7 +1001,7 @@
         "mysql_differing_substring": "`T2`.`Date` LIKE '1981-11-%'"
       }
     ],
-    "causing_part": "类型转换、数值处理、列与表引用规则、日期时间处理"
+    "causing_part": "类型转换、数值处理、列与列与表引用规则规则、日期时间处理"
   },
   {
     "question": "List all patients who were followed up at the outpatient clinic who underwent a laboratory test in October 1991 and had a total blood bilirubin level within the normal range.",
@@ -1074,7 +1074,7 @@
         "mysql_differing_substring": "`T1`.`ID` = `T2`.`ID`"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关"
   },
   {
     "question": "Please provide the diagnosis of patients with ALT glutamic pylvic transaminase beyond the normal range by ascending order of their date of birth.",
@@ -1111,7 +1111,7 @@
         "mysql_differing_substring": "T2.`T-CHO`"
       }
     ],
-    "causing_part": "日期时间处理、列与表引用规则"
+    "causing_part": "日期时间处理、列与列与表引用规则规则"
   },
   {
     "question": "For patient born between 1936-1956, how many male patients have creatinine phosphokinase beyond the normal range?",
@@ -1140,7 +1140,7 @@
         "mysql_differing_substring": "`T1`.`ID`, `T1`.`SEX`, `T2`.`CPK`"
       }
     ],
-    "causing_part": "日期时间处理、日期时间处理、列与表引用规则"
+    "causing_part": "日期时间处理、日期时间处理、列与列与表引用规则规则"
   },
   {
     "question": "Provide ID, sex and age of patient who has blood glucose (GLU) not within normal range but with total cholesterol(T-CHO) within normal range.",
@@ -1169,7 +1169,7 @@
         "mysql_differing_substring": "CURRENT_TIMESTAMP()"
       }
     ],
-    "causing_part": "日期时间处理、列与表引用规则、日期时间处理"
+    "causing_part": "日期时间处理、列与列与表引用规则规则、日期时间处理"
   },
   {
     "question": "Among the patients who were diagnosed with SLE, who is the oldest with normal hemoglobin level. Provide the ID and sex.",
@@ -1191,7 +1191,7 @@
         "mysql_differing_substring": "`Laboratory` AS `T2`"
       }
     ],
-    "causing_part": "空值（NULL）处理、列与表引用规则"
+    "causing_part": "空值（NULL）处理、列与列与表引用规则规则"
   },
   {
     "question": "For patients with abnormal platelet level, state the number of patients with lower than normal range. How is it compare to the number of patients with higher than normal range?",
@@ -1213,7 +1213,7 @@
         "mysql_differing_substring": "`T1`.`ID` = `T2`.`ID`"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关"
   },
   {
     "question": "For all patients who are older than 55 years old, what is the percentage of female who has abnormal prothrombin time (PT)?",
@@ -1249,7 +1249,7 @@
         "mysql_differing_substring": "`Patient` AS `T1` INNER JOIN `Laboratory` AS `T2`"
       }
     ],
-    "causing_part": "类型转换、数值处理、日期时间处理、列与表引用规则"
+    "causing_part": "类型转换、数值处理、日期时间处理、列与列与表引用规则规则"
   },
   {
     "question": "How many patients with an Ig G higher than normal?",
@@ -1278,7 +1278,7 @@
         "mysql_differing_substring": "`T2`.`IGG` >= 2000"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "How many patients with a normal Ig A level came to the hospital after 1990/1/1?",
@@ -1359,7 +1359,7 @@
         "mysql_differing_substring": "`T2`.`SM`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Among the patients who have an abnormal level of glutamic oxaloacetic transaminase, when was the youngest of them born?",
@@ -1441,7 +1441,7 @@
         "mysql_differing_substring": ""
       }
     ],
-    "causing_part": "列与表引用规则、空值（NULL）处理"
+    "causing_part": "列与列与表引用规则规则、空值（NULL）处理"
   },
   {
     "question": "At present, calculate for the player's age who have a sprint speed of no less than 97 between 2013 to 2015.",
@@ -1499,7 +1499,7 @@
         "mysql_differing_substring": "INNER JOIN `League` AS `t2`"
       }
     ],
-    "causing_part": "聚合函数与引用、列与表引用规则、表连接（JOIN）相关"
+    "causing_part": "聚合函数与引用、列与列与表引用规则规则、表连接（JOIN）相关"
   },
   {
     "question": "List the long name of teams with above-average build-up play passing in 2012.",
@@ -1725,7 +1725,7 @@
         "mysql_differing_substring": "`height`"
       }
     ],
-    "causing_part": "空值（NULL）处理、列与表引用规则、列与表引用规则"
+    "causing_part": "空值（NULL）处理、列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Among the players born before the year 1986, how many of them would remain in his position and defense while the team attacked?",
@@ -1806,7 +1806,7 @@
         "mysql_differing_substring": ""
       }
     ],
-    "causing_part": "列与表引用规则、排序（ORDER BY）基础语法"
+    "causing_part": "列与列与表引用规则规则、排序（ORDER BY）基础语法"
   },
   {
     "question": "What was the overall rating for Aaron Mooy on 2016/2/4?",
@@ -1828,7 +1828,7 @@
         "mysql_differing_substring": "`t2`.`overall_rating`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "How was Francesco Migliore's attacking work rate on 2015/5/1?",
@@ -1858,7 +1858,7 @@
         "mysql_differing_substring": "`t2`.`crossing`"
       }
     ],
-    "causing_part": "列与表引用规则"
+    "causing_part": "列与列与表引用规则规则"
   },
   {
     "question": "Tell the build Up play passing class for \"FC Lorient\" on 2010/2/22.",
@@ -1880,7 +1880,7 @@
         "mysql_differing_substring": "`t2`.`buildUpPlayPassingClass`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "For the team \"Hannover 96\", what was its defence aggression class on 2015/9/10?",
@@ -1954,7 +1954,7 @@
         "mysql_differing_substring": "AS ranked_players"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Who are the players that tend to be attacking when their mates were doing attack moves? List down their name.",
@@ -1976,7 +1976,7 @@
         "mysql_differing_substring": "`t1`.`player_api_id` = `t2`.`player_api_id`"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关"
   },
   {
     "question": "How many football players born after the 1990s have the first name \"Aaron\"?",
@@ -2005,7 +2005,7 @@
         "mysql_differing_substring": "`player_name`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Please provide top four football players' IDs who are among the lowest potential players and prefer to use the right foot when attacking.",
@@ -2034,7 +2034,7 @@
         "mysql_differing_substring": "`preferred_foot`"
       }
     ],
-    "causing_part": "空值（NULL）处理、列与表引用规则、列与表引用规则"
+    "causing_part": "空值（NULL）处理、列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Please state the finishing rate and curve score of the player who has the heaviest weight.",
@@ -2153,7 +2153,7 @@
         "mysql_differing_substring": "`T2`.`name` = 'Australian Grand Prix'"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "For the Bahrain Grand Prix in 2007, how many drivers not finished the game?",
@@ -2175,7 +2175,7 @@
         "mysql_differing_substring": "`T2`.`raceId` = `T1`.`raceId`"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关"
   },
   {
     "question": "For all the drivers who finished the game in race No. 592, who is the oldest?",
@@ -2234,7 +2234,7 @@
         "mysql_differing_substring": "`T1`.`raceId` = 901"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "For all the drivers who finished the game in race No. 872, who is the youngest?",
@@ -2329,7 +2329,7 @@
         "mysql_differing_substring": "`name`"
       }
     ],
-    "causing_part": "日期时间处理、日期时间处理、日期时间处理、日期时间处理、列与表引用规则"
+    "causing_part": "日期时间处理、日期时间处理、日期时间处理、日期时间处理、列与列与表引用规则规则"
   },
   {
     "question": "State the driver with the most points scored. Find his full name with that points.",
@@ -2440,7 +2440,7 @@
         "mysql_differing_substring": "`races` AS `T1`"
       }
     ],
-    "causing_part": "空值（NULL）处理、列与表引用规则"
+    "causing_part": "空值（NULL）处理、列与列与表引用规则规则"
   },
   {
     "question": "Which was Lewis Hamilton first race? What was his points recorded for his first race event?",
@@ -2507,7 +2507,7 @@
         "mysql_differing_substring": "`T1`.`rank` = 2"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "How much faster in percentage is the champion than the driver who finished the race last in the 2008 Australian Grand Prix?",
@@ -2551,7 +2551,7 @@
         "mysql_differing_substring": "`T2`.`nationality` = 'British'"
       }
     ],
-    "causing_part": "列与表引用规则、筛选条件相关"
+    "causing_part": "列与列与表引用规则规则、筛选条件相关"
   },
   {
     "question": "How many Japanese constructors have 0 points in 2 races?",
@@ -2580,7 +2580,7 @@
         "mysql_differing_substring": "HAVING COUNT(`raceId`) = 2"
       }
     ],
-    "causing_part": "列与表引用规则、分组聚合（GROUP BY 子句）、分组后的筛选（HAVING 子句）"
+    "causing_part": "列与列与表引用规则规则、分组聚合（GROUP BY 子句）、分组后的筛选（HAVING 子句）"
   },
   {
     "question": "What is the average time in seconds of champion for each year, before year 1975?",
@@ -2704,7 +2704,7 @@
         "mysql_differing_substring": "`T3`.`nationality`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Which drivers who were born in 1971 and has the fastest lap time on the race? Give id and code of these drivers.",
@@ -2755,7 +2755,7 @@
         "mysql_differing_substring": "`country`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "On what year did the youngest driver had his first qualifying race? Also state the name, date and time of the race.",
@@ -2828,7 +2828,7 @@
         "mysql_differing_substring": "`T2`.`name` = 'Singapore Grand Prix'"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "Which constructor scored most points from Monaco Grand Prix between 1980 and 2010? List the score, name and nationality of this team.",
@@ -2845,42 +2845,42 @@
     ],
     "causing_part": "分组聚合（GROUP BY 子句）"
   },
-{
-  "question": "What is full name of the racer who ranked 1st in the 3rd qualifying race held in the Marina Bay Street Circuit in 2008?",
-  "postgres_sql": "SELECT T2.forename, T2.surname FROM qualifying AS T1 INNER JOIN drivers AS T2 ON T1.driverId = T2.driverId INNER JOIN races AS T3 ON T1.raceid = T3.raceid WHERE q3 IS NOT NULL AND T3.year = 2008 AND T3.circuitId IN (SELECT circuitId FROM circuits WHERE name = 'Marina Bay Street Circuit') ORDER BY CAST(SPLIT_PART(q3, ':', 1) AS INTEGER) * 60 + CAST(SPLIT_PART(SPLIT_PART(q3, ':', 2), '.', 1) AS REAL) + CAST(SPLIT_PART(q3, '.', 2) AS REAL) / 1000 ASC LIMIT 1",
-  "mysql_sql": "SELECT\n  `T2`.`forename`,\n  `T2`.`surname`\nFROM `qualifying` AS `T1`\nINNER JOIN `drivers` AS `T2`\n  ON `T1`.`driverId` = `T2`.`driverId`\nINNER JOIN `races` AS `T3`\n  ON `T1`.`raceid` = `T3`.`raceid`\nWHERE\n  NOT `q3` IS NULL\n  AND `T3`.`year` = 2008\n  AND `T3`.`circuitId` IN (\n    SELECT\n      `circuitId`\n    FROM `circuits`\n    WHERE\n      `name` = 'Marina Bay Street Circuit'\n  )\nORDER BY\n  CAST(SUBSTR(`q3`, 1, INSTR(`q3`, ':') - 1) AS SIGNED) * 60 + CAST(SUBSTR(`q3`, INSTR(`q3`, ':') + 1, INSTR(`q3`, '.') - INSTR(`q3`, ':') - 1) AS DOUBLE) + CAST(SUBSTR(`q3`, INSTR(`q3`, '.') + 1) AS DOUBLE) / 1000 ASC\nLIMIT 1",
-  "syntax_differences": [
-    {
-      "difference": "列与表引用规则",
-      "detail": "PostgreSQL使用无引号标识符（如T1.driverId），MySQL使用反引号包裹标识符（如`T1`.`driverId`）",
-      "question_causing_substring": "racer, qualifying race, Marina Bay Street Circuit",
-      "postgres_differing_substring": "T1.driverId = T2.driverId, T1.raceid = T3.raceid",
-      "mysql_differing_substring": "`T1`.`driverId` = `T2`.`driverId`, `T1`.`raceid` = `T3`.`raceid`"
-    },
-    {
-      "difference": "空值（NULL）处理",
-      "detail": "PostgreSQL使用`q3 IS NOT NULL`判断非空，MySQL使用`NOT q3 IS NULL`判断非空",
-      "question_causing_substring": "ranked 1st in the 3rd qualifying race",
-      "postgres_differing_substring": "q3 IS NOT NULL",
-      "mysql_differing_substring": "NOT `q3` IS NULL"
-    },
-    {
-      "difference": "字符串处理",
-      "detail": "PostgreSQL使用`SPLIT_PART`分割字符串，MySQL使用`SUBSTR`+`INSTR`组合分割字符串",
-      "question_causing_substring": "ranked 1st（基于q3时间排序）",
-      "postgres_differing_substring": "SPLIT_PART(q3, ':', 1), SPLIT_PART(SPLIT_PART(q3, ':', 2), '.', 1)",
-      "mysql_differing_substring": "SUBSTR(`q3`, 1, INSTR(`q3`, ':') - 1), SUBSTR(`q3`, INSTR(`q3`, ':') + 1, INSTR(`q3`, '.') - INSTR(`q3`, ':') - 1)"
-    },
-    {
-      "difference": "类型转换",
-      "detail": "PostgreSQL使用`CAST(... AS INTEGER/REAL)`转换类型，MySQL使用`CAST(... AS SIGNED/DOUBLE)`转换类型",
-      "question_causing_substring": "ranked 1st（基于时间数值计算排序）",
-      "postgres_differing_substring": "CAST(SPLIT_PART(...) AS INTEGER), CAST(SPLIT_PART(...) AS REAL)",
-      "mysql_differing_substring": "CAST(SUBSTR(...) AS SIGNED), CAST(SUBSTR(...) AS DOUBLE)"
-    }
-  ],
-  "causing_part": "列与表引用规则、空值（NULL）处理、字符串处理、类型转换"
-},
+  {
+    "question": "What is full name of the racer who ranked 1st in the 3rd qualifying race held in the Marina Bay Street Circuit in 2008?",
+    "postgres_sql": "SELECT T2.forename, T2.surname FROM qualifying AS T1 INNER JOIN drivers AS T2 ON T1.driverId = T2.driverId INNER JOIN races AS T3 ON T1.raceid = T3.raceid WHERE q3 IS NOT NULL AND T3.year = 2008 AND T3.circuitId IN (SELECT circuitId FROM circuits WHERE name = 'Marina Bay Street Circuit') ORDER BY CAST(SPLIT_PART(q3, ':', 1) AS INTEGER) * 60 + CAST(SPLIT_PART(SPLIT_PART(q3, ':', 2), '.', 1) AS REAL) + CAST(SPLIT_PART(q3, '.', 2) AS REAL) / 1000 ASC LIMIT 1",
+    "mysql_sql": "SELECT\n  `T2`.`forename`,\n  `T2`.`surname`\nFROM `qualifying` AS `T1`\nINNER JOIN `drivers` AS `T2`\n  ON `T1`.`driverId` = `T2`.`driverId`\nINNER JOIN `races` AS `T3`\n  ON `T1`.`raceid` = `T3`.`raceid`\nWHERE\n  NOT `q3` IS NULL\n  AND `T3`.`year` = 2008\n  AND `T3`.`circuitId` IN (\n    SELECT\n      `circuitId`\n    FROM `circuits`\n    WHERE\n      `name` = 'Marina Bay Street Circuit'\n  )\nORDER BY\n  CAST(SUBSTR(`q3`, 1, INSTR(`q3`, ':') - 1) AS SIGNED) * 60 + CAST(SUBSTR(`q3`, INSTR(`q3`, ':') + 1, INSTR(`q3`, '.') - INSTR(`q3`, ':') - 1) AS DOUBLE) + CAST(SUBSTR(`q3`, INSTR(`q3`, '.') + 1) AS DOUBLE) / 1000 ASC\nLIMIT 1",
+    "syntax_differences": [
+      {
+        "difference": "列与表引用规则",
+        "detail": "PostgreSQL使用无引号标识符（如T1.driverId），MySQL使用反引号包裹标识符（如`T1`.`driverId`）",
+        "question_causing_substring": "racer, qualifying race, Marina Bay Street Circuit",
+        "postgres_differing_substring": "T1.driverId = T2.driverId, T1.raceid = T3.raceid",
+        "mysql_differing_substring": "`T1`.`driverId` = `T2`.`driverId`, `T1`.`raceid` = `T3`.`raceid`"
+      },
+      {
+        "difference": "空值（NULL）处理",
+        "detail": "PostgreSQL使用`q3 IS NOT NULL`判断非空，MySQL使用`NOT q3 IS NULL`判断非空",
+        "question_causing_substring": "ranked 1st in the 3rd qualifying race",
+        "postgres_differing_substring": "q3 IS NOT NULL",
+        "mysql_differing_substring": "NOT `q3` IS NULL"
+      },
+      {
+        "difference": "字符串处理",
+        "detail": "PostgreSQL使用`SPLIT_PART`分割字符串，MySQL使用`SUBSTR`+`INSTR`组合分割字符串",
+        "question_causing_substring": "ranked 1st（基于q3时间排序）",
+        "postgres_differing_substring": "SPLIT_PART(q3, ':', 1), SPLIT_PART(SPLIT_PART(q3, ':', 2), '.', 1)",
+        "mysql_differing_substring": "SUBSTR(`q3`, 1, INSTR(`q3`, ':') - 1), SUBSTR(`q3`, INSTR(`q3`, ':') + 1, INSTR(`q3`, '.') - INSTR(`q3`, ':') - 1)"
+      },
+      {
+        "difference": "类型转换",
+        "detail": "PostgreSQL使用`CAST(... AS INTEGER/REAL)`转换类型，MySQL使用`CAST(... AS SIGNED/DOUBLE)`转换类型",
+        "question_causing_substring": "ranked 1st（基于时间数值计算排序）",
+        "postgres_differing_substring": "CAST(SPLIT_PART(...) AS INTEGER), CAST(SPLIT_PART(...) AS REAL)",
+        "mysql_differing_substring": "CAST(SUBSTR(...) AS SIGNED), CAST(SUBSTR(...) AS DOUBLE)"
+      }
+    ],
+    "causing_part": "列与列与表引用规则规则、空值（NULL）处理、字符串处理、类型转换"
+  },
   {
     "question": "As of the present, what is the full name of the youngest racer? Indicate her nationality and the name of the race to which he/she first joined.",
     "postgres_sql": "SELECT T1.forename, T1.surname, T1.nationality, T3.name FROM drivers AS T1 INNER JOIN driverStandings AS T2 ON T1.driverId = T2.driverId INNER JOIN races AS T3 ON T2.raceId = T3.raceId WHERE T1.dob notnull ORDER BY T1.dob DESC LIMIT 1",
@@ -2989,7 +2989,7 @@
         "mysql_differing_substring": "INNER JOIN `hero_power` AS `T2`\n  ON `T1`.`id` = `T2`.`hero_id`"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关"
   },
   {
     "question": "Rank heroes published by Marvel Comics by their height in descending order.",
@@ -3011,7 +3011,7 @@
         "mysql_differing_substring": "FROM `superhero`"
       }
     ],
-    "causing_part": "空值（NULL）处理、列与表引用规则"
+    "causing_part": "空值（NULL）处理、列与列与表引用规则规则"
   },
   {
     "question": "Rank superheroes from Marvel Comics by their eye color popularity, starting with the most common color.",
@@ -3086,7 +3086,7 @@
         "mysql_differing_substring": "`superhero` AS `T1`"
       }
     ],
-    "causing_part": "列与表引用规则"
+    "causing_part": "列与列与表引用规则规则"
   },
   {
     "question": "List down at least five superpowers of male superheroes.",
@@ -3122,7 +3122,7 @@
         "mysql_differing_substring": "LIMIT 5"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关、分页（LIMIT）语法"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关、筛选条件相关、分页（LIMIT）语法"
   },
   {
     "question": "Provide the hair colour of the human superhero who is 185 cm tall.",
@@ -3144,7 +3144,7 @@
         "mysql_differing_substring": "`T1`.`race_id` = `T2`.`id`"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关"
   },
   {
     "question": "Among the male superheroes, list the super hero names of superheroes with weight greater than the 79% average weight of all superheroes.",
@@ -3173,7 +3173,7 @@
         "mysql_differing_substring": "AVG(`weight_kg`)"
       }
     ],
-    "causing_part": "列与表引用规则、筛选条件相关、聚合函数与引用"
+    "causing_part": "列与列与表引用规则规则、筛选条件相关、聚合函数与引用"
   },
   {
     "question": "What is the hero's full name with the highest attribute in strength?",
@@ -3225,7 +3225,7 @@
         "mysql_differing_substring": "`T1`.`eye_colour_id` = `T1`.`hair_colour_id`"
       }
     ],
-    "causing_part": "列与表引用规则、筛选条件相关"
+    "causing_part": "列与列与表引用规则规则、筛选条件相关"
   },
   {
     "question": "How many powers does Amazo hero have?",
@@ -3254,7 +3254,7 @@
         "mysql_differing_substring": "`T2`.`superhero_name`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "List the heroes' names whose eyes and hair colours are both black.",
@@ -3276,37 +3276,37 @@
         "mysql_differing_substring": "INNER JOIN `colour` AS `T2`\n  ON `T1`.`eye_colour_id` = `T2`.`id` AND `T1`.`hair_colour_id` = `T2`.`id`"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关"
   },
-    {
+  {
     "question": "How many heroes have the highest attribute value in strength?",
     "postgres_sql": "SELECT COUNT(T1.hero_id) FROM hero_attribute AS T1 INNER JOIN attribute AS T2 ON T1.attribute_id = T2.id WHERE T2.attribute_name = 'Strength' AND T1.attribute_value = (SELECT MAX(attribute_value) FROM hero_attribute)",
     "mysql_sql": "SELECT\n COUNT(T1.hero_id)\nFROM hero_attribute AS T1\nINNER JOIN attribute AS T2\n ON T1.attribute_id = T2.id\nWHERE\n T2.attribute_name = 'Strength'\n AND T1.attribute_value = (\n SELECT\n MAX(attribute_value)\n FROM hero_attribute\n )",
     "syntax_differences": [
-    {
-    "difference": "列与表引用规则",
-    "detail": "PostgreSQL 直接使用表别名和列名（如 T1.hero_id、T1.attribute_id），MySQL 使用反引号包裹表别名和列名（如T1.hero_id、T1.attribute_id）",
-    "question_causing_substring": "heroes, attribute value, strength",
-    "postgres_differing_substring": "COUNT(T1.hero_id), T1.attribute_id = T2.id, T2.attribute_name, T1.attribute_value, MAX(attribute_value)",
-    "mysql_differing_substring": "COUNT(T1.hero_id), T1.attribute_id = T2.id, T2.attribute_name, T1.attribute_value, MAX(attribute_value)"
-    },
-    {
-    "difference": "聚合函数与引用",
-    "detail": "PostgreSQL 中聚合函数直接作用于列名（如 COUNT (T1.hero_id)、MAX (attribute_value)），MySQL 中聚合函数作用于带反引号的列名（如 COUNT (T1.hero_id)、MAX(attribute_value)）",
-    "question_causing_substring": "How many heroes, highest attribute value",
-    "postgres_differing_substring": "COUNT(T1.hero_id), MAX(attribute_value)",
-    "mysql_differing_substring": "COUNT(T1.hero_id), MAX(attribute_value)"
-    },
-    {
-    "difference": "表连接（JOIN）相关",
-    "detail": "PostgreSQL 在 JOIN 子句中直接使用表名和别名（如 INNER JOIN attribute AS T2），MySQL 使用反引号包裹表名和别名（如 INNER JOIN attribute AS T2），且连接条件的列引用方式不同 ",
-    "question_causing_substring": "heroes have the highest attribute value in strength",
-    "postgres_differing_substring": "INNER JOIN attribute AS T2 ON T1.attribute_id = T2.id",
-    "mysql_differing_substring": "INNER JOIN attribute AS T2 ON T1.attribute_id = T2.id"
-    }
+      {
+        "difference": "列与表引用规则",
+        "detail": "PostgreSQL 直接使用表别名和列名（如 T1.hero_id、T1.attribute_id），MySQL 使用反引号包裹表别名和列名（如T1.hero_id、T1.attribute_id）",
+        "question_causing_substring": "heroes, attribute value, strength",
+        "postgres_differing_substring": "COUNT(T1.hero_id), T1.attribute_id = T2.id, T2.attribute_name, T1.attribute_value, MAX(attribute_value)",
+        "mysql_differing_substring": "COUNT(T1.hero_id), T1.attribute_id = T2.id, T2.attribute_name, T1.attribute_value, MAX(attribute_value)"
+      },
+      {
+        "difference": "聚合函数与引用",
+        "detail": "PostgreSQL 中聚合函数直接作用于列名（如 COUNT (T1.hero_id)、MAX (attribute_value)），MySQL 中聚合函数作用于带反引号的列名（如 COUNT (T1.hero_id)、MAX(attribute_value)）",
+        "question_causing_substring": "How many heroes, highest attribute value",
+        "postgres_differing_substring": "COUNT(T1.hero_id), MAX(attribute_value)",
+        "mysql_differing_substring": "COUNT(T1.hero_id), MAX(attribute_value)"
+      },
+      {
+        "difference": "表连接（JOIN）相关",
+        "detail": "PostgreSQL 在 JOIN 子句中直接使用表名和别名（如 INNER JOIN attribute AS T2），MySQL 使用反引号包裹表名和别名（如 INNER JOIN attribute AS T2），且连接条件的列引用方式不同 ",
+        "question_causing_substring": "heroes have the highest attribute value in strength",
+        "postgres_differing_substring": "INNER JOIN attribute AS T2 ON T1.attribute_id = T2.id",
+        "mysql_differing_substring": "INNER JOIN attribute AS T2 ON T1.attribute_id = T2.id"
+      }
     ],
-    "causing_part": "列与表引用规则、聚合函数与引用、表连接（JOIN）相关"
-    },
+    "causing_part": "列与列与表引用规则规则、聚合函数与引用、表连接（JOIN）相关"
+  },
   {
     "question": "Calculate the difference between Emil Blonsky's weight and Charles Chandler's weight.",
     "postgres_sql": "SELECT (SELECT weight_kg FROM superhero WHERE full_name LIKE 'Emil Blonsky') - (SELECT weight_kg FROM superhero WHERE full_name LIKE 'Charles Chandler') AS CALCULATE",
@@ -3342,7 +3342,7 @@
         "mysql_differing_substring": "`T1`.`id` = `T2`.`hero_id`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Which hero was the fastest?",
@@ -3401,7 +3401,7 @@
         "mysql_differing_substring": "`T1`.`full_name` = 'Karen Beecher-Duncan'"
       }
     ],
-    "causing_part": "列与表引用规则、筛选条件相关"
+    "causing_part": "列与列与表引用规则规则、筛选条件相关"
   },
   {
     "question": "How many green-skinned villains are there in the superhero universe?",
@@ -3423,7 +3423,7 @@
         "mysql_differing_substring": "INNER JOIN `alignment` AS `T2`\n  ON `T1`.`alignment_id` = `T2`.`id`\nINNER JOIN `colour` AS `T3`\n  ON `T1`.`skin_colour_id` = `T3`.`id`"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关"
   },
   {
     "question": "Identify superheroes who can control wind and list their names in alphabetical order.",
@@ -3460,7 +3460,7 @@
         "mysql_differing_substring": "`T1`.`publisher_id` = `T2`.`id`"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关"
   },
   {
     "question": "Please list the display names of all the users whose accounts were created in the year 2011.",
@@ -3511,7 +3511,7 @@
         "mysql_differing_substring": "`T1`.`LastEditorUserId`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "From which post is the tag \"bayesian\" excerpted from? Please give the body of the post.",
@@ -3533,7 +3533,7 @@
         "mysql_differing_substring": "`T1`.`TagName` = 'bayesian'"
       }
     ],
-    "causing_part": "列与表引用规则、筛选条件相关"
+    "causing_part": "列与列与表引用规则规则、筛选条件相关"
   },
   {
     "question": "Among the posts with a score of over 5, what is the percentage of them being owned by an elder user?",
@@ -3577,7 +3577,7 @@
         "mysql_differing_substring": "END AS `resylt`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Name the user that commented 'thank you user93!'",
@@ -3606,7 +3606,7 @@
         "mysql_differing_substring": "`T2`.`Text`"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "What is the percentage difference of student badges given during 2010 and 2011?",
@@ -3803,7 +3803,7 @@
         "mysql_differing_substring": "`T2`.`FavoriteCount`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Which post by Harvey Motulsky has the most views? Please give the id and title of this post.",
@@ -3825,7 +3825,7 @@
         "mysql_differing_substring": "`users` AS `T1` INNER JOIN `posts` AS `T2`"
       }
     ],
-    "causing_part": "空值（NULL）处理、列与表引用规则"
+    "causing_part": "空值（NULL）处理、列与列与表引用规则规则"
   },
   {
     "question": "Which is the most valuable post in 2010? Please give its id and the owner's display name.",
@@ -3935,7 +3935,7 @@
         "mysql_differing_substring": "`TagName`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Among the posts with views ranging from 100 to 150, what is the comment with the highest score?",
@@ -3994,7 +3994,7 @@
         "mysql_differing_substring": "`cardKingdomId`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "For artifact type of cards that do not have multiple faces on the same card, state its legalities status for vintage play format.",
@@ -4023,7 +4023,7 @@
         "mysql_differing_substring": "`T1`.`type` = 'Artifact' AND `T2`.`format` = 'vintage' AND `T1`.`side` IS NULL"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "Find all cards illustrated by Stephen Daniel and describe the text of the ruling of these cards. State if these cards have missing or degraded properties and values.",
@@ -4082,7 +4082,7 @@
         "mysql_differing_substring": "`name`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "What is the percentage of borderless cards?",
@@ -4126,7 +4126,7 @@
         "mysql_differing_substring": "COUNT(`id`)"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "How many of the banned cards are white border?",
@@ -4155,7 +4155,7 @@
         "mysql_differing_substring": "`T2`.`status` = 'Banned' AND `T1`.`borderColor` = 'white'"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "What is the mana cost of cards with a normal layout, a 2003 frame version, with a black border color, and available in paper and mtgo?",
@@ -4185,7 +4185,7 @@
         "mysql_differing_substring": "COUNT(`T1`.`id`)"
       }
     ],
-    "causing_part": "列与表引用规则"
+    "causing_part": "列与列与表引用规则规则"
   },
   {
     "question": "How many unknown power cards contain info about the triggered ability",
@@ -4207,7 +4207,7 @@
         "mysql_differing_substring": "`T1`.`power`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "What percentage of cards with format commander and legal status do not have a content warning?",
@@ -4251,7 +4251,7 @@
         "mysql_differing_substring": "`multiverseid`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "What languages are available in the set known as Archenemy on the magic card market and having the code ARC?",
@@ -4266,7 +4266,7 @@
         "mysql_differing_substring": "`T2`.`language`"
       }
     ],
-    "causing_part": "列与表引用规则"
+    "causing_part": "列与列与表引用规则规则"
   },
   {
     "question": "Which card costs more converted mana, \"Serra Angel\" or \"Shrine Keeper\"?",
@@ -4288,7 +4288,7 @@
         "mysql_differing_substring": "`convertedManaCost`"
       }
     ],
-    "causing_part": "空值（NULL）处理、列与表引用规则"
+    "causing_part": "空值（NULL）处理、列与列与表引用规则规则"
   },
   {
     "question": "What is the Simplified Chinese translation of the name of the set \"Eighth Edition\"?",
@@ -4310,7 +4310,7 @@
         "mysql_differing_substring": "`T2`.`translation`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Among the sets in the block \"Ice Age\", how many of them have an Italian translation?",
@@ -4332,7 +4332,7 @@
         "mysql_differing_substring": "`T2`.`setCode`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Among the sets of cards that have an Italian translation, how many of them have a base set number of under 100?",
@@ -4354,7 +4354,7 @@
         "mysql_differing_substring": "NOT `T2`.`translation` IS NULL"
       }
     ],
-    "causing_part": "列与表引用规则、空值（NULL）处理"
+    "causing_part": "列与列与表引用规则规则、空值（NULL）处理"
   },
   {
     "question": "Please list the Italian text ruling of all the cards in the set Coldsnap.",
@@ -4376,7 +4376,7 @@
         "mysql_differing_substring": "`T3`.`name` = 'Coldsnap'"
       }
     ],
-    "causing_part": "列与表引用规则、筛选条件相关"
+    "causing_part": "列与列与表引用规则规则、筛选条件相关"
   },
   {
     "question": "Please list the Italian names of the cards in the set Coldsnap with the highest converted mana cost.",
@@ -4435,7 +4435,7 @@
         "mysql_differing_substring": "GROUP BY `T1`.`name`, `T2`.`format`"
       }
     ],
-    "causing_part": "列与表引用规则、分组聚合（GROUP BY 子句）"
+    "causing_part": "列与列与表引用规则规则、分组聚合（GROUP BY 子句）"
   },
   {
     "question": "Find and list the names of sets which doesn't have Japanese translation but have Korean translation.",
@@ -4472,7 +4472,7 @@
         "mysql_differing_substring": "`bond_type`"
       }
     ],
-    "causing_part": "空值（NULL）处理、列与表引用规则"
+    "causing_part": "空值（NULL）处理、列与列与表引用规则规则"
   },
   {
     "question": "On average how many carcinogenic molecules are single bonded?",
@@ -4494,7 +4494,7 @@
         "mysql_differing_substring": "AS `subquery`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "What is the percentage of carbon in double-bond molecules?",
@@ -4545,7 +4545,7 @@
         "mysql_differing_substring": "`T2`.`bond_type` = '='"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "Which type of label is the most numerous in atoms with hydrogen?",
@@ -4574,7 +4574,7 @@
         "mysql_differing_substring": ""
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则、空值（NULL）处理"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则、空值（NULL）处理"
   },
   {
     "question": "Which element is the least numerous in non-carcinogenic molecules?",
@@ -4611,7 +4611,7 @@
         "mysql_differing_substring": "`T1`.`atom_id` = `T2`.`atom_id`"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关"
   },
   {
     "question": "What is the percentage of carcinogenic molecules in triple type bonds?",
@@ -4655,7 +4655,7 @@
         "mysql_differing_substring": "`atom` AS `T`"
       }
     ],
-    "causing_part": "空值（NULL）处理、列与表引用规则"
+    "causing_part": "空值（NULL）处理、列与列与表引用规则规则"
   },
   {
     "question": "What is the percentage of double bonds in the molecule TR008? Please provide your answer as a percentage with five decimal places.",
@@ -4677,7 +4677,7 @@
         "mysql_differing_substring": "`T`.`bond_type`"
       }
     ],
-    "causing_part": "类型转换、列与表引用规则"
+    "causing_part": "类型转换、列与列与表引用规则规则"
   },
   {
     "question": "What is the percentage of molecules that are carcinogenic? Please provide your answer as a percentage with three decimal places.",
@@ -4706,7 +4706,7 @@
         "mysql_differing_substring": "`T`.`label`"
       }
     ],
-    "causing_part": "类型转换、数值处理、列与表引用规则"
+    "causing_part": "类型转换、数值处理、列与列与表引用规则规则"
   },
   {
     "question": "How much of the hydrogen in molecule TR206 is accounted for? Please provide your answer as a percentage with four decimal places.",
@@ -4757,7 +4757,7 @@
         "mysql_differing_substring": ""
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则、空值（NULL）处理"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则、空值（NULL）处理"
   },
   {
     "question": "Please list top three molecules that have single bonds between two atoms and are not carcinogenic in alphabetical order.",
@@ -4779,7 +4779,7 @@
         "mysql_differing_substring": "`T1`.`molecule_id` = `T2`.`molecule_id`"
       }
     ],
-    "causing_part": "空值（NULL）处理、列与表引用规则"
+    "causing_part": "空值（NULL）处理、列与列与表引用规则规则"
   },
   {
     "question": "What are the bond type and the atoms of the bond ID of TR001_6_9?",
@@ -4808,7 +4808,7 @@
         "mysql_differing_substring": "`T2`.`bond_id` = 'TR001_6_9'"
       }
     ],
-    "causing_part": "列与表引用规则、筛选条件相关、筛选条件相关"
+    "causing_part": "列与列与表引用规则规则、筛选条件相关、筛选条件相关"
   },
   {
     "question": "What are the bonds that have phosphorus and nitrogen as their atom elements?",
@@ -4830,7 +4830,7 @@
         "mysql_differing_substring": "`T1`.`element` = 'n'"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Is the molecule with the most double bonds carcinogenic?",
@@ -4867,7 +4867,7 @@
         "mysql_differing_substring": "`T1`.`element`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "What are the elements of the atoms of TR144_8_19?",
@@ -4896,7 +4896,7 @@
         "mysql_differing_substring": "`T1`.`bond_id` = 'TR144_8_19'"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关、筛选条件相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关、筛选条件相关"
   },
   {
     "question": "What proportion of single bonds are carcinogenic? Please provide your answer as a percentage with five decimal places.",
@@ -4999,7 +4999,7 @@
         "mysql_differing_substring": "`T1`.`AvgScrMath`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Please list the codes of the schools with a total enrollment of over 500.",
@@ -5014,7 +5014,7 @@
         "mysql_differing_substring": "`T2`.`CDSCode`"
       }
     ],
-    "causing_part": "列与表引用规则"
+    "causing_part": "列与列与表引用规则规则"
   },
   {
     "question": "Among the schools with an SAT excellence rate of over 0.3, what is the highest eligible free rate for students aged 5-17?",
@@ -5058,7 +5058,7 @@
         "mysql_differing_substring": "`schools` AS `T1`"
       }
     ],
-    "causing_part": "空值（NULL）处理、列与表引用规则"
+    "causing_part": "空值（NULL）处理、列与列与表引用规则规则"
   },
   {
     "question": "List the names of schools with more than 30 difference in enrollements between K-12 and ages 5-17? Please also give the full street adress of the schools.",
@@ -5080,7 +5080,7 @@
         "mysql_differing_substring": "`schools` AS `T1`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "Give the names of the schools with the percent eligible for free meals in K-12 is more than 0.1 and test takers whose test score is greater than or equal to 1500?",
@@ -5168,7 +5168,7 @@
         "mysql_differing_substring": "`T2`.`DOC`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "What is the eligible free rate of the 10th and 11th schools with the highest enrolment for students in grades 1 through 12?",
@@ -5240,7 +5240,7 @@
         "mysql_differing_substring": ""
       }
     ],
-    "causing_part": "类型转换、数值处理、列与表引用规则、类型转换、空值（NULL）处理"
+    "causing_part": "类型转换、数值处理、列与列与表引用规则规则、类型转换、空值（NULL）处理"
   },
   {
     "question": "What is the complete address of the school with the lowest excellence rate? Indicate the Street, City, Zip and State.",
@@ -5343,7 +5343,7 @@
         "mysql_differing_substring": ") ranked_schools"
       }
     ],
-    "causing_part": "空值（NULL）处理、列与表引用规则"
+    "causing_part": "空值（NULL）处理、列与列与表引用规则规则"
   },
   {
     "question": "Which state special schools have the highest number of enrollees from grades 1 through 12?",
@@ -5416,7 +5416,7 @@
         "mysql_differing_substring": "`T1`.`cds`"
       }
     ],
-    "causing_part": "空值（NULL）处理、列与表引用规则、列与表引用规则"
+    "causing_part": "空值（NULL）处理、列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "What is the total number of non-chartered schools in the county of Los Angeles with a percent (%) of eligible free meals for grades 1 through 12 that is less than 0.18%?",
@@ -5497,7 +5497,7 @@
         "mysql_differing_substring": "ORDER BY COUNT(`Virtual`) DESC"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则、排序（ORDER BY）基础语法"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则、排序（ORDER BY）基础语法"
   },
   {
     "question": "What is the grade span offered in the school with the highest longitude?",
@@ -5534,7 +5534,7 @@
         "mysql_differing_substring": "`T2`.`City`"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "What is the Percent (%) Eligible Free (K-12) in the school administered by an administrator whose first name is Alusine. List the district code of the school.",
@@ -5593,7 +5593,7 @@
         "mysql_differing_substring": "`T1`.`gender` = 'F' AND `T2`.`A11` BETWEEN 6000 AND 10000"
       }
     ],
-    "causing_part": "列与表引用规则、列与表引用规则"
+    "causing_part": "列与列与表引用规则规则、列与列与表引用规则规则"
   },
   {
     "question": "List out the account numbers of female clients who are oldest and has lowest average salary, calculate the gap between this lowest average salary with the highest average salary?",
@@ -5629,7 +5629,7 @@
         "mysql_differing_substring": "ORDER BY `T2`.`A11` DESC"
       }
     ],
-    "causing_part": "空值（NULL）处理、列与表引用规则、列与表引用规则、空值（NULL）处理"
+    "causing_part": "空值（NULL）处理、列与列与表引用规则规则、列与列与表引用规则规则、空值（NULL）处理"
   },
   {
     "question": "List out the account numbers of clients who are youngest and have highest average salary?",
@@ -5775,7 +5775,7 @@
         "mysql_differing_substring": "`status`, `amount`"
       }
     ],
-    "causing_part": "类型转换、数值处理、列与表引用规则"
+    "causing_part": "类型转换、数值处理、列与列与表引用规则规则"
   },
   {
     "question": "For loans contracts which are still running where client are in debt, list the district of the and the state the percentage unemployment rate increment from year 1995 to 1996.",
@@ -5834,7 +5834,7 @@
         "mysql_differing_substring": "`T1`.`district_id` = `T2`.`district_id`"
       }
     ],
-    "causing_part": "列与表引用规则、表连接（JOIN）相关"
+    "causing_part": "列与列与表引用规则规则、表连接（JOIN）相关"
   },
   {
     "question": "In the branch where the second-highest number of crimes were committed in 1995 occurred, how many male clients are there?",
@@ -5995,7 +5995,7 @@
         "mysql_differing_substring": "`T1`.`frequency`"
       }
     ],
-    "causing_part": "列与表引用规则"
+    "causing_part": "列与列与表引用规则规则"
   },
   {
     "question": "Name the account numbers of female clients who are oldest and have lowest average salary?",
