@@ -89,8 +89,6 @@ def get_evaluation_scores(pred_file: str, gold_file: str) ->  Dict[str, Dict[str
 
     # ===== 按方言逐个评估 =====
     for engine, engine_preds in pred_map.items():
-        logger.info(f"[Step 2] 评估方言: {engine}")
-
         scores = {}
 
         count_2 = 0
@@ -125,16 +123,16 @@ def get_evaluation_scores(pred_file: str, gold_file: str) ->  Dict[str, Dict[str
             elif score == 1:
                 count_1_or_2 += 1
 
-            # 计算百分比，确保 total 不为 0
-            acc = (count_2 / total * 100) if total > 0 else 0
-            exec_rate = (count_1_or_2 / total * 100) if total > 0 else 0
+        # 计算百分比，确保 total 不为 0
+        acc = (count_2 / total * 100) if total > 0 else 0
+        exec_rate = (count_1_or_2 / total * 100) if total > 0 else 0
 
-            logger.info(
-                f"[Step 2] {engine} | "
-                f"正确: {count_2} ({acc:.2f}%) | "
-                f"可执行: {count_1_or_2} ({exec_rate:.2f}%) | "
-                f"总数: {total}"
-            )
+        logger.info(
+            f"[Step 2] {engine} | "
+            f"正确: {count_2} ({acc:.2f}%) | "
+            f"可执行: {count_1_or_2} ({exec_rate:.2f}%) | "
+            f"总数: {total}"
+        )
 
         all_scores[engine] = scores
 
