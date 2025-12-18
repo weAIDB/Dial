@@ -1,0 +1,595 @@
+SQL生成结果汇总（MySQL）
+生成时间: 2025-12-13 21:19:39
+使用模型: unknown
+SQL执行超时时间: unknown秒
+总处理项数: 98
+================================================================================
+
+=== 结果项 1/98 ===
+原始问题: Among the transactions made in the gas stations in the Czech Republic, how many of them are taken place after 2012/1/1?
+MySQL: SELECT COUNT(t.`TransactionID`) AS `number_of_transactions` FROM `transactions_1k` AS t INNER JOIN `gasstations` AS g   ON t.`GasStationID` = g.`GasStationID` WHERE g.`Country` = 'CZE'   AND t.`Date` > '2012-01-01';
+
+--------------------------------------------------------------------------------
+
+=== 结果项 2/98 ===
+原始问题: What is the percentage of female patient were born after 1930?
+MySQL: SELECT ROUND(COUNT(CASE WHEN `SEX` = 'F' AND YEAR(`Birthday`) > 1930 THEN `ID` END) * 100.0 / NULLIF(COUNT(CASE WHEN `SEX` = 'F' THEN `ID` END), 0), 2) AS `percentage` FROM `patient`;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 3/98 ===
+原始问题: State the ID and age of patient with positive degree of coagulation.
+MySQL: SELECT DISTINCT   p.ID AS `Patient ID`,   (YEAR(CURRENT_TIMESTAMP) - YEAR(p.Birthday)) AS age FROM `examination` AS e INNER JOIN `patient` AS p   ON e.ID = p.ID WHERE e.RVVT = '+' LIMIT 1000;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 4/98 ===
+原始问题: How many female patients who came at the hospital in 1997 was immediately followed at the outpatient clinic?
+MySQL: SELECT COUNT(DISTINCT `patient`.`ID`) AS `female_patient_count` FROM `patient` WHERE `patient`.`SEX` = 'F'   AND YEAR(`patient`.`Description`) = 1997   AND `patient`.`Admission` = '-';
+
+--------------------------------------------------------------------------------
+
+=== 结果项 5/98 ===
+原始问题: How many of the patients with the most serious thrombosis cases examined in 1997 are women?
+MySQL: SELECT COUNT(DISTINCT p.ID) AS women_patients_count FROM `examination` AS e JOIN `patient` AS p   ON e.ID = p.ID WHERE YEAR(e.`Examination Date`) = 1997   AND e.`Thrombosis` = 1   AND p.`SEX` = 'F';
+
+--------------------------------------------------------------------------------
+
+=== 结果项 6/98 ===
+原始问题: The oldest SJS patient's medical laboratory work was completed on what date, and what age was the patient when they initially arrived at the hospital?
+MySQL: SELECT   MAX(l.`Date`) AS lab_work_completion_date,   MIN(YEAR(p.`First Date`) - YEAR(p.`Birthday`)) AS age_at_initial_arrival FROM `patient` AS p JOIN `laboratory` AS l   ON p.`ID` = l.`ID` WHERE p.`Diagnosis` = 'SJS'   AND p.`Birthday` = (     SELECT MIN(p2.`Birthday`)     FROM `patient` AS p2     WHERE p2.`Diagnosis` = 'SJS'   );
+
+--------------------------------------------------------------------------------
+
+=== 结果项 7/98 ===
+原始问题: How many underage patients were examined during the course of the three-year period from 1990 to 1993?
+MySQL: SELECT   COUNT(DISTINCT p.`ID`) AS underage_patients_examined FROM `examination` AS e INNER JOIN `patient` AS p   ON e.`ID` = p.`ID` WHERE YEAR(e.`Examination Date`) BETWEEN 1990 AND 1993   AND (YEAR(e.`Examination Date`) - YEAR(p.`Birthday`)) < 18;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 8/98 ===
+原始问题: How old was the patient who had the highest hemoglobin count at the time of the examination, and what is the doctor's diagnosis?
+MySQL: SELECT   l.`ID` AS `patient_id`,   l.`Date` AS `examination_date`,   (YEAR(l.`Date`) - YEAR(p.`Birthday`)) AS `age_at_examination`,   p.`Diagnosis` AS `Diagnosis` FROM `laboratory` AS l INNER JOIN `patient` AS p   ON l.`ID` = p.`ID` INNER JOIN (   SELECT MAX(l2.`HGB`) AS `max_hgb`   FROM `laboratory` AS l2 ) AS m   ON l.`HGB` = m.`max_hgb`;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 9/98 ===
+原始问题: What percentage of patients who were born in 1980 and were diagnosed with RA are women?
+MySQL: SELECT   CAST(SUM(`patient`.`SEX` = 'F') AS DECIMAL(18,6)) / NULLIF(COUNT(`patient`.`SEX`), 0) * 100 AS `percentage_women` FROM `patient` WHERE YEAR(`patient`.`Birthday`) = 1980   AND `patient`.`Diagnosis` = 'RA';
+
+--------------------------------------------------------------------------------
+
+=== 结果项 10/98 ===
+原始问题: What is the average age of the male patient with high cholesterol?
+MySQL: SELECT   SUM((YEAR(CURDATE()) - YEAR(`patient`.`Birthday`)))*1.0 / NULLIF(COUNT(`patient`.`ID`), 0) AS `Average calculated age` FROM `patient` INNER JOIN `laboratory`   ON `patient`.`ID` = `laboratory`.`ID` WHERE `patient`.`SEX` = 'M'   AND `laboratory`.`T-CHO` >= 250;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 11/98 ===
+原始问题: For all patients with triglyceride (TG) level beyond the normal range, how many are age more than 50 years?
+MySQL: SELECT COUNT(DISTINCT p.ID) AS `distinct_patient_count` FROM `patient` AS p JOIN `laboratory` AS l   ON p.ID = l.ID WHERE l.TG >= 200   AND (YEAR(CURRENT_TIMESTAMP) - YEAR(p.Birthday)) > 50;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 12/98 ===
+原始问题: For patient born between 1936-1956, how many male patients have creatinine phosphokinase beyond the normal range?
+MySQL: SELECT   COUNT(DISTINCT p.ID) AS count_distinct_male_patients FROM `patient` AS p INNER JOIN `laboratory` AS l   ON p.ID = l.ID WHERE p.SEX = 'M'   AND YEAR(p.Birthday) BETWEEN 1936 AND 1956   AND l.CPK >= 250;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 13/98 ===
+原始问题: Provide ID, sex and age of patient who has blood glucose (GLU) not within normal range but with total cholesterol(T-CHO) within normal range.
+MySQL: SELECT DISTINCT   p.ID AS `Patient ID`,   p.SEX AS sex,   (YEAR(CURRENT_TIMESTAMP) - YEAR(p.Birthday)) AS age FROM `patient` AS p INNER JOIN `laboratory` AS l   ON l.ID = p.ID WHERE l.GLU >= 180   AND l.`T-CHO` < 250 LIMIT 1000;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 14/98 ===
+原始问题: What are the patient's diagnosis for those who has lower red blood blood cell? State their ID and age.
+MySQL: SELECT DISTINCT   p.ID AS `ID`,   p.Diagnosis AS `Diagnosis`,   (YEAR(CURRENT_TIMESTAMP) - YEAR(p.Birthday)) AS `Age` FROM `patient` AS p INNER JOIN `laboratory` AS l   ON p.ID = l.ID WHERE l.RBC < 3.5;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 15/98 ===
+原始问题: Name the ID and age of patient with two or more laboratory examinations which show their hematoclit level exceeded the normal range.
+MySQL: SELECT   p.ID AS `Patient ID`,   YEAR(CURRENT_TIMESTAMP) - YEAR(p.Birthday) AS age FROM `patient` AS p INNER JOIN `laboratory` AS l   ON p.ID = l.ID WHERE l.HCT >= 52 GROUP BY   p.ID,   p.Birthday HAVING COUNT(l.ID) > 2 LIMIT 1000;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 16/98 ===
+原始问题: For laboratory examinations take in 1984, list all patients below 50 years old with normal platelet level.
+MySQL: SELECT DISTINCT p.ID FROM `laboratory` AS l JOIN `patient` AS p   ON l.ID = p.ID WHERE YEAR(l.`Date`) = 1984   AND (YEAR(CURRENT_TIMESTAMP) - YEAR(p.Birthday)) < 50   AND l.PLT BETWEEN 100 AND 400;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 17/98 ===
+原始问题: For all patients who are older than 55 years old, what is the percentage of female who has abnormal prothrombin time (PT)?
+MySQL: SELECT   ROUND(     COUNT(DISTINCT CASE WHEN p.SEX = 'F' THEN p.ID END) * 1.0     / NULLIF(COUNT(DISTINCT p.ID), 0) * 100   , 2) AS percentage_female_abnormal_pt FROM `patient` AS p INNER JOIN `laboratory` AS l   ON p.ID = l.ID WHERE (YEAR(CURRENT_TIMESTAMP) - YEAR(p.Birthday)) > 55   AND l.PT >= 14;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 18/98 ===
+原始问题: How many patients with a normal Ig A level came to the hospital after 1990/1/1?
+MySQL: SELECT COUNT(DISTINCT p.`ID`) AS number_of_patients FROM `patient` AS p INNER JOIN `laboratory` AS l   ON p.`ID` = l.`ID` WHERE l.`IGA` > 80   AND l.`IGA` < 500   AND YEAR(p.`First Date`) >= 1990;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 19/98 ===
+原始问题: Among the patients whose creatinine level is abnormal, how many of them aren't 70 yet?
+MySQL: SELECT COUNT(DISTINCT p.ID) AS patient_count FROM `patient` AS p INNER JOIN `laboratory` AS l   ON l.ID = p.ID WHERE l.CRE >= 1.5   AND (YEAR(CURDATE()) - YEAR(p.Birthday)) < 70;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 20/98 ===
+原始问题: At present, calculate for the player's age who have a sprint speed of no less than 97 between 2013 to 2015.
+MySQL: SELECT DISTINCT   TIMESTAMPDIFF(YEAR, `p`.`birthday`, NOW()) AS `age_at_present` FROM `player_attributes` AS `pa` JOIN `player` AS `p`   ON `pa`.`player_api_id` = `p`.`player_api_id` WHERE `pa`.`sprint_speed` >= 97   AND YEAR(`pa`.`date`) BETWEEN 2013 AND 2015;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 21/98 ===
+原始问题: List the long name of teams with above-average build-up play passing in 2012.
+MySQL: SELECT DISTINCT t.team_long_name FROM team_attributes AS ta INNER JOIN team AS t   ON ta.team_api_id = t.team_api_id WHERE YEAR(ta.`date`) = 2012   AND ta.buildUpPlayPassing IS NOT NULL   AND ta.buildUpPlayPassing > (     SELECT SUM(ta2.buildUpPlayPassing) / NULLIF(COUNT(t2.team_long_name), 0)     FROM team_attributes AS ta2     INNER JOIN team AS t2       ON ta2.team_api_id = t2.team_api_id     WHERE YEAR(ta2.`date`) = 2012       AND ta2.buildUpPlayPassing IS NOT NULL   ) LIMIT 1000;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 22/98 ===
+原始问题: What is the overall rating of the football player Gabriel Tamas in year 2011?
+MySQL: SELECT AVG(pa.overall_rating) AS overall_rating FROM player AS p INNER JOIN player_attributes AS pa   ON p.player_api_id = pa.player_api_id WHERE p.player_name = 'Gabriel Tamas'   AND YEAR(pa.`date`) = 2011;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 23/98 ===
+原始问题: From 2010 to 2015, what was the average overall rating of players who are higher than 170?
+MySQL: SELECT   SUM(pa.overall_rating) * 1.0 / COUNT(pa.id) AS avg_overall_rating FROM `player_attributes` AS pa JOIN `player` AS p   ON pa.player_api_id = p.player_api_id WHERE YEAR(pa.`date`) BETWEEN 2010 AND 2015   AND p.height > 170;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 24/98 ===
+原始问题: Among the players born before the year 1986, how many of them would remain in his position and defense while the team attacked?
+MySQL: SELECT COUNT(DISTINCT p.player_api_id) AS distinct_player_count FROM `player` AS p INNER JOIN `player_attributes` AS pa   ON p.player_api_id = pa.player_api_id WHERE YEAR(p.birthday) < 1986   AND pa.defensive_work_rate = 'high';
+
+--------------------------------------------------------------------------------
+
+=== 结果项 25/98 ===
+原始问题: List the names of all races that occurred in the earliest recorded year and month.
+MySQL: SELECT   r.`name` AS `Race Name` FROM `races` AS r WHERE YEAR(r.`date`) = YEAR((SELECT MIN(r2.`date`) FROM `races` AS r2))   AND MONTH(r.`date`) = MONTH((SELECT MIN(r3.`date`) FROM `races` AS r3));
+
+--------------------------------------------------------------------------------
+
+=== 结果项 26/98 ===
+原始问题: How old is the youngest Japanese driver? What is his name?
+MySQL: SELECT   (YEAR(CURRENT_TIMESTAMP) - YEAR(d.dob)) AS age,   d.forename,   d.surname FROM drivers AS d WHERE d.nationality = 'Japanese'   AND d.dob IS NOT NULL ORDER BY d.dob DESC LIMIT 1;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 27/98 ===
+原始问题: Name the races along with its circuit name and location for f1 races hosted in September 2005.
+MySQL: SELECT   r.`name` AS `Race name`,   c.`name` AS `circuit name`,   c.`location` AS `circuit location` FROM `races` AS r INNER JOIN `circuits` AS c   ON r.`circuitId` = c.`circuitId` WHERE YEAR(r.`date`) = 2005   AND MONTH(r.`date`) = 9;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 28/98 ===
+原始问题: From 2000 to 2005, what percentage of drivers who were born before 1985 and the lap numbers were over 50?
+MySQL: SELECT   ROUND(     COUNT(DISTINCT CASE       WHEN YEAR(d.`dob`) < 1985 AND r.`laps` > 50 THEN r.`driverId`       ELSE NULL     END) * 1.0 / NULLIF(COUNT(DISTINCT r.`driverId`), 0) * 100   , 2) AS `percentage` FROM `races` AS ra JOIN `results` AS r   ON ra.`raceId` = r.`raceId` JOIN `drivers` AS d   ON r.`driverId` = d.`driverId` WHERE ra.`year` BETWEEN 2000 AND 2005;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 29/98 ===
+原始问题: Which drivers who were born in 1971 and has the fastest lap time on the race? Give id and code of these drivers.
+MySQL: SELECT DISTINCT   d.driverId AS `Driver ID`,   d.code AS `Driver code` FROM `results` AS r JOIN `drivers` AS d   ON r.driverId = d.driverId WHERE YEAR(d.dob) = 1971   AND r.fastestLapTime IS NOT NULL   AND r.fastestLapTime = (     SELECT MIN(r2.fastestLapTime)     FROM `results` AS r2     JOIN `drivers` AS d2       ON r2.driverId = d2.driverId     WHERE YEAR(d2.dob) = 1971       AND r2.fastestLapTime IS NOT NULL   );
+
+--------------------------------------------------------------------------------
+
+=== 结果项 30/98 ===
+原始问题: List down top 3 German drivers who has the shortest average pit stop duration and were born between 1980-1985.
+MySQL: SELECT   d.forename,   d.surname FROM `drivers` AS d JOIN `pitstops` AS p   ON d.driverId = p.driverId WHERE d.nationality = 'German'   AND YEAR(d.dob) BETWEEN 1980 AND 1985   AND p.duration IS NOT NULL GROUP BY   d.driverId,   d.forename,   d.surname ORDER BY   (SUM(CAST(p.duration AS DECIMAL(18,6))) / NULLIF(COUNT(p.duration), 0)) ASC LIMIT 3;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 31/98 ===
+原始问题: Please list the display names of all the users whose accounts were created in the year 2011.
+MySQL: SELECT   `users`.`DisplayName` FROM `users` WHERE YEAR(`users`.`CreationDate`) = 2011;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 32/98 ===
+原始问题: What is the percentage difference of student badges given during 2010 and 2011?
+MySQL: SELECT   (     (COUNT(CASE WHEN YEAR(`Date`) = 2010 THEN `Id` END) * 1.0 / NULLIF(COUNT(`Id`), 0)) * 100     -     (COUNT(CASE WHEN YEAR(`Date`) = 2011 THEN `Id` END) * 1.0 / NULLIF(COUNT(`Id`), 0)) * 100   ) AS percentage_difference FROM `badges` WHERE `Name` = 'Student';
+
+--------------------------------------------------------------------------------
+
+=== 结果项 33/98 ===
+原始问题: Calculate the ratio of votes in 2010 and 2011.
+MySQL: SELECT CAST(SUM(CASE WHEN YEAR(`votes`.`CreationDate`) = 2010 THEN 1 ELSE 0 END) AS DECIMAL(20,10)) / NULLIF(SUM(CASE WHEN YEAR(`votes`.`CreationDate`) = 2011 THEN 1 ELSE 0 END), 0) AS `ratio_2010_to_2011` FROM `votes`;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 34/98 ===
+原始问题: What is the average monthly number of links created in 2010 for posts that have no more than 2 answers?
+MySQL: SELECT CAST(COUNT(pl.Id) AS DECIMAL(20,6)) / 12 AS average_monthly_links_2010 FROM `postlinks` AS pl INNER JOIN `posts` AS p   ON pl.PostId = p.Id WHERE YEAR(pl.CreationDate) = 2010   AND p.AnswerCount <= 2;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 35/98 ===
+原始问题: Which is the most valuable post in 2010? Please give its id and the owner's display name.
+MySQL: SELECT p.Id, u.DisplayName FROM posts AS p INNER JOIN users AS u ON p.OwnerUserId = u.Id WHERE YEAR(p.CreaionDate) = 2010   AND p.FavoriteCount = (     SELECT MAX(p2.FavoriteCount)     FROM posts AS p2     WHERE YEAR(p2.CreaionDate) = 2010   );
+
+--------------------------------------------------------------------------------
+
+=== 结果项 36/98 ===
+原始问题: What is the percentage of posts whose owners had a reputation of over 1000 in 2011?
+MySQL: SELECT   CAST(SUM(u.Reputation > 1000) AS DECIMAL(20,6)) / NULLIF(COUNT(p.Id), 0) * 100 AS percentage FROM `posts` AS p JOIN `users` AS u   ON p.OwnerUserId = u.Id WHERE YEAR(p.CreaionDate) = 2011;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 37/98 ===
+原始问题: What is the average score in writing for the schools that were opened after 1991 or closed before 2000? List the school names along with the score. Also, list the communication number of the schools if there is any.
+MySQL: SELECT   s.School AS `School Name`,   ss.AvgScrWrite AS `Average Writing Score`,   s.Phone AS `Phone` FROM `schools` AS s LEFT JOIN `satscores` AS ss   ON s.CDSCode = ss.cds WHERE (YEAR(s.OpenDate) > 1991)    OR (YEAR(s.ClosedDate) < 2000) LIMIT 1000;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 38/98 ===
+原始问题: What is the average number of test takers from Fresno schools that opened between 1/1/1980 and 12/31/1980?
+MySQL: SELECT AVG(ss.NumTstTakr) AS avg_test_takers FROM `schools` AS s INNER JOIN `satscores` AS ss   ON s.CDSCode = ss.cds WHERE s.County = 'Fresno'   AND YEAR(s.OpenDate) = 1980;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 39/98 ===
+原始问题: What is the monthly average number of schools that opened in Alameda County under the jurisdiction of the Elementary School District in 1980?
+MySQL: SELECT CAST(COUNT(`School`) AS DECIMAL(18,6)) / 12 AS `monthly_average_opened_1980` FROM `schools` WHERE `County` = 'Alameda'   AND `DOC` = '52'   AND YEAR(`OpenDate`) = 1980;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 40/98 ===
+原始问题: What are the valid e-mail addresses of the administrator of the school located in the San Bernardino county, City of San Bernardino City Unified that opened between 1/1/2009 to 12/31/2010 whose school types are public Intermediate/Middle Schools and Unified Schools?
+MySQL: SELECT DISTINCT t.admin_email FROM (     SELECT s.AdmEmail1 AS admin_email     FROM schools AS s     WHERE s.County = 'San Bernardino'       AND s.City = 'San Bernardino City Unified'       AND s.OpenDate BETWEEN '2009-01-01' AND '2010-12-31'       AND s.SOC = '62'       AND s.DOC = '54'       AND s.AdmEmail1 IS NOT NULL     UNION ALL     SELECT s.AdmEmail2 AS admin_email     FROM schools AS s     WHERE s.County = 'San Bernardino'       AND s.City = 'San Bernardino City Unified'       AND s.OpenDate BETWEEN '2009-01-01' AND '2010-12-31'       AND s.SOC = '62'       AND s.DOC = '54'       AND s.AdmEmail2 IS NOT NULL ) AS t WHERE t.admin_email NOT LIKE '% %'   AND (LENGTH(t.admin_email) - LENGTH(REPLACE(t.admin_email, '@', ''))) = 1   AND LOCATE('.', SUBSTRING_INDEX(t.admin_email, '@', -1)) > 1 LIMIT 1000;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 41/98 ===
+原始问题: Among the accounts who have approved loan date in 1997, list out the accounts that have the lowest approved amount and choose weekly issuance statement.
+MySQL: SELECT DISTINCT l.account_id FROM `loan` AS l JOIN `account` AS a   ON l.account_id = a.account_id WHERE YEAR(l.`date`) = 1997   AND a.frequency = 'POPLATEK TYDNE'   AND l.amount = (     SELECT MIN(l2.amount)     FROM `loan` AS l2     JOIN `account` AS a2       ON l2.account_id = a2.account_id     WHERE YEAR(l2.`date`) = 1997       AND a2.frequency = 'POPLATEK TYDNE'   );
+
+--------------------------------------------------------------------------------
+
+=== 结果项 42/98 ===
+原始问题: Among the accounts who have loan validity more than 12 months, list out the accounts that have the highest approved amount and have account opening date in 1993.
+MySQL: SELECT DISTINCT l.account_id FROM `loan` AS l JOIN `account` AS a ON l.account_id = a.account_id WHERE l.duration > 12   AND a.`date` >= '1993-01-01'   AND a.`date` < '1994-01-01'   AND l.amount = (     SELECT MAX(l2.amount)     FROM `loan` AS l2     JOIN `account` AS a2 ON l2.account_id = a2.account_id     WHERE l2.duration > 12       AND a2.`date` >= '1993-01-01'       AND a2.`date` < '1994-01-01'   );
+
+--------------------------------------------------------------------------------
+
+=== 结果项 43/98 ===
+原始问题: Among the account opened, how many female customers who were born before 1950 and stayed in Sokolov?
+MySQL: SELECT   COUNT(DISTINCT c.client_id) AS female_customers_count FROM `client` AS c INNER JOIN `district` AS d   ON c.District_id = d.district_id WHERE c.gender = 'F'   AND c.birth_date < '1950-01-01'   AND d.A2 = 'Sokolov'   AND EXISTS (     SELECT 1     FROM `disp` AS di     INNER JOIN `account` AS a       ON a.account_id = di.account_id     WHERE di.client_id = c.client_id       AND a.date IS NOT NULL       AND a.date <= CURRENT_DATE()   );
+
+--------------------------------------------------------------------------------
+
+=== 结果项 44/98 ===
+原始问题: Who are the account holder identification numbers whose who have transactions on the credit card with the amount is less than the average, in 1998?
+MySQL: SELECT DISTINCT a.account_id FROM `trans` AS t INNER JOIN `account` AS a   ON a.account_id = t.account_id WHERE YEAR(t.`date`) = 1998   AND t.operation = 'VYBER KARTOU'   AND t.amount < (     SELECT AVG(t2.amount) AS avg_amount_1998_cc     FROM `trans` AS t2     WHERE YEAR(t2.`date`) = 1998       AND t2.operation = 'VYBER KARTOU'   );
+
+--------------------------------------------------------------------------------
+
+=== 结果项 45/98 ===
+原始问题: What is the average number of crimes committed in 1995 in regions where the number exceeds 4000 and the region has accounts that are opened starting from the year 1997?
+MySQL: SELECT AVG(t.A15) AS avg_crimes_1995 FROM (   SELECT DISTINCT d.district_id, d.A15   FROM district AS d   INNER JOIN account AS a     ON a.district_id = d.district_id   WHERE d.A15 > 4000     AND YEAR(a.`date`) = 1997 ) AS t;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 46/98 ===
+原始问题: What was the growth rate of the total amount of loans across all accounts for a male client between 1996 and 1997?
+MySQL: SELECT   ROUND(     (SUM(CASE WHEN YEAR(l.`date`) = 1997 THEN l.amount ELSE 0 END) - SUM(CASE WHEN YEAR(l.`date`) = 1996 THEN l.amount ELSE 0 END)) * 1.0     / NULLIF(SUM(CASE WHEN YEAR(l.`date`) = 1996 THEN l.amount ELSE 0 END), 0)     * 100   , 2) AS growth_rate_percent FROM `loan` AS l JOIN `account` AS a   ON l.account_id = a.account_id JOIN `disp` AS d   ON a.account_id = d.account_id JOIN `client` AS c   ON d.client_id = c.client_id WHERE c.gender = 'M'   AND YEAR(l.`date`) IN (1996, 1997);
+
+--------------------------------------------------------------------------------
+
+=== 结果项 47/98 ===
+原始问题: Provide the IDs and age of the client with high level credit card, which is eligible for loans.
+MySQL: SELECT DISTINCT   c.client_id AS `Client ID`,   TIMESTAMPDIFF(YEAR, c.birth_date, CURDATE()) AS `Client age` FROM card AS ca JOIN disp AS d   ON ca.disp_id = d.disp_id JOIN client AS c   ON d.client_id = c.client_id WHERE ca.type = 'gold'   AND d.type = 'OWNER' LIMIT 1000;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 48/98 ===
+原始问题: For accounts in 1993 with statement issued after transaction, list the account ID, district name and district region.
+MySQL: SELECT   a.account_id AS `Account ID`,   d.A2 AS `District Name`,   d.A3 AS `District Region` FROM `account` AS a INNER JOIN `district` AS d   ON a.District_id = d.district_id WHERE YEAR(a.`date`) = 1993   AND a.frequency = 'POPLATEK PO OBRATU' LIMIT 1000;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 49/98 ===
+原始问题: From Year 1995 to 2000, who are the accounts holders from 'east Bohemia'. State the account ID the frequency of statement issuance.
+MySQL: SELECT   a.account_id,   a.frequency FROM `account` AS a INNER JOIN `district` AS d   ON a.district_id = d.district_id WHERE d.A3 = 'east Bohemia'   AND YEAR(a.`date`) BETWEEN 1995 AND 2000;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 50/98 ===
+原始问题: What is the ratio of customers who pay in EUR against customers who pay in CZK?
+MySQL: SELECT CAST(SUM(`customers`.`Currency` = 'EUR') AS DECIMAL(20,10)) / NULLIF(SUM(`customers`.`Currency` = 'CZK'), 0) AS `ratio` FROM `customers`;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 51/98 ===
+原始问题: What was the difference in gas consumption between CZK-paying customers and EUR-paying customers in 2012?
+MySQL: SELECT   SUM(CASE WHEN c.Currency = 'CZK' THEN ym.Consumption ELSE 0 END)   - SUM(CASE WHEN c.Currency = 'EUR' THEN ym.Consumption ELSE 0 END) AS difference_consumption_2012 FROM `yearmonth` AS ym INNER JOIN `customers` AS c   ON ym.CustomerID = c.CustomerID WHERE ym.`Date` BETWEEN '201201' AND '201212'   AND c.Currency IN ('CZK', 'EUR');
+
+--------------------------------------------------------------------------------
+
+=== 结果项 52/98 ===
+原始问题: What is the difference in the annual average consumption of the customers with the least amount of consumption paid in CZK for 2013 between SME and LAM, LAM and KAM, and KAM and SME?
+MySQL: WITH customer_2013 AS (   SELECT     c.`Segment` AS segment,     c.`CustomerID` AS customer_id,     SUM(ym.`Consumption`) AS total_consumption_2013   FROM `yearmonth` AS ym   INNER JOIN `customers` AS c     ON ym.`CustomerID` = c.`CustomerID`   WHERE c.`Currency` = 'CZK'     AND ym.`Date` BETWEEN '201301' AND '201312'     AND c.`Segment` IN ('SME', 'LAM', 'KAM')   GROUP BY     c.`Segment`,     c.`CustomerID` ), segment_min AS (   SELECT     segment,     MIN(total_consumption_2013) AS min_total_consumption_2013   FROM customer_2013   GROUP BY segment ), segment_least AS (   SELECT     c13.segment,     c13.customer_id,     c13.total_consumption_2013   FROM customer_2013 AS c13   INNER JOIN segment_min AS sm     ON sm.segment = c13.segment    AND sm.min_total_consumption_2013 = c13.total_consumption_2013 ), segment_avg AS (   SELECT     segment,     SUM(total_consumption_2013) AS segment_total_consumption_2013,     COUNT(DISTINCT customer_id) AS segment_min_customer_count,     SUM(total_consumption_2013) * 1.0 / NULLIF(COUNT(DISTINCT customer_id), 0) AS annual_avg_consumption_2013   FROM segment_least   GROUP BY segment ) SELECT   (MAX(CASE WHEN segment = 'SME' THEN annual_avg_consumption_2013 END)    - MAX(CASE WHEN segment = 'LAM' THEN annual_avg_consumption_2013 END)) AS diff_SME_minus_LAM,   (MAX(CASE WHEN segment = 'LAM' THEN annual_avg_consumption_2013 END)    - MAX(CASE WHEN segment = 'KAM' THEN annual_avg_consumption_2013 END)) AS diff_LAM_minus_KAM,   (MAX(CASE WHEN segment = 'KAM' THEN annual_avg_consumption_2013 END)    - MAX(CASE WHEN segment = 'SME' THEN annual_avg_consumption_2013 END)) AS diff_KAM_minus_SME FROM segment_avg;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 53/98 ===
+原始问题: Which of the three segments—SME, LAM and KAM—has the biggest and lowest percentage increases in consumption paid in EUR between 2012 and 2013?
+MySQL: SELECT   t.segment,   t.percentage_increase,   t.increase,   t.consumption_2012,   t.consumption_2013,   t.extreme_type FROM (   SELECT     s.segment,     s.consumption_2012,     s.consumption_2013,     (s.consumption_2013 - s.consumption_2012) AS increase,     ROUND(       (s.consumption_2013 - s.consumption_2012) * 1.0 / NULLIF(s.consumption_2013, 0) * 100,       2     ) AS percentage_increase,     CASE       WHEN ROUND((s.consumption_2013 - s.consumption_2012) * 1.0 / NULLIF(s.consumption_2013, 0) * 100, 2) =            (SELECT MAX(x.percentage_increase)             FROM (               SELECT                 ROUND(                   (SUM(CASE WHEN SUBSTR(ym.`Date`, 1, 4) = '2013' THEN ym.Consumption ELSE 0 END) -                    SUM(CASE WHEN SUBSTR(ym.`Date`, 1, 4) = '2012' THEN ym.Consumption ELSE 0 END)                   ) * 1.0 / NULLIF(SUM(CASE WHEN SUBSTR(ym.`Date`, 1, 4) = '2013' THEN ym.Consumption ELSE 0 END), 0) * 100,                   2                 ) AS percentage_increase               FROM yearmonth ym               JOIN customers c ON ym.CustomerID = c.CustomerID               WHERE c.Segment IN ('SME','LAM','KAM')                 AND c.Currency = 'EUR'                 AND SUBSTR(ym.`Date`, 1, 4) IN ('2012','2013')               GROUP BY c.Segment             ) AS x)       THEN 'biggest'       WHEN ROUND((s.consumption_2013 - s.consumption_2012) * 1.0 / NULLIF(s.consumption_2013, 0) * 100, 2) =            (SELECT MIN(x.percentage_increase)             FROM (               SELECT                 ROUND(                   (SUM(CASE WHEN SUBSTR(ym.`Date`, 1, 4) = '2013' THEN ym.Consumption ELSE 0 END) -                    SUM(CASE WHEN SUBSTR(ym.`Date`, 1, 4) = '2012' THEN ym.Consumption ELSE 0 END)                   ) * 1.0 / NULLIF(SUM(CASE WHEN SUBSTR(ym.`Date`, 1, 4) = '2013' THEN ym.Consumption ELSE 0 END), 0) * 100,                   2                 ) AS percentage_increase               FROM yearmonth ym               JOIN customers c ON ym.CustomerID = c.CustomerID               WHERE c.Segment IN ('SME','LAM','KAM')                 AND c.Currency = 'EUR'                 AND SUBSTR(ym.`Date`, 1, 4) IN ('2012','2013')               GROUP BY c.Segment             ) AS x)       THEN 'lowest'       ELSE NULL     END AS extreme_type   FROM (     SELECT       c.Segment AS segment,       SUM(CASE WHEN SUBSTR(ym.`Date`, 1, 4) = '2012' THEN ym.Consumption ELSE 0 END) AS consumption_2012,       SUM(CASE WHEN SUBSTR(ym.`Date`, 1, 4) = '2013' THEN ym.Consumption ELSE 0 END) AS consumption_2013     FROM yearmonth ym     JOIN customers c ON ym.CustomerID = c.CustomerID     WHERE c.Segment IN ('SME','LAM','KAM')       AND c.Currency = 'EUR'       AND SUBSTR(ym.`Date`, 1, 4) IN ('2012','2013')     GROUP BY c.Segment   ) AS s ) AS t WHERE t.extreme_type IS NOT NULL ORDER BY FIELD(t.extreme_type, 'biggest', 'lowest') LIMIT 2;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 54/98 ===
+原始问题: How many more "discount" gas stations does the Czech Republic have compared to Slovakia?
+MySQL: SELECT   SUM(`Country` = 'CZE') - SUM(`Country` = 'SVK') AS `difference` FROM `gasstations` WHERE `Segment` = 'discount';
+
+--------------------------------------------------------------------------------
+
+=== 结果项 55/98 ===
+原始问题: How many percent of LAM customer consumed more than 46.73?
+MySQL: SELECT   ROUND(     COUNT(DISTINCT CASE WHEN `yearmonth`.`Consumption` > 46.73 THEN `customers`.`CustomerID` END) * 1.0     / NULLIF(COUNT(DISTINCT `customers`.`CustomerID`), 0) * 100   , 2) AS `percentage` FROM `customers` JOIN `yearmonth`   ON `yearmonth`.`CustomerID` = `customers`.`CustomerID` WHERE `customers`.`Segment` = 'LAM';
+
+--------------------------------------------------------------------------------
+
+=== 结果项 56/98 ===
+原始问题: In February 2012, what percentage of customers consumed more than 528.3?
+MySQL: SELECT ROUND(COUNT(DISTINCT CASE WHEN `yearmonth`.`Consumption` > 528.3 THEN `yearmonth`.`CustomerID` END) * 1.0 / NULLIF(COUNT(DISTINCT `yearmonth`.`CustomerID`), 0) * 100, 2) AS `percentage` FROM `yearmonth` WHERE `yearmonth`.`Date` = '201202';
+
+--------------------------------------------------------------------------------
+
+=== 结果项 57/98 ===
+原始问题: What is the percentage of the customers who used EUR in 2012/8/25?
+MySQL: SELECT ROUND(COUNT(DISTINCT CASE WHEN c.Currency = 'EUR' THEN t.CustomerID END) * 1.0 / NULLIF(COUNT(DISTINCT t.CustomerID), 0) * 100, 2) AS percentage FROM transactions_1k AS t JOIN customers AS c   ON t.CustomerID = c.CustomerID WHERE t.Date = '2012-08-25';
+
+--------------------------------------------------------------------------------
+
+=== 结果项 58/98 ===
+原始问题: For the customer who paid 634.8 in 2012/8/25, what was the consumption decrease rate from Year 2012 to 2013?
+MySQL: SELECT   (t.consumption_2012 - t.consumption_2013) / NULLIF(t.consumption_2012, 0) AS consumption_decrease_rate FROM (   SELECT     tr.CustomerID,     SUM(CASE WHEN YEAR(STR_TO_DATE(ym.`Date`, '%Y-%m-%d')) = 2012 THEN ym.Consumption ELSE 0 END) AS consumption_2012,     SUM(CASE WHEN YEAR(STR_TO_DATE(ym.`Date`, '%Y-%m-%d')) = 2013 THEN ym.Consumption ELSE 0 END) AS consumption_2013   FROM (     SELECT MIN(CustomerID) AS CustomerID     FROM transactions_1k     WHERE `Date` = '2012-08-25'       AND Price = 634.8   ) AS tr   JOIN yearmonth AS ym     ON ym.CustomerID = tr.CustomerID   WHERE YEAR(STR_TO_DATE(ym.`Date`, '%Y-%m-%d')) IN (2012, 2013)   GROUP BY tr.CustomerID ) AS t;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 59/98 ===
+原始问题: What is the percentage of "premium" against the overall segment in Country = "SVK"?
+MySQL: SELECT ROUND(SUM(`Segment` = 'premium') * 1.0 / NULLIF(COUNT(*), 0) * 100, 2) AS premium_percentage FROM `gasstations` WHERE `Country` = 'SVK';
+
+--------------------------------------------------------------------------------
+
+=== 结果项 60/98 ===
+原始问题: What is the amount spent by customer "38508" at the gas stations? How much had the customer spent in January 2012?
+MySQL: SELECT   SUM(t.`Price`) AS `total_amount_spent_at_gas_stations`,   SUM(CASE WHEN DATE_FORMAT(t.`Date`, '%Y%m') = '201201' THEN t.`Price` ELSE 0 END) AS `total_amount_spent_at_gas_stations_jan_2012` FROM `transactions_1k` AS t INNER JOIN `gasstations` AS g   ON t.`GasStationID` = g.`GasStationID` WHERE t.`CustomerID` = 38508;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 61/98 ===
+原始问题: Identify the type of expenses and their total value approved for 'October Meeting' event.
+MySQL: SELECT   e.`type` AS expense_type,   SUM(ex.`cost`) AS total_approved_expense_value FROM `event` AS e INNER JOIN `budget` AS b   ON e.`event_id` = b.`link_to_event` INNER JOIN `expense` AS ex   ON b.`budget_id` = ex.`link_to_budget` WHERE e.`event_name` = 'October Meeting'   AND ex.`approved` IN ('Yes', 'Approved') GROUP BY e.`type` LIMIT 1000;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 62/98 ===
+原始问题: Please provide the diagnosis of patients with ALT glutamic pylvic transaminase beyond the normal range by ascending order of their date of birth.
+MySQL: SELECT p.Diagnosis FROM patient AS p JOIN laboratory AS l ON p.ID = l.ID WHERE l.GPT > 60 ORDER BY p.Birthday ASC;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 63/98 ===
+原始问题: Give the name of the league had the most goals in the 2016 season?
+MySQL: SELECT l.`name` FROM `match` AS m INNER JOIN `league` AS l   ON m.`league_id` = l.`id` WHERE m.`season` = '2015/2016' GROUP BY l.`id`, l.`name` ORDER BY SUM(m.`home_team_goal` + m.`away_team_goal`) DESC LIMIT 1;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 64/98 ===
+原始问题: In Scotland Premier League, which away team won the most during the 2010 season?
+MySQL: SELECT   t.`team_long_name` FROM `match` AS m JOIN `league` AS l   ON m.`league_id` = l.`id` JOIN `team` AS t   ON m.`away_team_api_id` = t.`team_api_id` WHERE l.`name` = 'Scotland Premier League'   AND m.`season` = '2009/2010'   AND (m.`away_team_goal` - m.`home_team_goal`) > 0 GROUP BY m.`away_team_api_id`, t.`team_long_name` ORDER BY COUNT(*) DESC LIMIT 1;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 65/98 ===
+原始问题: Give the name of the league had the most matches end as draw in the 2016 season?
+MySQL: SELECT l.name FROM `match` AS m JOIN league AS l ON m.league_id = l.id WHERE m.season = '2015/2016' GROUP BY l.id, l.name ORDER BY SUM(m.home_team_goal = m.away_team_goal) DESC LIMIT 1;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 66/98 ===
+原始问题: Give the name of the league with the highest matches of all time and how many matches were played in the said league.
+MySQL: SELECT   l.name,   COUNT(m.id) AS match_count FROM `match` AS m JOIN `league` AS l   ON m.league_id = l.id GROUP BY   l.id,   l.name ORDER BY   match_count DESC LIMIT 1;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 67/98 ===
+原始问题: List the name of leagues in which the average goals by the home team is higher than the away team in the 2009/2010 season.
+MySQL: SELECT DISTINCT        l.name FROM `match` AS m INNER JOIN `league` AS l         ON m.league_id = l.id WHERE m.season = '2009/2010' GROUP BY l.id, l.name HAVING (SUM(m.home_team_goal) / NULLIF(COUNT(DISTINCT m.id), 0)) >        (SUM(m.away_team_goal) / NULLIF(COUNT(DISTINCT m.id), 0));
+
+--------------------------------------------------------------------------------
+
+=== 结果项 68/98 ===
+原始问题: Calculate the average home team goal in the 2010/2011 season in the country of Poland.
+MySQL: SELECT   SUM(m.home_team_goal) * 1.0 / NULLIF(COUNT(DISTINCT m.id), 0) AS avg_home_team_goals FROM `match` AS m INNER JOIN country AS c   ON m.country_id = c.id WHERE c.name = 'Poland'   AND m.season = '2010/2011';
+
+--------------------------------------------------------------------------------
+
+=== 结果项 69/98 ===
+原始问题: Who has the highest average finishing rate between the highest and shortest football player?
+MySQL: SELECT   SUBSTRING_INDEX(t.player_name, ' ', 1) AS forename,   SUBSTRING_INDEX(t.player_name, ' ', -1) AS surname FROM (   SELECT     p.player_api_id,     p.player_name,     AVG(pa.finishing) AS avg_finishing   FROM `player` AS p   JOIN `player_attributes` AS pa     ON p.player_api_id = pa.player_api_id   WHERE p.height IN (     (SELECT MAX(p2.height) FROM `player` AS p2),     (SELECT MIN(p3.height) FROM `player` AS p3)   )   GROUP BY     p.player_api_id,     p.player_name ) AS t WHERE t.avg_finishing = (   SELECT MAX(t2.avg_finishing)   FROM (     SELECT       p.player_api_id,       AVG(pa.finishing) AS avg_finishing     FROM `player` AS p     JOIN `player_attributes` AS pa       ON p.player_api_id = pa.player_api_id     WHERE p.height IN (       (SELECT MAX(p2.height) FROM `player` AS p2),       (SELECT MIN(p3.height) FROM `player` AS p3)     )     GROUP BY p.player_api_id   ) AS t2 );
+
+--------------------------------------------------------------------------------
+
+=== 结果项 70/98 ===
+原始问题: How many matches were held in the Belgium Jupiler League in April, 2009?
+MySQL: SELECT COUNT(m.`id`) AS `Number of matches held` FROM `match` AS m JOIN `league` AS l ON m.`league_id` = l.`id` WHERE l.`name` = 'Belgium Jupiler League'   AND LEFT(m.`date`, 7) = '2009-04';
+
+--------------------------------------------------------------------------------
+
+=== 结果项 71/98 ===
+原始问题: Give the name of the league had the most matches in the 2008/2009 season?
+MySQL: SELECT l.`name` FROM `match` AS m INNER JOIN `league` AS l ON m.`league_id` = l.`id` WHERE m.`season` = '2008/2009' GROUP BY l.`id`, l.`name` ORDER BY COUNT(m.`id`) DESC LIMIT 1;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 72/98 ===
+原始问题: When was the first time did Kevin Constant have his highest crossing score? Give the date.
+MySQL: SELECT MIN(pa.`date`) AS first_highest_crossing_date FROM `player` AS p INNER JOIN `player_attributes` AS pa   ON p.`player_fifa_api_id` = pa.`player_fifa_api_id` WHERE p.`player_name` = 'Kevin Constant'   AND pa.`crossing` = (     SELECT MAX(pa2.`crossing`)     FROM `player_attributes` AS pa2     WHERE pa2.`player_fifa_api_id` = p.`player_fifa_api_id`   );
+
+--------------------------------------------------------------------------------
+
+=== 结果项 73/98 ===
+原始问题: List down most tallest players' name.
+MySQL: SELECT DISTINCT p.player_name FROM player AS p WHERE p.height = (SELECT MAX(p2.height) FROM player AS p2);
+
+--------------------------------------------------------------------------------
+
+=== 结果项 74/98 ===
+原始问题: What was the final score for the match on September 24, 2008, in the Belgian Jupiler League between the home team and the away team?
+MySQL: SELECT   m.home_team_goal,   m.away_team_goal FROM `match` AS m INNER JOIN `league` AS l   ON m.league_id = l.id WHERE l.name = 'Belgium Jupiler League'   AND m.`date` LIKE '2008-09-24%' LIMIT 1;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 75/98 ===
+原始问题: Which top 4 leagues had the most games in the 2015-2016 season?
+MySQL: SELECT   l.name FROM `match` AS m JOIN league AS l   ON m.league_id = l.id WHERE m.season = '2015/2016' GROUP BY l.name ORDER BY COUNT(m.id) DESC LIMIT 4;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 76/98 ===
+原始问题: Please provide the full name of the away team that scored the most goals.
+MySQL: SELECT DISTINCT t.team_long_name FROM `match` AS m INNER JOIN `team` AS t   ON m.away_team_api_id = t.team_api_id WHERE m.away_team_goal = (   SELECT MAX(m2.away_team_goal)   FROM `match` AS m2 );
+
+--------------------------------------------------------------------------------
+
+=== 结果项 77/98 ===
+原始问题: Paul di Resta was in the No. 853 race, what percent faster did he finish in the 853rd race than the next race for the fastest lap speed?
+MySQL: SELECT   ((t.speed_853 - t.speed_854) / NULLIF(t.speed_853, 0)) * 100 AS percent_faster FROM (   SELECT     MAX(CASE WHEN r.raceId = 853 THEN CAST(r.fastestLapSpeed AS DECIMAL(10,3)) END) AS speed_853,     MAX(CASE WHEN r.raceId = 854 THEN CAST(r.fastestLapSpeed AS DECIMAL(10,3)) END) AS speed_854   FROM drivers d   JOIN results r ON d.driverId = r.driverId   WHERE d.forename = 'Paul'     AND d.surname = 'di Resta'     AND r.raceId IN (853, 854) ) AS t LIMIT 1;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 78/98 ===
+原始问题: In which Formula_1 race did Lewis Hamilton rank the highest?
+MySQL: SELECT ra.`name` AS Formula_1_race FROM `drivers` AS d JOIN `results` AS re   ON d.`driverId` = re.`driverId` JOIN `races` AS ra   ON re.`raceId` = ra.`raceId` WHERE d.`forename` = 'Lewis'   AND d.`surname` = 'Hamilton'   AND re.`rank` = (     SELECT MIN(re2.`rank`)     FROM `drivers` AS d2     JOIN `results` AS re2       ON d2.`driverId` = re2.`driverId`     WHERE d2.`forename` = 'Lewis'       AND d2.`surname` = 'Hamilton'   ) LIMIT 100;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 79/98 ===
+原始问题: Among the drivers that finished the race in the 2008 Chinese Grand Prix, how many of them have participated in Formula_1 races?
+MySQL: SELECT COUNT(*) AS finished_drivers_participated_f1 FROM (   SELECT DISTINCT res_gp.driverId   FROM races AS r   INNER JOIN results AS res_gp     ON r.raceId = res_gp.raceId   WHERE r.`year` = 2008     AND r.`name` = 'Chinese Grand Prix'     AND res_gp.`time` IS NOT NULL     AND res_gp.`time` <> ''     AND EXISTS (       SELECT 1       FROM results AS res_all       WHERE res_all.driverId = res_gp.driverId       GROUP BY res_all.driverId       HAVING COUNT(DISTINCT res_all.raceId) > 0     ) ) AS t;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 80/98 ===
+原始问题: Please calculate the race completion percentage of Japanese drivers from 2007 to 2009.
+MySQL: SELECT   ROUND(     COUNT(CASE WHEN `results`.`time` IS NOT NULL THEN `results`.`driverId` END) * 1.0     / NULLIF(COUNT(`results`.`driverId`), 0) * 100   , 2) AS `race_completion_percentage` FROM `results` JOIN `races`   ON `results`.`raceId` = `races`.`raceId` JOIN `drivers`   ON `results`.`driverId` = `drivers`.`driverId` WHERE `races`.`year` BETWEEN 2007 AND 2009   AND `drivers`.`nationality` = 'Japanese';
+
+--------------------------------------------------------------------------------
+
+=== 结果项 81/98 ===
+原始问题: How many French drivers who obtain the laptime less than 02:00.00?
+MySQL: SELECT COUNT(DISTINCT d.driverId) AS num_french_drivers_under_2min FROM drivers AS d JOIN laptimes AS lt   ON d.driverId = lt.driverId WHERE d.nationality = 'French'   AND (     CAST(SUBSTRING_INDEX(lt.time, ':', 1) AS UNSIGNED) * 60     + CAST(SUBSTRING_INDEX(lt.time, ':', -1) AS DECIMAL(10,3))   ) < 120;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 82/98 ===
+原始问题: State code numbers of top 3 yougest drivers. How many Netherlandic drivers among them?
+MySQL: SELECT   t.`code`,   SUM(CASE WHEN t.`nationality` = 'Dutch' THEN 1 ELSE 0 END) OVER () AS netherlandic_count FROM (   SELECT     d.`code`,     d.`nationality`,     d.`dob`   FROM `drivers` AS d   ORDER BY d.`dob` DESC   LIMIT 3 ) AS t ORDER BY t.`dob` DESC;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 83/98 ===
+原始问题: Please state the reference name of the oldest German driver.
+MySQL: SELECT DISTINCT d.`driverRef` FROM `drivers` AS d WHERE d.`nationality` = 'German'   AND d.`dob` IS NOT NULL   AND YEAR(d.`dob`) = (     SELECT MIN(YEAR(d2.`dob`))     FROM `drivers` AS d2     WHERE d2.`nationality` = 'German'       AND d2.`dob` IS NOT NULL   );
+
+--------------------------------------------------------------------------------
+
+=== 结果项 84/98 ===
+原始问题: From race no. 50 to 100, how many finishers have been disqualified?
+MySQL: SELECT COUNT(*) AS `Number of disqualified finishers` FROM `results` WHERE `results`.`raceId` > 50   AND `results`.`raceId` < 100   AND `results`.`statusId` = 2   AND `results`.`time` IS NOT NULL;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 85/98 ===
+原始问题: What is full name of the racer who ranked 1st in the 3rd qualifying race held in the Marina Bay Street Circuit in 2008?
+MySQL: SELECT d.forename, d.surname FROM races AS r JOIN circuits AS c ON r.circuitId = c.circuitId JOIN qualifying AS q ON r.raceId = q.raceId JOIN drivers AS d ON q.driverId = d.driverId WHERE r.year = 2008   AND c.name = 'Marina Bay Street Circuit'   AND q.q3 IS NOT NULL   AND q.q3 = (     SELECT MIN(q2.q3)     FROM races AS r2     JOIN circuits AS c2 ON r2.circuitId = c2.circuitId     JOIN qualifying AS q2 ON r2.raceId = q2.raceId     WHERE r2.year = 2008       AND c2.name = 'Marina Bay Street Circuit'       AND q2.q3 IS NOT NULL   ) LIMIT 1;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 86/98 ===
+原始问题: As of the present, what is the full name of the youngest racer? Indicate her nationality and the name of the race to which he/she first joined.
+MySQL: SELECT   d.forename,   d.surname,   d.nationality,   r.name AS first_joined_race_name FROM drivers AS d JOIN driverstandings AS ds   ON ds.driverId = d.driverId JOIN races AS r   ON r.raceId = ds.raceId JOIN (   SELECT     t.driverId,     MIN(t.raceId) AS first_raceId   FROM (     SELECT       ds2.driverId,       r2.raceId,       r2.date,       MIN(r2.date) OVER (PARTITION BY ds2.driverId) AS min_race_date     FROM driverstandings AS ds2     JOIN races AS r2       ON r2.raceId = ds2.raceId   ) AS t   WHERE t.date = t.min_race_date   GROUP BY t.driverId ) AS fr   ON fr.driverId = d.driverId  AND fr.first_raceId = r.raceId WHERE d.dob = (SELECT MAX(dob) FROM drivers);
+
+--------------------------------------------------------------------------------
+
+=== 结果项 87/98 ===
+原始问题: Among the posts with a score of over 5, what is the percentage of them being owned by an elder user?
+MySQL: SELECT ROUND(CAST(COUNT(CASE WHEN `users`.`Age` > 65 THEN `posts`.`Id` END) AS DECIMAL(20,6)) / NULLIF(COUNT(`posts`.`Id`), 0) * 100, 6) AS `percentage` FROM `posts` INNER JOIN `users`   ON `posts`.`OwnerUserId` = `users`.`Id` WHERE `posts`.`Score` > 5;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 88/98 ===
+原始问题: User No.23853 gave a comment to a post at 9:08:18 on 2013/7/12, was that post well-finished?
+MySQL: SELECT   IF(p.`ClosedDate` IS NULL, 'NOT well-finished', 'well-finished') AS `finish_status` FROM `comments` AS c INNER JOIN `posts` AS p   ON c.`PostId` = p.`Id` WHERE c.`UserId` = 23853   AND c.`CreationDate` = '2013-07-12 09:08:18.0' LIMIT 1;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 89/98 ===
+原始问题: Based on posts posted by Community, calculate the percentage of posts that use the R language.
+MySQL: SELECT   ROUND(     COUNT(DISTINCT CASE WHEN t.TagName = 'r' THEN ph.PostId END) * 1.0     / NULLIF(COUNT(DISTINCT ph.PostId), 0) * 100   , 2) AS percentage FROM `users` AS u INNER JOIN `posthistory` AS ph   ON u.Id = ph.UserId INNER JOIN `tags` AS t   ON ph.PostId = t.ExcerptPostId WHERE u.DisplayName = 'Community';
+
+--------------------------------------------------------------------------------
+
+=== 结果项 90/98 ===
+原始问题: Calculate the difference in view count from post posted by Mornington and view count from posts posted by Amos.
+MySQL: SELECT   SUM(u.DisplayName = 'Mornington' AND p.ViewCount IS NOT NULL) * 0 + (     SUM(CASE WHEN u.DisplayName = 'Mornington' THEN IFNULL(p.ViewCount, 0) ELSE 0 END)     - SUM(CASE WHEN u.DisplayName = 'Amos' THEN IFNULL(p.ViewCount, 0) ELSE 0 END)   ) AS difference_in_total_view_count FROM `posts` AS p INNER JOIN `users` AS u   ON u.Id = p.OwnerUserId WHERE u.DisplayName IN ('Mornington', 'Amos');
+
+--------------------------------------------------------------------------------
+
+=== 结果项 91/98 ===
+原始问题: Among the comments with scores between 5 to 10, what is the percentage of the users with 0 up votes?
+MySQL: SELECT   CAST(COUNT(DISTINCT CASE WHEN u.UpVotes = 0 THEN c.UserId END) AS DECIMAL(20,6))   / NULLIF(COUNT(DISTINCT c.UserId), 0) * 100 AS percentage FROM `comments` AS c INNER JOIN `users` AS u   ON u.Id = c.UserId WHERE c.Score >= 5   AND c.Score <= 10;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 92/98 ===
+原始问题: Name the card and artist with the most ruling information. Also state if the card is a promotional printing.
+MySQL: SELECT   c.name AS `Card Name`,   c.artist AS `Artist Name`,   CASE     WHEN c.isPromo = 1 THEN 'YES'     WHEN c.isPromo = 1 THEN 'NO'     ELSE 'NO'   END AS `promotional printing` FROM `cards` AS c JOIN `rulings` AS r   ON c.uuid = r.uuid GROUP BY   c.uuid,   c.name,   c.artist,   c.isPromo HAVING COUNT(r.uuid) = (   SELECT MAX(t.ruling_count)   FROM (     SELECT       c2.uuid,       COUNT(r2.uuid) AS ruling_count     FROM `cards` AS c2     JOIN `rulings` AS r2       ON c2.uuid = r2.uuid     GROUP BY c2.uuid   ) AS t );
+
+--------------------------------------------------------------------------------
+
+=== 结果项 93/98 ===
+原始问题: For the set of cards with "Ancestor's Chosen" in it, is there a Korean version of it?
+MySQL: SELECT   CASE     WHEN EXISTS (       SELECT 1       FROM `cards` AS c       INNER JOIN `set_translations` AS st         ON c.`setCode` = st.`setCode`       WHERE c.`name` = 'Ancestor''s Chosen'         AND st.`language` = 'Korean'       LIMIT 1     ) THEN 'YES'     ELSE 'NO'   END AS `has_korean_version`;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 94/98 ===
+原始问题: Did the set of cards with "Angel of Mercy" appear on Magic: The Gathering Online?
+MySQL: SELECT   CASE     WHEN EXISTS (       SELECT 1       FROM `cards` AS c       INNER JOIN `sets` AS s ON c.`setCode` = s.`code`       WHERE c.`name` = 'Angel of Mercy'         AND s.`mtgoCode` IS NOT NULL       LIMIT 1     ) THEN 'YES'     ELSE 'NO'   END AS `appeared_on_mtgo`;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 95/98 ===
+原始问题: Is the set of cards with Adarkar Valkyrie only available outside the United States?
+MySQL: SELECT   IF(     COUNT(DISTINCT c.setCode) > 0     AND SUM(CASE WHEN s.isForeignOnly = 1 THEN 0 ELSE 1 END) = 0,     'YES',     'NO'   ) AS answer FROM cards AS c INNER JOIN sets AS s   ON c.setCode = s.code WHERE c.name = 'Adarkar Valkyrie';
+
+--------------------------------------------------------------------------------
+
+=== 结果项 96/98 ===
+原始问题: List all the frame styles and cards Allen Williams worked on and find any banned cards if there are any.
+MySQL: SELECT   c.frameVersion AS `frame style`,   c.name AS `card name`,   IF(SUM(CASE WHEN l.status = 'Banned' THEN 1 ELSE 0 END) > 0, 'Banned', 'Not Banned') AS `banned status` FROM `cards` AS c LEFT JOIN `legalities` AS l   ON c.uuid = l.uuid WHERE c.artist = 'Allen Williams' GROUP BY   c.frameVersion,   c.name LIMIT 1000;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 97/98 ===
+原始问题: Between San Diego and Santa Barbara, which county offers the most number of schools that does not offer physical building? Indicate the amount.
+MySQL: SELECT   `schools`.`County` AS `County`,   COUNT(`schools`.`CDSCode`) AS `Number of schools that do not offer physical building` FROM `schools` WHERE `schools`.`County` IN ('San Diego', 'Santa Barbara')   AND `schools`.`Virtual` = 'F' GROUP BY `schools`.`County` ORDER BY `Number of schools that do not offer physical building` DESC LIMIT 1;
+
+--------------------------------------------------------------------------------
+
+=== 结果项 98/98 ===
+原始问题: For the client whose loan was approved first in 1993/7/5, what is the increase rate of his/her account balance from 1993/3/22 to 1998/12/27?
+MySQL: SELECT   ROUND(     (MAX(CASE WHEN t.`date` = '1998-12-27' THEN t.`balance` END) - MAX(CASE WHEN t.`date` = '1993-03-22' THEN t.`balance` END)) * 1.0     / NULLIF(MAX(CASE WHEN t.`date` = '1993-03-22' THEN t.`balance` END), 0) * 100   , 2) AS `balance_increase_rate_percent` FROM `trans` AS t JOIN (   SELECT l.`account_id`   FROM `loan` AS l   WHERE l.`date` = '1993-07-05'   ORDER BY l.`loan_id` ASC   LIMIT 1 ) AS sel   ON sel.`account_id` = t.`account_id` WHERE t.`date` IN ('1993-03-22', '1998-12-27');
+
+--------------------------------------------------------------------------------
+

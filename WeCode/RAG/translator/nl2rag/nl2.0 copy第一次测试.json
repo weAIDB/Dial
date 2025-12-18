@@ -1,0 +1,23 @@
+[
+  {
+    "question": "Among the transactions made in the gas stations in the Czech Republic, how many of them are taken place after 2012/1/1?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'transactions_1k' and 'gasstations' using 'GasStationID'\n\n ---  Filters\n- 'gasstations.Country' = 'CZE' (representing gas stations in the Czech Republic)\n- 'transactions_1k.Date' > 2012-01-01 (transactions that took place after 2012/1/1)\n\n ---  Aggregation & Computation\n- Calculate 'transaction_count' = Count of 'transactions_1k.TransactionID' over all records that satisfy the filters\n\n ---  Return\n- transaction_count",
+    "teps Count Total": 4,
+    "question_id": 1509,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "What is the percentage of female patient were born after 1930?",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'patient' (no joins required)\n\n ---  Filters\n- For numerator: year part of 'patient.Birthday' > 1930\n- For both numerator and denominator: 'patient.SEX' = 'F'\n\n ---  Aggregation & Computation\n- Calculate 'female_total' = Count of DISTINCT 'patient.ID' where 'patient.SEX' = 'F'\n- Calculate 'female_post_1930' = Count of DISTINCT 'patient.ID' where year part of 'patient.Birthday' > 1930 and 'patient.SEX' = 'F'\n- Calculate 'percentage' = ('female_post_1930' / 'female_total') * 100\n\n ---  Return\n- percentage",
+    "teps Count Total": 6,
+    "question_id": 1150,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "State the ID and age of patient with positive degree of coagulation.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'patient' and 'examination' tables using 'ID'\n\n ---  Filters\n- 'examination.RVVT' = '+' (positive degree of coagulation)\n\n ---  Aggregation & Computation\n- For each patient, calculate 'age' = year part of current timestamp - year part of 'patient.Birthday'\n\n ---  Return\n- Distinct patient.ID\n- age",
+    "teps Count Total": 3,
+    "question_id": 1156,
+    "difficulty": "moderate"
+  }
+]

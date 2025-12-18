@@ -1,0 +1,769 @@
+[
+    {
+        "query": "What is the core purpose of this document?",
+        "reference_docs": [
+            {
+                "page_content": "1. The purpose of this document is to generate SQL statements based on given natural language questions, focusing on the syntax and respective differences of five databases: MySQL, PostgreSQL, SQLite, Oracle, and SQL Server. Note that these differences are also referred to as dialects, meaning each database's distinct implementation functions for the same feature and different data types.",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "Document Purpose Description"
+                }
+            }
+        ],
+        "ideal_answer": "The core purpose of this document is to generate SQL statements for natural language questions, covering the syntax and dialects of five databases: MySQL, PostgreSQL, SQLite, Oracle, and SQL Server (including different implementation functions for the same functionality and different data types).",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "query": "Which five databases' syntax and dialect differences does the document cover?",
+        "reference_docs": [
+            {
+                "page_content": "1. The purpose of this document is to generate SQL statements based on given natural language questions, focusing on the syntax of five databases: MySQL, PostgreSQL, SQLite, Oracle, and SQL Server, as well as their respective differences. Note that these differences are also referred to as dialects, meaning each database's distinct implementation functions for the same feature and different data types.",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "Covering the list of databases"
+                }
+            }
+        ],
+        "ideal_answer": "The five databases covered in the document are MySQL, PostgreSQL, SQLite, Oracle, and SQL Server, with the core content focusing on the syntax and dialect differences among these five databases.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "query": "What is the most common standard practice for defining aliases? Which databases support this practice?",
+        "reference_docs": [
+            {
+                "page_content": "1.1 Alias Definition and Reference: * AS keyword: The most universal standard practice. -- MySQL, PostgreSQL, SQL Server, Oracle (recommended), BigQuery, SQLite SELECT first_name AS fn, last_name AS ln FROM employees;",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "Alias Definition - AS Keyword"
+                }
+            }
+        ],
+        "ideal_answer": "The most common standard practice for defining an alias is to use the AS keyword. Databases that support this practice include MySQL, PostgreSQL, SQL Server, Oracle (recommended), and SQLite.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "query": "What is the underlying data type of the Boolean type (BOOL/BOOLEAN) in MySQL?",
+        "reference_docs": [
+            {
+                "page_content": "2.4.1 BOOLEAN Type Support: (2) MySQL: Natively supports BOOL/BOOLEAN (actually an alias for TINYINT(1): 0=FALSE, other values=TRUE).",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "The nature of MySQL Boolean type"
+                }
+            }
+        ],
+        "ideal_answer": "In MySQL, the BOOL/BOOLEAN type is essentially an alias for TINYINT(1), where 0 represents FALSE and other values represent TRUE.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "query": "What is the syntax example for directly executing a tableless query when SQLite does not require a virtual table?",
+        "reference_docs": [
+            {
+                "page_content": "1.11 Usage of Virtual Tables: (3) SQLite: Completely eliminates the need for dual, tableless queries are executed directly, eg: SELECT 1;  -- Returns constant 1.     SELECT datetime('now');  -- Queries the current time",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "SQLite tableless query example"
+                }
+            }
+        ],
+        "ideal_answer": "When SQLite does not require a virtual table, syntax examples for directly executable tableless queries include: SELECT 1; (returns constant 1), SELECT datetime('now'); (queries current time).",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "query": "What is the definition of database dialect in the documentation?",
+        "reference_docs": [
+            {
+                "page_content": "1. The purpose of this document is to generate SQL statements based on given natural language questions, focusing on the syntax of five databases: MySQL, PostgreSQL, SQLite, Oracle, and SQL Server, as well as their respective differences. Note that these differences are also referred to as dialects, meaning each database's distinct implementation functions for the same feature and different data types.",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "Database dialect definition"
+                }
+            }
+        ],
+        "ideal_answer": "The database dialect defined in the document refers to the different implementation functions and distinct data types for the same functionality across each database.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "query": "Does SQLite support using the AS keyword to define an alias?",
+        "reference_docs": [
+            {
+                "page_content": "1.1 Alias Definition and Reference: * AS keyword: The most universal standard practice. -- MySQL, PostgreSQL, SQL Server, Oracle (recommended), BigQuery, SQLite SELECT first_name AS fn, last_name AS ln FROM employees;",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "SQLite alias support"
+                }
+            }
+        ],
+        "ideal_answer": "SQLite supports defining aliases using the AS keyword, which is the common standard practice for defining aliases.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "query": "What are the value rules for the BOOL type in MySQL?",
+        "reference_docs": [
+            {
+                "page_content": "2.4.1 BOOLEAN Type Support: (2) MySQL: Natively supports BOOL/BOOLEAN (actually an alias for TINYINT(1): 0=FALSE, other values=TRUE).",
+                "metadata": {
+                    "source": "Database dialect.txt",
+                    "title": "MySQL BOOL value rules"
+                }
+            }
+        ],
+        "ideal_answer": "In MySQL, the value rules for the BOOL/BOOLEAN type are defined as 0 representing FALSE and any other value representing TRUE.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "query": "What symbol does Oracle recommend for referencing field names with special characters?",
+        "reference_docs": [
+            {
+                "page_content": "1.2.2 Identifier Referencing (Object Names): -- PostgreSQL, SQL Server (when QUOTED_IDENTIFIER is ON), Oracle (highly recommended) SELECT \"name\", \"group\" FROM \"users\";",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "Oracle special character quoting"
+                }
+            }
+        ],
+        "ideal_answer": "Oracle strongly recommends using double quotes (\") to quote field names with special characters.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "query": "What is the function in PostgreSQL for constructing a JSON array?",
+        "reference_docs": [
+            {
+                "page_content": "3.3.1.1 Constructing JSON Objects: 1) MySQL (8.0+): JSON_OBJECT(), JSON_ARRAY() 3) Oracle (12.1.0.2+): JSON_OBJECT, JSON_ARRAY",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "PostgreSQL JSON array functions"
+                }
+            }
+        ],
+        "ideal_answer": "The function for constructing JSON arrays in PostgreSQL is JSON_ARRAY.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "query": "What is the function name in SQL Server to extract the \"year\" from a date?",
+        "reference_docs": [
+            {
+                "page_content": "1.4.2 Extracting Date Components: -- SQL Server SELECT DATEPART(YEAR, order_date);",
+                "metadata": {
+                    "source": "Database Dialects.txt",
+                    "title": "SQL Server YEAR function"
+                }
+            }
+        ],
+        "ideal_answer": "The function to extract the \"year\" from a date in SQL Server is DATEPART.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "query": "In non-strict mode of MySQL, can GROUP BY contain only partial non-aggregated columns?",
+        "reference_docs": [
+            {
+                "page_content": "1.7.1 GROUP BY:(1)MySQL:In non-strict mode, MySQL allows GROUP BY to include only partial non-aggregated columns, eg:GROUP BY t2.name",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "MySQL GROUP BY non-aggregated columns"
+                }
+            }
+        ],
+        "ideal_answer": "In non-strict mode, MySQL allows GROUP BY to include only some non-aggregated columns.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "query": "Does SQLite rely on the dual table when executing tableless queries?",
+        "reference_docs": [
+            {
+                "page_content": "1.11 Usage of Virtual Tables: (3) SQLite: Completely eliminates the need for dual, executes tableless queries directly, e.g.: SELECT 1;  -- Returns the constant 1.     SELECT datetime('now');  -- Queries the current time.",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "SQLite tableless query dependencies"
+                }
+            }
+        ],
+        "ideal_answer": "SQLite executes tableless queries without any reliance on the dual table.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "query": "What is the function for constructing JSON objects in Oracle 12.1.0.2+?",
+        "reference_docs": [
+            {
+                "page_content": "3.3.1.1 Constructing JSON Objects: 3)Oracle(12.1.0.2+):JSON_OBJECT,JSON_ARRAY",
+                "metadata": {
+                    "source": "Database dialect.txt",
+                    "title": "Oracle JSON Object Functions"
+                }
+            }
+        ],
+        "ideal_answer": "Oracle 12.1.0.2+ uses the JSON_OBJECT function to construct JSON objects.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "query": "What is the core function in PostgreSQL for calculating the age difference between dates?",
+        "reference_docs": [
+            {
+                "page_content": "1.9 Function for calculating age difference: (1) PostgreSQL: Built-in AGE calculates date difference, then extracts year difference through EXTRACT, eg: EXTRACT(YEAR FROM AGE(CURRENT_DATE, \"birthday\"))",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "PostgreSQL age difference function"
+                }
+            }
+        ],
+        "ideal_answer": "The core function for calculating date age differences in PostgreSQL is AGE.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "easy"
+        }
+    },
+    {
+        "query": "What are the pagination query syntaxes for the three databases: MySQL, PostgreSQL, and Oracle?",
+        "reference_docs": [
+            {
+                "page_content": "1.5 Pagination Query:\n* MySQL\n--LIMIT/OFFSET: Clear and intuitive\nSELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 records per page)\n--LIMIT OFFSET,ROW_COUNT\nSELECT * FROM products ORDER BY price DESC LIMIT 20, 10;-- Page 3 (10 records per page)\n* PostgreSQL\n--LIMIT/OFFSET: Clear and intuitive\nSELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 records per page)\n* Oracle\n--ROW_NUMBER: Using ROWNUM pseudocolumn before 12c\nSELECT * FROM (\n  SELECT t.*, ROWNUM rn\n  FROM (\n    SELECT * FROM products ORDER BY price DESC\n  ) t\n  WHERE ROWNUM <= 30\n)\nWHERE rn > 20;\n-- Window function ROW_NUMBER() + FETCH FIRST: Modern standard\nSELECT * FROM products ORDER BY price DESC OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY;",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "MySQL/PostgreSQL/Oracle pagination syntax"
+                }
+            }
+        ],
+        "ideal_answer": "1. MySQL pagination syntax: Uses LIMIT/OFFSET, example: SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; or LIMIT 20, 10; 2. PostgreSQL pagination syntax: Uses LIMIT/OFFSET, example: SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; 3. Oracle pagination syntax: Before 12c uses ROWNUM pseudo-column (nested subqueries), example: SELECT * FROM (SELECT t.*, ROWNUM rn FROM (SELECT * FROM products ORDER BY price DESC) t WHERE ROWNUM <=30) WHERE rn>20; modern standard uses OFFSET+FETCH, example: SELECT * FROM products ORDER BY price DESC OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "What functions are used to extract the \"year\" field from a date in PostgreSQL and SQL Server respectively?",
+        "reference_docs": [
+            {
+                "page_content": "1.4.2 Extracting Date Components:  \n-- PostgreSQL Method 1: EXTRACT(field FROM date_column), eg: SELECT EXTRACT(YEAR FROM order_date);  \nMethod 2: DATE_PART('field', date_column), eg: Extracting year DATE_PART('year', lastaccessdate);  \n-- SQL Server  \nSELECT DATEPART(YEAR, order_date);",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "PostgreSQL/SQL Server year extraction function"
+                }
+            }
+        ],
+        "ideal_answer": "1. Functions for extracting the \"year\" field from a date in PostgreSQL: two methods, one is EXTRACT(YEAR FROM date_column), example: EXTRACT(YEAR FROM order_date); the other is DATE_PART('year', date_column), example: DATE_PART('year', lastaccessdate). 2. Function for extracting the \"year\" field from a date in SQL Server: DATEPART(YEAR, date_column), example: DATEPART(YEAR, order_date).",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "What are the differences in the requirements for non-aggregated columns in the GROUP BY clause between MySQL and Oracle?",
+        "reference_docs": [
+            {
+                "page_content": "1.7.1 GROUP BY:(1)MySQL:In non-strict mode, MySQL allows GROUP BY to include only partial non-aggregated columns, eg:GROUP BY t2.name (2)Oracle:Oracle requires GROUP BY to include all non-aggregated columns (unless using aggregate functions), eg:GROUP BY \"t2\".\"name\", \"t2\".\"nationality\"",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "MySQL/Oracle GROUP BY requirements for non-aggregated columns"
+                }
+            }
+        ],
+        "ideal_answer": "Differences in GROUP BY clause requirements for non-aggregated columns between MySQL and Oracle: 1. MySQL: In non-strict mode, GROUP BY can include only some non-aggregated columns, example: GROUP BY t2.name; 2. Oracle: Requires GROUP BY to include all non-aggregated columns (unless non-aggregated columns are processed using aggregate functions), example: GROUP BY \"t2\".\"name\", \"t2\".\"nationality\".",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "When field names contain special characters, how do MySQL and PostgreSQL reference identifiers respectively?",
+        "reference_docs": [
+            {
+                "page_content": "1.2.2 Identifier Quoting (Object Names):\n-- MySQL, SQLite (backticks ``` in default mode) SELECT `name`, `group` FROM `users`;\n-- PostgreSQL, SQL Server (when QUOTED_IDENTIFIER is ON), Oracle (highly recommended) SELECT \"name\", \"group\" FROM \"users\";",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "MySQL/PostgreSQL identifier quoting for field names with special characters"
+                }
+            }
+        ],
+        "ideal_answer": "When field names contain special characters, the identifier quoting methods for MySQL and PostgreSQL: 1. MySQL: Use backticks (`) to wrap identifiers, example: SELECT `name`, `group` FROM `users`; 2. PostgreSQL: Use double quotes (\") to wrap identifiers, example: SELECT \"name\", \"group\" FROM \"users\".",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "When constructing JSON objects, what functions are used in MySQL 8.0+ and Oracle 12.1.0.2+ respectively?",
+        "reference_docs": [
+            {
+                "page_content": "3.3.1.1 Constructing JSON Objects: 1) MySQL (8.0+): JSON_OBJECT(), JSON_ARRAY() 3) Oracle (12.1.0.2+): JSON_OBJECT, JSON_ARRAY",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "MySQL/Oracle JSON object construction functions"
+                }
+            }
+        ],
+        "ideal_answer": "When constructing JSON objects: 1. MySQL 8.0+ uses the JSON_OBJECT() function (to construct JSON objects) and the JSON_ARRAY() function (to construct JSON arrays); 2. Oracle 12.1.0.2+ uses the JSON_OBJECT function (to construct JSON objects) and the JSON_ARRAY function (to construct JSON arrays).",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "In MySQL, PostgreSQL, Oracle, SQL Server, and SQLite, how to accurately calculate \"user age (based on birthday field)\" respectively? Need to write the core syntax for each database.",
+        "reference_docs": [
+            {
+                "page_content": "1.9 Functions for Calculating Age Difference: (1)PostgreSQL: Built-in AGE function calculates date difference, then extracts year difference via EXTRACT, e.g.: EXTRACT(YEAR FROM AGE(CURRENT_DATE, \"birthday\")) (2)MySQL: Uses MySQL's native functions, e.g.: YEAR(CURDATE()) - YEAR(birthday) or TIMESTAMPDIFF(YEAR, birthday, CURRENT_DATE). The former uses simple \"current year - birth year\" (may cause inaccuracies due to \"birthday not yet occurred\"); the latter uses TIMESTAMPDIFF for precise year difference calculation. (3)Oracle: Uses MONTHS_BETWEEN to calculate month difference between \"current date - birthday\", then divides by 12 and truncates to obtain age. e.g.: TRUNC(MONTHS_BETWEEN(SYSDATE, birthday) / 12) (4)SQL Server: First calculates year difference via DATEDIFF, then corrects for \"birthday not yet occurred in current year\" via CASE (if birthday hasn't occurred, subtract 1 from year difference). e.g.: DATEDIFF(YEAR, birthday, GETDATE()) - CASE WHEN (MONTH(birthday) > MONTH(GETDATE())) OR (MONTH(birthday) = MONTH(GETDATE()) AND DAY(birthday) > DAY(GETDATE())) THEN 1 ELSE 0 END (5)SQLite: Uses strftime to obtain year difference separately, then subtracts Boolean value of \"current month-day < birthday month-day\" (True as 1, False as 0) to achieve precise age, e.g.: (strftime('%Y', 'now') - strftime('%Y', birthday)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthday))",
+                "metadata": {
+                    "source": "Database Dialects.txt",
+                    "title": "Precise Age Calculation Syntax Across Five Databases"
+                }
+            }
+        ],
+        "ideal_answer": "Core syntax for precise calculation of user age (based on birthday field) across five databases: 1. MySQL: Use the TIMESTAMPDIFF function, example: TIMESTAMPDIFF(YEAR, birthday, CURRENT_DATE) (avoiding errors when birthday hasn't occurred yet); 2. PostgreSQL: Use AGE+EXTRACT functions, example: EXTRACT(YEAR FROM AGE(CURRENT_DATE, \"birthday\")); 3. Oracle: Use MONTHS_BETWEEN+TRUNC functions, example: TRUNC(MONTHS_BETWEEN(SYSDATE, birthday) / 12); 4. SQL Server: Use DATEDIFF+CASE correction, example: DATEDIFF(YEAR, birthday, GETDATE()) - CASE WHEN (MONTH(birthday) > MONTH(GETDATE())) OR (MONTH(birthday)=MONTH(GETDATE()) AND DAY(birthday)>DAY(GETDATE())) THEN 1 ELSE 0 END; 5. SQLite: Use strftime to calculate year difference with correction, example: (strftime('%Y', 'now') - strftime('%Y', birthday)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthday)).",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "A business requirement needs to implement \"ranking employees in each department by sales amount (same sales amount shares the same rank)\". Window functions must be used. Which ranking function is suitable for this scenario? In which databases is this function supported?",
+        "reference_docs": [
+            {
+                "page_content": "3.1 Window Functions: 2) Functions available in MySQL 8.0+, PostgreSQL, Oracle, SQL Server, and SQLite include: Ranking: ROW_NUMBER(), RANK(), DENSE_RANK(); Offset: LAG(), LEAD(); First/Last Values: FIRST_VALUE(); Bucketing: NTILE() 1.7.1 GROUP BY: Ranking scenario description: The RANK() function returns the same rank for identical values and skips subsequent ranking positions after ties (i.e., tied rankings).",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "Window Functions - Tie Ranking Functions and Supported Databases"
+                }
+            }
+        ],
+        "ideal_answer": "1. Ranking function suitable for the scenario: RANK() function, which returns the same ranking for identical sales amounts and skips subsequent duplicate rankings (meeting the requirement of \"identical sales amounts sharing the same rank\"); 2. Databases supporting this function: MySQL 8.0+, PostgreSQL, Oracle, SQL Server, SQLite.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "When handling high-concurrency scenarios that require \"transaction isolation level set to READ COMMITTED while avoiding lock contention,\" what are the implementation differences between Oracle and MySQL (InnoDB)?",
+        "reference_docs": [
+            {
+                "page_content": "4.1.1 Default Isolation Level Comparison: (1) Oracle: Defaults to READ COMMITTED, providing non-blocking read capability. Its UNDO tablespace mechanism enables historical data access. (2) MySQL (InnoDB): Defaults to REPEATABLE READ. Resolves phantom reads through MVCC multi-version concurrency control. 4.1.2 Lock Contention Handling Strategies: (1) Oracle: Focuses on \"write operations not blocking read operations\" (Consistent Read is its core competitiveness). (2) MySQL: InnoDB employs row-level locking, resolving phantom reads through Next-Key Locking (locking scope includes rows and Gap intervals). Features deadlock detection and automatic rollback.",
+                "metadata": {
+                    "domain": "Database",
+                    "difficulty": "middle",
+                    "source": "Database dialects.txt",
+                    "title": "Oracle/MySQL READ COMMITTED isolation level lock contention mechanism"
+                }
+            }
+        ],
+        "ideal_answer": "In high-concurrency scenarios with \"transaction isolation level set to READ COMMITTED and avoiding lock contention,\" the implementation mechanism differences between Oracle and MySQL (InnoDB): 1. Oracle: Achieves \"write does not block read\" (Consistent Read) through the UNDO tablespace mechanism, accessing historical version data during reads without blocking write operations, fundamentally reducing lock contention; 2. MySQL (InnoDB): Although the default isolation level is REPEATABLE READ, after switching to READ COMMITTED, it still relies on MVCC (Multi-Version Concurrency Control), employs row-level locks (not table locks), and controls the locking scope through Next-Key Locking (only locking necessary rows without expanding the Gap range), reducing the probability of lock contention, but lacks Oracle's dedicated historical data access mechanism via the UNDO tablespace.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "The storage format of a certain JSON field is `{\"user\":{\"address\":{\"city\":\"Beijing\"}}}`, requiring extraction of the value of \"city\". What syntax is used in PostgreSQL, SQL Server, and SQLite respectively?",
+        "reference_docs": [
+            {
+                "page_content": "3.3.1.2 Path Extraction: 2)PostgreSQL:column->>'key', #>> 4)SQL Server(2016+):JSON_VALUE(), OPENJSON 5)SQLite:json_extract() Example: PostgreSQL extracts deep JSON values: SELECT user->'address'->>'city' FROM table; SQL Server: JSON_VALUE(json_column, '$.user.address.city'); SQLite: json_extract(json_column, '$.user.address.city').",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "PostgreSQL/SQL Server/SQLite JSON deep extraction syntax"
+                }
+            }
+        ],
+        "ideal_answer": "For the JSON field `{\"user\":{\"address\":{\"city\":\"Beijing\"}}}` to extract the value of \"city\", the syntax is as follows:  \n1. PostgreSQL: Use the combination of `->` (to retrieve JSON objects) and `->>` (to retrieve string values). Example: `SELECT json_column->'user'->'address'->>'city' FROM table;` Alternatively, use `#>>` with a path array. Example: `SELECT json_column#>>'{user,address,city}' FROM table;`  \n2. SQL Server: Use the `JSON_VALUE` function to specify the JSON path. Example: `SELECT JSON_VALUE(json_column, '$.user.address.city') FROM table;`  \n3. SQLite: Use the `json_extract` function to specify the path. Example: `SELECT json_extract(json_column, '$.user.address.city') FROM table;`.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "Write a stored procedure to implement \"give a specified employee a 10% salary increase\", which must include transaction control (rollback on error). Please compare the syntax differences between Oracle (PL/SQL) and MySQL.",
+        "reference_docs": [
+            {
+                "page_content": "3.4.1 Language Ecosystem Differences: (1)Oracle: PL/SQL is the core language (Turing complete), deeply integrated into the database kernel. PROCEDURE update_salary (emp_id NUMBER, increase NUMBER) IS BEGIN UPDATE employees SET salary = salary + increase WHERE id = emp_id; COMMIT; -- COMMIT directly triggers transaction submission in PL/SQL END; (4)MySQL: Uses SQL/PSM style (similar to PL/SQL but incomplete). Exception handling is relatively basic. DELIMITER // CREATE PROCEDURE update_salary(IN emp_id INT, IN increase DECIMAL(10,2)) BEGIN DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK; START TRANSACTION; UPDATE employees SET salary = salary + increase WHERE id = emp_id; COMMIT; END // DELIMITER ; 10% salary increase logic: increase = salary * 0.1, requires querying salary first in the stored procedure before calculation.",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "Oracle/MySQL salary increase stored procedure syntax differences"
+                }
+            }
+        ],
+        "ideal_answer": "Syntax differences between Oracle (PL/SQL) and MySQL for implementing \"Give a specified employee a 10% salary increase\" (with transaction control): 1. Syntax structure differences: Oracle uses PROCEDURE definition without DELIMITER switching; MySQL requires using DELIMITER to modify the statement terminator and uses CREATE PROCEDURE for definition. 2. Transaction control differences: Oracle directly uses COMMIT for submission in PL/SQL, exceptions require explicit capture; MySQL requires using START TRANSACTION to initiate a transaction, DECLARE EXIT HANDLER FOR SQLEXCEPTION to specify rollback on error. 3. Specific implementations: Oracle example: CREATE OR REPLACE PROCEDURE raise_salary(emp_id NUMBER) IS BEGIN UPDATE employees SET salary = salary * 1.1 WHERE id = emp_id; COMMIT; EXCEPTION WHEN OTHERS THEN ROLLBACK; END; MySQL example: DELIMITER // CREATE PROCEDURE raise_salary(IN emp_id INT) BEGIN DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK; START TRANSACTION; UPDATE employees SET salary = salary * 1.1 WHERE id = emp_id; COMMIT; END // DELIMITER ;.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "What are the differences in how MySQL and PostgreSQL handle symbols in field names with special characters?",
+        "reference_docs": [
+            {
+                "page_content": "1.2.2 Identifier Quoting (Object Names):\n-- MySQL, SQLite (backticks ``` in default mode) SELECT `name`, `group` FROM `users`;\n-- PostgreSQL, SQL Server (when QUOTED_IDENTIFIER is ON), Oracle (highly recommended) SELECT \"name\", \"group\" FROM \"users\";",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "MySQL/PostgreSQL differences in special character quoting"
+                }
+            }
+        ],
+        "ideal_answer": "MySQL uses backticks (`) to handle field names with special characters; PostgreSQL uses double quotes (\") to handle field names with special characters.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "What are the functions and examples for constructing JSON objects in MySQL 8.0+ and Oracle 12.1.0.2+ respectively?",
+        "reference_docs": [
+            {
+                "page_content": "3.3.1.1 Constructing JSON Objects: 1) MySQL (8.0+): JSON_OBJECT(), JSON_ARRAY() 3) Oracle (12.1.0.2+): JSON_OBJECT, JSON_ARRAY",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "MySQL/Oracle JSON object construction"
+                }
+            }
+        ],
+        "ideal_answer": "1. MySQL 8.0+ uses the JSON_OBJECT() function, example: SELECT JSON_OBJECT('name', 'Zhang San', 'age', 25); 2. Oracle 12.1.0.2+ uses the JSON_OBJECT function, example: SELECT JSON_OBJECT('name' VALUE 'Zhang San', 'age' VALUE 25) FROM dual;",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "What are the syntax differences between PostgreSQL and SQLite for extracting deeply nested JSON values?",
+        "reference_docs": [
+            {
+                "page_content": "3.3.1.2 Path Extraction: 2)PostgreSQL:column->>'key', #>> 5)SQLite:json_extract() Example: PostgreSQL extracts deep JSON values: SELECT user->'address'->>'city' FROM table; SQLite: json_extract(json_column, '$.user.address.city').",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "PostgreSQL/SQLite JSON extraction differences"
+                }
+            }
+        ],
+        "ideal_answer": "1. PostgreSQL uses a combination of -> (to retrieve JSON objects) and ->> (to retrieve string values), or #>> for path arrays. Example: SELECT json_column->'user'->'address'->>'city' FROM table; 2. SQLite uses the json_extract function to specify paths. Example: SELECT json_extract(json_column, '$.user.address.city') FROM table;",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "What are the differences in the requirements for non-aggregated columns in the GROUP BY clause between MySQL and Oracle?",
+        "reference_docs": [
+            {
+                "page_content": "1.7.1 GROUP BY:(1)MySQL:In non-strict mode, MySQL allows GROUP BY to include only partial non-aggregated columns, eg:GROUP BY t2.name (2)Oracle:Oracle requires GROUP BY to include all non-aggregated columns (unless using aggregate functions), eg:GROUP BY \"t2\".\"name\", \"t2\".\"nationality\"",
+                "metadata": {
+                    "source": "Database dialect.txt",
+                    "title": "MySQL/Oracle GROUP BY syntax differences"
+                }
+            }
+        ],
+        "ideal_answer": "1. In MySQL under non-strict mode, GROUP BY can include only some non-aggregated columns, example: GROUP BY t2.name; 2. Oracle requires GROUP BY to include all non-aggregated columns (unless non-aggregated columns are processed with aggregate functions), example: GROUP BY \"t2\".\"name\", \"t2\".\"nationality\".",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "What are the syntax differences for extracting the \"month\" from a date in PostgreSQL and SQL Server?",
+        "reference_docs": [
+            {
+                "page_content": "1.4.2 Extracting Date Components:  \n-- PostgreSQL Method 1: EXTRACT(field FROM date_column), eg: SELECT EXTRACT(YEAR FROM order_date);  \nMethod 2: DATE_PART('field', date_column), eg: Extracting the year DATE_PART('year', lastaccessdate);  \n-- SQL Server SELECT DATEPART(YEAR, order_date);",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "PostgreSQL/SQL Server month extraction syntax"
+                }
+            }
+        ],
+        "ideal_answer": "1. PostgreSQL has two methods: one is EXTRACT(MONTH FROM date column), example: EXTRACT(MONTH FROM order_date); the other is DATE_PART('month', date column), example: DATE_PART('month', lastaccessdate); 2. SQL Server uses the DATEPART function, example: DATEPART(MONTH, order_date).",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "What are the differences in the lock contention handling mechanisms between MySQL and Oracle under the READ COMMITTED isolation level?",
+        "reference_docs": [
+            {
+                "page_content": "4.1.1 Default Isolation Level Comparison: (1) Oracle: Defaults to READ COMMITTED, providing non-blocking read capability. Its UNDO tablespace mechanism enables historical data access. (2) MySQL (InnoDB): Defaults to REPEATABLE READ. Resolves phantom reads through MVCC multi-version concurrency control. 4.1.2 Lock Contention Handling Strategies: (1) Oracle: Focuses on \"write operations not blocking read operations\" (Consistent Read is its core competitiveness). (2) MySQL: InnoDB employs row-level locking, resolving phantom reads through Next-Key Locking (locking scope includes rows and Gap intervals). Features deadlock detection and automatic rollback.",
+                "metadata": {
+                    "source": "Database dialect.txt",
+                    "title": "Differences in READ COMMITTED Locking Mechanisms Between Oracle and MySQL"
+                }
+            }
+        ],
+        "ideal_answer": "1. Oracle implements \"write does not block read\" through UNDO tablespaces, reading historical version data to reduce lock contention; 2. After MySQL (InnoDB) switches to READ COMMITTED, based on MVCC multi-version concurrency control, it adopts row-level locks and Next-Key Locking to control the locking scope, reducing the probability of lock contention, without a dedicated UNDO tablespace mechanism.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "What are the standard practices and examples for defining aliases in MySQL and PostgreSQL respectively?",
+        "reference_docs": [
+            {
+                "page_content": "1.1 Alias Definition and Reference: * AS keyword: The most universal standard practice. -- MySQL, PostgreSQL, SQL Server, Oracle (recommended), BigQuery, SQLite SELECT first_name AS fn, last_name AS ln FROM employees;",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "MySQL/PostgreSQL alias practices"
+                }
+            }
+        ],
+        "ideal_answer": "1. The standard practice in MySQL is to use the AS keyword, example: SELECT first_name AS fn, last_name AS ln FROM employees; 2. The standard practice in PostgreSQL is to use the AS keyword, example: SELECT first_name AS fn, last_name AS ln FROM employees.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "What are the syntax differences between SQLite and Oracle when executing tableless queries?",
+        "reference_docs": [
+            {
+                "page_content": "1.11 Usage of Virtual Tables: (3) SQLite: Completely eliminates the need for dual, executes tableless queries directly, e.g.: SELECT 1;  -- Returns the constant 1.     SELECT datetime('now');  -- Queries the current time.",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "SQLite/Oracle tableless query differences"
+                }
+            }
+        ],
+        "ideal_answer": "1. SQLite does not require dependency on the dual table and directly executes queries, example: SELECT datetime('now'); 2. Oracle requires dependency on the dual table, example: SELECT SYSDATE FROM dual;",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "What are the core syntaxes for accurately calculating user age in PostgreSQL and SQL Server respectively?",
+        "reference_docs": [
+            {
+                "page_content": "1.9 Functions for calculating age difference: (1)PostgreSQL: Built-in AGE function calculates date difference, then extracts year difference through EXTRACT, eg:EXTRACT(YEAR FROM AGE(CURRENT_DATE, \"birthday\")) (4)SQL Server: First calculates year difference through DATEDIFF, then corrects for \"birthday not yet occurred in current year\" situation through CASE (if birthday hasn't occurred, subtract 1 from year difference). eg:DATEDIFF(YEAR, birthday, GETDATE()) - CASE WHEN (MONTH(birthday) > MONTH(GETDATE())) OR (MONTH(birthday) = MONTH(GETDATE()) AND DAY(birthday) > DAY(GETDATE())) THEN 1 ELSE 0 END",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "PostgreSQL/SQL Server age syntax"
+                }
+            }
+        ],
+        "ideal_answer": "1. The core syntax in PostgreSQL is EXTRACT(YEAR FROM AGE(CURRENT_DATE, \"birthday\")); 2. The core syntax in SQL Server is DATEDIFF(YEAR, birthday, GETDATE()) - CASE WHEN (MONTH(birthday) > MONTH(GETDATE())) OR (MONTH(birthday) = MONTH(GETDATE()) AND DAY(birthday) > DAY(GETDATE())) THEN 1 ELSE 0 END.",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "What are the syntax differences between MySQL and Oracle when writing basic stored procedures?",
+        "reference_docs": [
+            {
+                "page_content": "3.4.1 Language Ecosystem Differences: (1)Oracle: PL/SQL is the core language (Turing complete), deeply integrated into the database kernel. PROCEDURE update_salary (emp_id NUMBER, increase NUMBER) IS BEGIN UPDATE employees SET salary = salary + increase WHERE id = emp_id; COMMIT; -- COMMIT directly triggers transaction submission in PL/SQL END; (4)MySQL: Uses SQL/PSM style (similar to PL/SQL but incomplete). Exception handling is relatively basic. DELIMITER // CREATE PROCEDURE update_salary(IN emp_id INT, IN increase DECIMAL(10,2)) BEGIN DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK; START TRANSACTION; UPDATE employees SET salary = salary + increase WHERE id = emp_id; COMMIT; END // DELIMITER ;",
+                "metadata": {
+                    "source": "Database dialect.txt",
+                    "title": "MySQL/Oracle stored procedure structure differences"
+                }
+            }
+        ],
+        "ideal_answer": "1. MySQL requires the use of DELIMITER to modify the statement terminator, uses CREATE PROCEDURE for definition, and specifies parameter types with IN/OUT. Example: DELIMITER // CREATE PROCEDURE proc_name(IN param INT) BEGIN ... END // DELIMITER ; 2. Oracle uses PROCEDURE for definition, does not require DELIMITER switching, and directly specifies parameter types. Example: CREATE OR REPLACE PROCEDURE proc_name(param NUMBER) IS BEGIN ... END;",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "middle"
+        }
+    },
+    {
+        "query": "Statistics on the number of employees in each department in 2023, filter out departments with more than 10 people, and take the top 3 by number of people from most to least, provide the implementation syntax for MySQL and Oracle.",
+        "reference_docs": [
+            {
+                "page_content": "1.5 Pagination Query:\n* MySQL -- LIMIT/OFFSET: Clear and intuitive\nSELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20;\n\n1.7.1 GROUP BY:\n(1) MySQL: In non-strict mode, GROUP BY can include only some non-aggregated columns, e.g.: GROUP BY t2.name\n(2) Oracle: Oracle requires GROUP BY to include all non-aggregated columns (unless using aggregate functions), e.g.: GROUP BY \"t2\".\"name\", \"t2\".\"nationality\"\n\n1.5 Pagination Query:\n* Oracle -- ROW_NUMBER: Use ROWNUM pseudo-column before 12c\nSELECT * FROM (\n    SELECT t.*, ROWNUM rn FROM (\n        SELECT * FROM products ORDER BY price DESC\n    ) t\n    WHERE ROWNUM <= 30\n)\nWHERE rn > 20;\n\n-- Window function ROW_NUMBER() + FETCH FIRST: Modern standard\nSELECT * FROM products ORDER BY price DESC OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY;",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "MySQL/Oracle grouping and pagination syntax"
+                }
+            }
+        ],
+        "ideal_answer": "1.5 Pagination Query:\n* MySQL -- LIMIT/OFFSET: Clear and intuitive\nSELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20;\n\n1.7.1 GROUP BY:\n(1) MySQL: In non-strict mode, MySQL allows GROUP BY to include only some non-aggregated columns, e.g.: GROUP BY t2.name\n(2) Oracle: Oracle requires GROUP BY to include all non-aggregated columns (unless using aggregate functions), e.g.: GROUP BY \"t2\".\"name\", \"t2\".\"nationality\"\n\n1.5 Pagination Query:\n* Oracle -- ROW_NUMBER: Use ROWNUM pseudo-column before 12c\nSELECT * FROM (\n  SELECT t.*, ROWNUM rn FROM (\n    SELECT * FROM products ORDER BY price DESC\n  ) t\n  WHERE ROWNUM <= 30\n)\nWHERE rn > 20;\n\n-- Window function ROW_NUMBER() + FETCH FIRST: Modern standard\nSELECT * FROM products ORDER BY price DESC OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY;",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "difficult"
+        }
+    },
+    {
+        "query": "Query all users whose birthday is after 1990 and whose city in the JSON-formatted address is \"Shanghai\", retrieve records 5 to 10 sorted by age in descending order, and provide the implementation syntax for PostgreSQL and SQLite.",
+        "reference_docs": [
+            {
+                "page_content": "1.9 Functions for calculating age difference: (1) PostgreSQL: Built-in AGE function calculates date difference, then extracts year difference through EXTRACT, eg: EXTRACT(YEAR FROM AGE(CURRENT_DATE, \"birthday\")) 3.3.1.2 Path extraction: 2) PostgreSQL: column->>'key', #>> 5) SQLite: json_extract() Example: PostgreSQL extracts deep JSON values: SELECT user->'address'->>'city' FROM table; SQL Server: JSON_VALUE(json_column, '$.user.address.city'); SQLite: json_extract(json_column, '$.user.address.city'). 1.5 Pagination query: * PostgreSQL -- LIMIT/OFFSET: Clear and intuitive SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 records per page) 1.5 Pagination query: * SQLite -- LIMIT/OFFSET: Clear and intuitive SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 records per page)",
+                "metadata": {
+                    "source": "Database dialect.txt",
+                    "title": "PostgreSQL/SQLite JSON age pagination syntax"
+                }
+            }
+        ],
+        "ideal_answer": "1.9 Function for calculating age difference: (1)PostgreSQL: Built-in AGE function calculates date difference, then extracts year difference through EXTRACT, eg: EXTRACT(YEAR FROM AGE(CURRENT_DATE, \"birthday\")) 3.3.1.2 Path extraction: 2)PostgreSQL: column->>'key', #>> 5)SQLite: json_extract() Example: PostgreSQL extracts deep JSON values: SELECT user->'address'->>'city' FROM table; SQL Server: JSON_VALUE(json_column, '$.user.address.city'); SQLite: json_extract(json_column, '$.user.address.city'). 1.5 Pagination query: * PostgreSQL --LIMIT/OFFSET: Clear and intuitive SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 records per page) 1.5 Pagination query: * SQLite --LIMIT/OFFSET: Clear and intuitive SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 records per page)",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "difficult"
+        }
+    },
+    {
+        "query": "Associate the order table and the user table, query users with orders in the last 30 days, sort by the total order amount in descending order, take the top 20, and retrieve the first three digits of their mobile phone numbers from the JSON format contact information, provide the implementation syntax for MySQL and PostgreSQL.",
+        "reference_docs": [
+            {
+                "page_content": "1.5 Pagination Query: * MySQL --LIMIT/OFFSET: Clear and intuitive SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; 3.3.1.2 Path Extraction: 2)PostgreSQL:column->>'key', #>> 1.5 Pagination Query: * PostgreSQL --LIMIT/OFFSET: Clear and intuitive SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 records per page)",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "MySQL/PostgreSQL JSON Pagination Syntax"
+                }
+            }
+        ],
+        "ideal_answer": "1.5 Pagination Query: * MySQL --LIMIT/OFFSET: Clear and intuitive SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; 3.3.1.2 Path Extraction: 2)PostgreSQL:column->>'key', #>> 1.5 Pagination Query: * PostgreSQL --LIMIT/OFFSET: Clear and intuitive SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 records per page)",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "difficult"
+        }
+    },
+    {
+        "query": "In a transaction, update the JSON format preferences of all users in the user table whose age is greater than 35, changing their \"notification frequency\" to \"weekly\", and ensure rollback if the transaction fails. Provide the stored procedure syntax for Oracle and MySQL.",
+        "reference_docs": [
+            {
+                "page_content": "3.4.1 Language Ecosystem Differences: (1)Oracle: PL/SQL is the core language (Turing complete), deeply integrated into the database kernel. PROCEDURE update_salary (emp_id NUMBER, increase NUMBER) IS BEGIN UPDATE employees SET salary = salary + increase WHERE id = emp_id; COMMIT; -- COMMIT directly triggers transaction submission in PL/SQL END; (4)MySQL: Uses SQL/PSM style (similar to PL/SQL but incomplete). Exception handling is relatively basic. DELIMITER // CREATE PROCEDURE update_salary(IN emp_id INT, IN increase DECIMAL(10,2)) BEGIN DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK; START TRANSACTION; UPDATE employees SET salary = salary + increase WHERE id = emp_id; COMMIT; END // DELIMITER ; 3.3.1.1 Constructing JSON Objects: 1)MySQL(8.0+): JSON_OBJECT(), JSON_ARRAY() 3)Oracle(12.1.0.2+): JSON_OBJECT, JSON_ARRAY",
+                "metadata": {
+                    "source": "Database dialect.txt",
+                    "title": "Oracle/MySQL transaction JSON stored procedure syntax"
+                }
+            }
+        ],
+        "ideal_answer": "3.4.1 Language Ecosystem Differences: (1)Oracle: PL/SQL is the core language (Turing complete), deeply integrated into the database kernel. PROCEDURE update_salary (emp_id NUMBER, increase NUMBER) IS BEGIN UPDATE employees SET salary = salary + increase WHERE id = emp_id; COMMIT; -- COMMIT directly triggers transaction submission in PL/SQL END; (4)MySQL: Uses SQL/PSM style (similar to PL/SQL but incomplete). Exception handling is relatively basic. DELIMITER // CREATE PROCEDURE update_salary(IN emp_id INT, IN increase DECIMAL(10,2)) BEGIN DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK; START TRANSACTION; UPDATE employees SET salary = salary + increase WHERE id = emp_id; COMMIT; END // DELIMITER ; 3.3.1.1 Constructing JSON Objects: 1)MySQL(8.0+): JSON_OBJECT(), JSON_ARRAY() 3)Oracle(12.1.0.2+): JSON_OBJECT, JSON_ARRAY",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "difficult"
+        }
+    },
+    {
+        "query": "Query all products to find items with inventory less than 10 and price greater than 1000, sort by price in ascending order, retrieve records 11 to 20, and calculate the total price of these items. Provide implementation syntax for PostgreSQL and SQL Server.",
+        "reference_docs": [
+            {
+                "page_content": "1.5 Pagination Query:\n* PostgreSQL\n--LIMIT/OFFSET: Clear and intuitive\nSELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 records per page)\n\n1.5 Pagination Query:\n* SQL Server\n--OFFSET FETCH: Modern standard\nSELECT * FROM products ORDER BY price DESC OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY;",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "PostgreSQL/SQL Server pagination aggregation syntax"
+                }
+            }
+        ],
+        "ideal_answer": "1.5 Pagination Query:\n* PostgreSQL\n--LIMIT/OFFSET: Clear and intuitive\nSELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 records per page)\n\n1.5 Pagination Query:\n* SQL Server\n--OFFSET FETCH: Modern standard\nSELECT * FROM products ORDER BY price DESC OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY;",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "difficult"
+        }
+    },
+    {
+        "query": "Count the number of orders under each category, filter out categories with more than 50 orders, sort in descending order by the number of orders, and simultaneously retrieve the maximum and minimum order amounts for each category. Provide the implementation syntax for MySQL and Oracle.",
+        "reference_docs": [
+            {
+                "page_content": "1.7.1 GROUP BY:(1)MySQL:In non-strict mode, MySQL allows GROUP BY to include only partial non-aggregated columns, eg:GROUP BY t2.name (2)Oracle:Oracle requires GROUP BY to include all non-aggregated columns (unless using aggregate functions), eg:GROUP BY \"t2\".\"name\", \"t2\".\"nationality\"",
+                "metadata": {
+                    "source": "Database dialect.txt",
+                    "title": "MySQL/Oracle grouping aggregation syntax"
+                }
+            }
+        ],
+        "ideal_answer": "1.7.1 GROUP BY:(1)MySQL:In non-strict mode, MySQL allows GROUP BY to include only partial non-aggregated columns, eg:GROUP BY t2.name (2)Oracle:Oracle requires GROUP BY to include all non-aggregated columns (unless using aggregate functions), eg:GROUP BY \"t2\".\"name\", \"t2\".\"nationality\"",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "difficult"
+        }
+    },
+    {
+        "query": "In the stored procedure, batch insert 100 test data records into the user table, with each record containing randomly generated JSON-formatted personal information (including name, age, address), and ensure rollback upon insertion failure. Provide the stored procedure syntax for Oracle and MySQL.",
+        "reference_docs": [
+            {
+                "page_content": "3.4.1 Language Ecosystem Differences: (1)Oracle: PL/SQL is the core language (Turing complete), deeply integrated into the database kernel. PROCEDURE update_salary (emp_id NUMBER, increase NUMBER) IS BEGIN UPDATE employees SET salary = salary + increase WHERE id = emp_id; COMMIT; -- COMMIT directly triggers transaction submission in PL/SQL END; (4)MySQL: Uses SQL/PSM style (similar to PL/SQL but incomplete). Exception handling is relatively basic. DELIMITER // CREATE PROCEDURE update_salary(IN emp_id INT, IN increase DECIMAL(10,2)) BEGIN DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK; START TRANSACTION; UPDATE employees SET salary = salary + increase WHERE id = emp_id; COMMIT; END // DELIMITER ; 3.3.1.1 Constructing JSON Objects: 1)MySQL(8.0+): JSON_OBJECT(), JSON_ARRAY() 3)Oracle(12.1.0.2+): JSON_OBJECT, JSON_ARRAY",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "Oracle/MySQL batch JSON stored procedure syntax"
+                }
+            }
+        ],
+        "ideal_answer": "3.4.1 Language Ecosystem Differences: (1)Oracle: PL/SQL is the core language (Turing complete), deeply integrated into the database kernel. PROCEDURE update_salary (emp_id NUMBER, increase NUMBER) IS BEGIN UPDATE employees SET salary = salary + increase WHERE id = emp_id; COMMIT; -- COMMIT directly triggers transaction submission in PL/SQL END; (4)MySQL: Uses SQL/PSM style (similar to PL/SQL but incomplete). Exception handling is relatively basic. DELIMITER // CREATE PROCEDURE update_salary(IN emp_id INT, IN increase DECIMAL(10,2)) BEGIN DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK; START TRANSACTION; UPDATE employees SET salary = salary + increase WHERE id = emp_id; COMMIT; END // DELIMITER ; 3.3.1.1 Constructing JSON Objects: 1)MySQL(8.0+): JSON_OBJECT(), JSON_ARRAY() 3)Oracle(12.1.0.2+): JSON_OBJECT, JSON_ARRAY",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "difficult"
+        }
+    },
+    {
+        "query": "Query all employees who joined after 2020 and belong to the \"Technical Department\", sort them in ascending order by their joining date, take the top 5, and calculate their average age. Provide the implementation syntax for PostgreSQL and SQLite.",
+        "reference_docs": [
+            {
+                "page_content": "1.9 Functions for calculating age difference: (1)PostgreSQL: Built-in AGE function calculates date difference, then extracts year difference through EXTRACT, eg:EXTRACT(YEAR FROM AGE(CURRENT_DATE, \"birthday\")) (5)SQLite: Use strftime to obtain year difference separately, then subtract the Boolean value of \"current month-day < birthday month-day\" (True is 1, False is 0) to achieve precise age, eg:(strftime('%Y', 'now') - strftime('%Y', birthday)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthday)) 1.5 Pagination query: * PostgreSQL --LIMIT/OFFSET: Clear and intuitive SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 records per page) 1.5 Pagination query: * SQLite --LIMIT/OFFSET: Clear and intuitive SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 records per page)",
+                "metadata": {
+                    "source": "Database dialects.txt",
+                    "title": "PostgreSQL/SQLite age pagination syntax"
+                }
+            }
+        ],
+        "ideal_answer": "1.9 Functions for calculating age difference: (1)PostgreSQL: Built-in AGE function calculates date difference, then extracts year difference through EXTRACT, eg:EXTRACT(YEAR FROM AGE(CURRENT_DATE, \"birthday\")) (5)SQLite: Use strftime to obtain year difference separately, then subtract the Boolean value of \"current month-day < birthday month-day\" (True as 1, False as 0) to achieve precise age, eg:(strftime('%Y', 'now') - strftime('%Y', birthday)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthday)) 1.5 Pagination query: * PostgreSQL --LIMIT/OFFSET: Clear and intuitive SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 records per page) 1.5 Pagination query: * SQLite --LIMIT/OFFSET: Clear and intuitive SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 records per page)",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "difficult"
+        }
+    },
+    {
+        "query": "Processing order submissions in high-concurrency scenarios requires the transaction isolation level to be READ COMMITTED, while querying all unpaid orders created within the last 24 hours, sorted in descending order by creation time and taking the top 10 records. Provide the implementation syntax for Oracle and MySQL.",
+        "reference_docs": [
+            {
+                "page_content": "4.1.1 Default Isolation Level Comparison:\n(1) Oracle: Defaults to READ COMMITTED, providing non-blocking read capability. Its UNDO tablespace mechanism enables historical data access.\n(2) MySQL (InnoDB): Defaults to REPEATABLE READ. Solves phantom reads through MVCC multi-version concurrency control.\n\n4.1.2 Lock Contention Handling Strategies:\n(1) Oracle: Focuses on \"write does not block read\" (Consistent Read is its core competitiveness).\n(2) MySQL: InnoDB employs row-level locking, resolving phantom reads through Next-Key Locking (locking scope includes rows and Gap intervals). Features deadlock detection and automatic rollback.\n\n1.5 Pagination Query:\n* Oracle\n-- ROW_NUMBER: Uses ROWNUM pseudo-column before 12c\nSELECT * FROM (\n  SELECT t.*, ROWNUM rn FROM (\n    SELECT * FROM products ORDER BY price DESC\n  ) t\n  WHERE ROWNUM <= 30\n)\nWHERE rn > 20;\n\n-- Window function ROW_NUMBER() + FETCH FIRST: Modern standard\nSELECT * FROM products \nORDER BY price DESC \nOFFSET 20 ROWS \nFETCH NEXT 10 ROWS ONLY;\n\n1.5 Pagination Query:\n* MySQL\n-- LIMIT/OFFSET: Clear and intuitive\nSELECT * FROM products \nORDER BY price DESC \nLIMIT 10 \nOFFSET 20;  -- Page 3 (10 records per page)",
+                "metadata": {
+                    "source": "Database dialect.txt",
+                    "title": "Oracle/MySQL concurrent pagination syntax"
+                }
+            }
+        ],
+        "ideal_answer": "4.1.1 Default Isolation Level Comparison:\n(1) Oracle: Defaults to READ COMMITTED, providing non-blocking read capability. Its UNDO tablespace mechanism enables historical data access.\n(2) MySQL (InnoDB): Defaults to REPEATABLE READ. Utilizes MVCC (Multi-Version Concurrency Control) to resolve phantom reads.\n\n4.1.2 Lock Contention Handling Strategies:\n(1) Oracle: Focuses on \"write operations do not block read operations\" (Consistent Read is its core competitive advantage).\n(2) MySQL: InnoDB employs row-level locking and addresses phantom reads through Next-Key Locking (locking scope includes both rows and Gap intervals). Features deadlock detection and automatic rollback.\n\n1.5 Pagination Queries:\n* Oracle\n-- ROW_NUMBER: Uses ROWNUM pseudo-column prior to 12c\nSELECT * FROM (\n  SELECT t.*, ROWNUM rn\n  FROM (\n    SELECT * FROM products\n    ORDER BY price DESC\n  ) t\n  WHERE ROWNUM <= 30\n)\nWHERE rn > 20;\n\n-- Window function ROW_NUMBER() + FETCH FIRST: Modern standard\nSELECT * FROM products\nORDER BY price DESC\nOFFSET 20 ROWS\nFETCH NEXT 10 ROWS ONLY;\n\n1.5 Pagination Queries:\n* MySQL\n-- LIMIT/OFFSET: Clear and intuitive\nSELECT * FROM products\nORDER BY price DESC\nLIMIT 10 OFFSET 20;\n-- Page 3 (10 records per page)",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "difficult"
+        }
+    },
+    {
+        "query": "Query all users whose JSON-formatted hobbies include \"reading\" and whose age is between 25 and 35, sorted in ascending order by age, retrieve records 6 to 15, and extract the length of their hobbies JSON array. Provide the implementation syntax for PostgreSQL and SQLite.",
+        "reference_docs": [
+            {
+                "page_content": "1.9 Functions for calculating age difference: (1)PostgreSQL: Built-in AGE function calculates date difference, then extracts year difference through EXTRACT, eg: EXTRACT(YEAR FROM AGE(CURRENT_DATE, \"birthday\")) (5)SQLite: Use strftime to obtain year difference separately, then subtract the Boolean value of \"current month-day < birthday month-day\" (True is 1, False is 0) to achieve precise age, eg: (strftime('%Y', 'now') - strftime('%Y', birthday)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthday)) 3.3.1.2 Path extraction: 2)PostgreSQL: column->>'key', #>> 5)SQLite: json_extract() Example: PostgreSQL extracts deep JSON values: SELECT user->'address'->>'city' FROM table; SQL Server: JSON_VALUE(json_column, '$.user.address.city'); SQLite: json_extract(json_column, '$.user.address.city'). 1.5 Pagination query: * PostgreSQL --LIMIT/OFFSET: Clear and intuitive SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 records per page) 1.5 Pagination query: * SQLite --LIMIT/OFFSET: Clear and intuitive SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 records per page)",
+                "metadata": {
+                    "source": "Database dialect.txt",
+                    "title": "PostgreSQL/SQLite JSON age pagination syntax"
+                }
+            }
+        ],
+        "ideal_answer": "1.9 Functions for Calculating Age Difference: (1)PostgreSQL: Built-in AGE function calculates date difference, then extracts year difference via EXTRACT, e.g.: EXTRACT(YEAR FROM AGE(CURRENT_DATE, \"birthday\")) (5)SQLite: Use strftime to obtain year difference separately, then subtract the Boolean value (True as 1, False as 0) of \"current month-day < birthday month-day\" to achieve precise age, e.g.: (strftime('%Y', 'now') - strftime('%Y', birthday)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthday)) 3.3.1.2 Path Extraction: 2)PostgreSQL: column->>'key', #>> 5)SQLite: json_extract() Examples: PostgreSQL extracting deep JSON values: SELECT user->'address'->>'city' FROM table; SQL Server: JSON_VALUE(json_column, '$.user.address.city'); SQLite: json_extract(json_column, '$.user.address.city'). 1.5 Pagination Query: * PostgreSQL --LIMIT/OFFSET: Clear and intuitive SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 items per page) 1.5 Pagination Query: * SQLite --LIMIT/OFFSET: Clear and intuitive SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 items per page)",
+        "metadata": {
+            "domain": "Database",
+            "difficulty": "difficult"
+        }
+    }
+]

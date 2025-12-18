@@ -1,0 +1,688 @@
+[
+  {
+    "question": "Among the transactions made in the gas stations in the Czech Republic, how many of them are taken place after 2012/1/1?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'transactions_1k' and 'gasstations' using 'GasStationID'\n\n ---  Filters\n- 'gasstations.Country' = 'CZE' (representing gas stations in the Czech Republic)\n- 'transactions_1k.Date' > 2012-01-01 (transactions that took place after 2012/1/1)\n\n ---  Aggregation & Computation\n- Calculate 'transaction_count' = Count of 'transactions_1k.TransactionID' over all records that satisfy the filters\n\n ---  Return\n- transaction_count",
+    "teps Count Total": 4,
+    "question_id": 1509,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "What is the percentage of female patient were born after 1930?",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'patient' (no joins required)\n\n ---  Filters\n- For numerator: year part of 'patient.Birthday' > 1930\n- For both numerator and denominator: 'patient.SEX' = 'F'\n\n ---  Aggregation & Computation\n- Calculate 'female_total' = Count of DISTINCT 'patient.ID' where 'patient.SEX' = 'F'\n- Calculate 'female_post_1930' = Count of DISTINCT 'patient.ID' where year part of 'patient.Birthday' > 1930 and 'patient.SEX' = 'F'\n- Calculate 'percentage' = ('female_post_1930' / 'female_total') * 100\n\n ---  Return\n- percentage",
+    "teps Count Total": 6,
+    "question_id": 1150,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "State the ID and age of patient with positive degree of coagulation.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'patient' and 'examination' tables using 'ID'\n\n ---  Filters\n- 'examination.RVVT' = '+' (positive degree of coagulation)\n\n ---  Aggregation & Computation\n- For each patient, calculate 'age' = year part of current timestamp - year part of 'patient.Birthday'\n\n ---  Return\n- Distinct patient.ID\n- age",
+    "teps Count Total": 3,
+    "question_id": 1156,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "How many female patients who came at the hospital in 1997 was immediately followed at the outpatient clinic?",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'patient' (no joins required)\n\n ---  Filters\n- 'patient.SEX' = 'F'\n- year part of 'patient.Description' = 1997\n- 'patient.Admission' = '-'\n\n ---  Aggregation & Computation\n- Calculate 'female_patient_count' = Count of rows that satisfy all filter conditions\n\n ---  Return\n- female_patient_count",
+    "teps Count Total": 5,
+    "question_id": 1162,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "How many of the patients with the most serious thrombosis cases examined in 1997 are women?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'patient' and 'examination' tables using 'patient.ID' = 'examination.ID'\n\n ---  Filters\n- year part of 'examination.Examination Date' = 1997\n- 'examination.Thrombosis' = 1 (the most serious thrombosis cases)\n- 'patient.SEX' = 'F' (women)\n\n ---  Aggregation & Computation\n- Calculate 'female_most_serious_thrombosis_1997_count' = Count of DISTINCT 'patient.ID'\n\n ---  Return\n- female_most_serious_thrombosis_1997_count",
+    "teps Count Total": 5,
+    "question_id": 1164,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "The oldest SJS patient's medical laboratory work was completed on what date, and what age was the patient when they initially arrived at the hospital?",
+    "nl2_rewrite": " ---   Source & Joins\n- Link 'patient' and 'laboratory' tables using 'ID'\n\n ---  Filters\n- 'patient.Diagnosis' = 'SJS'\n\n ---  Aggregation & Computation\n- For each SJS patient, identify that patient's earliest laboratory work date: 'min_lab_date_per_patient' = minimum value of 'laboratory.Date' grouped by 'laboratory.ID'\n- Among all SJS patients, find the overall earliest laboratory work date: 'oldest_lab_date' = minimum value of 'min_lab_date_per_patient'\n- Identify the patient (or patients) whose 'min_lab_date_per_patient' = 'oldest_lab_date'\n- For that patient, calculate 'age_at_first_arrival' as the difference in years between 'patient.First Date' and 'patient.Birthday' (i.e., year part of 'patient.First Date' - year part of 'patient.Birthday')\n\n ---  Return\n- 'oldest_lab_date' (the earliest 'laboratory.Date' for SJS patients)\n- 'age_at_first_arrival' for the patient whose lab work corresponds to 'oldest_lab_date'",
+    "teps Count Total": 6,
+    "question_id": 1168,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "How many underage patients were examined during the course of the three-year period from 1990 to 1993?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'patient' and 'examination' tables using 'patient.ID' = 'examination.ID'\n\n ---  Filters\n- Year part of 'examination.Examination Date' >= 1990\n- Year part of 'examination.Examination Date' <= 1993\n- Patient is underage at the time of examination: difference in years between 'examination.Examination Date' and 'patient.Birthday' < 18\n\n ---  Aggregation & Computation\n- Calculate 'underage_examinations' = Count of rows that satisfy all filters (each row represents one examination of an underage patient in the specified period)\n\n ---  Return\n- underage_examinations",
+    "teps Count Total": 5,
+    "question_id": 1171,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "How old was the patient who had the highest hemoglobin count at the time of the examination, and what is the doctor's diagnosis?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'patient' and 'laboratory' tables using 'ID'\n\n ---  Filters\n- None beyond join condition; consider all laboratory examinations\n\n ---  Aggregation & Computation\n- For each record in 'laboratory', compute 'age_at_exam' = year part of 'laboratory.Date' - year part of 'patient.Birthday'\n- Identify 'max_hgb' = maximum value of 'laboratory.HGB' across all joined records\n- Select the record(s) where 'laboratory.HGB' = 'max_hgb'\n\n ---  Return\n- age_at_exam (age of the patient at the time of the examination with the highest hemoglobin count)\n- patient.Diagnosis (doctor's diagnosis for that patient)",
+    "teps Count Total": 5,
+    "question_id": 1175,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "What percentage of patients who were born in 1980 and were diagnosed with RA are women?",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'patient' (no joins required)\n\n ---  Filters\n- year part of 'patient.Birthday' = 1980\n- 'patient.Diagnosis' = 'RA'\n\n ---  Aggregation & Computation\n- Calculate 'total_patients' = Count of 'patient.ID' after applying filters\n- Calculate 'female_patients' = Count of 'patient.ID' where 'patient.SEX' = 'F' after applying filters\n- Calculate 'percentage_women' = ('female_patients' / 'total_patients') * 100\n\n ---  Return\n- percentage_women",
+    "teps Count Total": 6,
+    "question_id": 1201,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "What is the average age of the male patient with high cholesterol?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'patient' and 'laboratory' tables using 'ID'\n\n ---  Filters\n- 'patient.SEX' = 'M'\n- 'laboratory.T-CHO' >= 250\n\n ---  Aggregation & Computation\n- For each qualifying record, compute 'age_at_now' = (current year) - (year part of 'patient.Birthday')\n- Calculate 'sum_age' = SUM of 'age_at_now' across all qualifying patients\n- Calculate 'count_patients' = COUNT of DISTINCT 'patient.ID' across all qualifying patients\n- Calculate 'average_age' = 'sum_age' / 'count_patients'\n\n ---  Return\n- average_age",
+    "teps Count Total": 7,
+    "question_id": 1227,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "For all patients with triglyceride (TG) level beyond the normal range, how many are age more than 50 years?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'patient' and 'laboratory' tables using 'ID'\n\n ---  Filters\n- 'laboratory.TG' >= 200 (triglyceride level beyond the normal range)\n- Age > 50 years, where Age is computed as: year part of current date - year part of 'patient.Birthday' > 50\n\n ---  Aggregation & Computation\n- Calculate 'patient_count' = Count of DISTINCT 'patient.ID' that satisfy all filters\n\n ---  Return\n- patient_count",
+    "teps Count Total": 4,
+    "question_id": 1229,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "For patient born between 1936-1956, how many male patients have creatinine phosphokinase beyond the normal range?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'patient' and 'laboratory' tables using 'ID'\n\n ---  Filters\n- year part of 'patient.Birthday' BETWEEN 1936 AND 1956\n- 'patient.SEX' = 'M'\n- 'laboratory.CPK' >= 250\n\n ---  Aggregation & Computation\n- Calculate 'num_male_patients_high_cpk' = Count of DISTINCT 'patient.ID' that satisfy all filters\n\n ---  Return\n- num_male_patients_high_cpk",
+    "teps Count Total": 5,
+    "question_id": 1231,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "Provide ID, sex and age of patient who has blood glucose (GLU) not within normal range but with total cholesterol(T-CHO) within normal range.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'patient' and 'laboratory' tables using 'ID'\n\n ---  Filters\n- 'laboratory.GLU' >= 180 (blood glucose not within normal range)\n- 'laboratory.T-CHO' < 250 (total cholesterol within normal range)\n\n ---  Aggregation & Computation\n- Calculate 'age' = year part of current date - year part of 'patient.Birthday'\n\n ---  Return\n- Distinct 'patient.ID'\n- 'patient.SEX'\n- 'age'",
+    "teps Count Total": 4,
+    "question_id": 1232,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "What are the patient's diagnosis for those who has lower red blood blood cell? State their ID and age.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'patient' and 'laboratory' tables using 'ID'\n\n ---  Filters\n- 'laboratory.RBC' < 3.5\n\n ---  Aggregation & Computation\n- For each 'patient.ID', compute 'age' = year part of current date - year part of 'patient.Birthday'\n- Optionally apply DISTINCT on 'patient.ID' if multiple laboratory records per patient satisfy 'RBC' < 3.5\n\n ---  Return\n- Distinct patient.ID\n- patient.Diagnosis\n- age",
+    "teps Count Total": 4,
+    "question_id": 1235,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Name the ID and age of patient with two or more laboratory examinations which show their hematoclit level exceeded the normal range.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'patient' and 'laboratory' tables using 'ID'\n\n ---  Filters\n- 'laboratory.HCT' >= 52 (hematocrit level exceeded the normal range)\n\n ---  Aggregation & Computation\n- Group records by 'laboratory.ID'\n- For each 'laboratory.ID', calculate 'exam_count' = Count of rows where 'laboratory.HCT' >= 52\n- Keep only groups where 'exam_count' >= 2 (patients with two or more such laboratory examinations)\n- For each remaining patient, calculate 'age' = year part of current timestamp - year part of 'patient.Birthday'\n\n ---  Return\n- Distinct patient.ID\n- age",
+    "teps Count Total": 6,
+    "question_id": 1239,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "For laboratory examinations take in 1984, list all patients below 50 years old with normal platelet level.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'patient' and 'laboratory' tables using 'ID'\n\n ---  Filters\n- year part of 'laboratory.Date' = 1984\n- Age at the time of query: (year part of current timestamp - year part of 'patient.Birthday') < 50\n- 'laboratory.PLT' >= 100\n- 'laboratory.PLT' <= 400\n\n ---  Return\n- Distinct 'patient.ID'\n- 'patient.Birthday'\n- 'laboratory.Date'\n- 'laboratory.PLT'",
+    "teps Count Total": 5,
+    "question_id": 1242,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "For all patients who are older than 55 years old, what is the percentage of female who has abnormal prothrombin time (PT)?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'patient' and 'laboratory' tables using 'ID'\n\n ---  Filters\n- Age filter: difference between the year part of the current date and the year part of 'patient.Birthday' > 55\n- 'laboratory.PT' >= 14 (abnormal prothrombin time)\n\n ---  Aggregation & Computation\n- Define the population as all laboratory records that satisfy the age and abnormal PT filters\n- Calculate 'total_abnormal_PT' = Count of records where the above filters are satisfied\n- Calculate 'female_abnormal_PT' = Count of records where the above filters are satisfied AND 'patient.SEX' = 'F'\n- Calculate 'percentage_female_abnormal_PT' = ('female_abnormal_PT' / 'total_abnormal_PT') * 100\n\n ---  Return\n- percentage_female_abnormal_PT",
+    "teps Count Total": 7,
+    "question_id": 1243,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "How many patients with a normal Ig A level came to the hospital after 1990/1/1?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'patient' and 'laboratory' tables using 'ID'\n\n ---  Filters\n- 'laboratory.IGA' > 80\n- 'laboratory.IGA' < 500\n- year part of 'patient.First Date' >= 1990\n\n ---  Aggregation & Computation\n- Calculate 'patient_count' = Count of DISTINCT 'patient.ID' that satisfy all filters\n\n ---  Return\n- patient_count",
+    "teps Count Total": 5,
+    "question_id": 1254,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Among the patients whose creatinine level is abnormal, how many of them aren't 70 yet?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'patient' and 'laboratory' tables using 'ID'\n\n ---  Filters\n- 'laboratory.CRE' >= 1.5 (creatinine level is abnormal)\n- Age of patient at the time of query < 70 years, computed as the difference between the current calendar year and the year part of 'patient.Birthday' < 70\n\n ---  Aggregation & Computation\n- Calculate 'abnormal_cre_patients_under_70' = Count of DISTINCT 'patient.ID' that satisfy all filters\n\n ---  Return\n- abnormal_cre_patients_under_70",
+    "teps Count Total": 4,
+    "question_id": 1257,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "At present, calculate for the player's age who have a sprint speed of no less than 97 between 2013 to 2015.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'player_attributes' and 'player' tables using 'player_attributes.player_api_id' = 'player.player_api_id'\n\n ---  Filters\n- sprint_speed >= 97\n- year part of 'player_attributes.date' >= 2013\n- year part of 'player_attributes.date' <= 2015\n\n ---  Aggregation & Computation\n- For each qualifying record, calculate 'current_age' = difference between the current datetime and 'player.birthday' expressed in years (using an appropriate date-difference in years based on the system's current datetime)\n\n ---  Return\n- player.player_api_id\n- current_age",
+    "teps Count Total": 5,
+    "question_id": 1031,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "List the long name of teams with above-average build-up play passing in 2012.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'team_attributes' and 'team' using 'team_attributes.team_api_id' = 'team.team_api_id'\n\n ---  Filters\n- Year part of 'team_attributes.date' = 2012\n- 'team_attributes.buildUpPlayPassing' IS NOT NULL\n\n ---  Aggregation & Computation\n- Calculate 'avg_buildUpPlayPassing_2012' = SUM('team_attributes.buildUpPlayPassing') / COUNT('team.team_long_name') over all records that satisfy the Filters\n- For each joined record, keep only those where 'team_attributes.buildUpPlayPassing' > 'avg_buildUpPlayPassing_2012'\n\n ---  Return\n- Distinct 'team.team_long_name'",
+    "teps Count Total": 5,
+    "question_id": 1036,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "What is the overall rating of the football player Gabriel Tamas in year 2011?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'player' and 'player_attributes' tables using 'player.player_api_id' = 'player_attributes.player_api_id'\n\n ---  Filters\n- 'player.player_name' = 'Gabriel Tamas'\n- year part of 'player_attributes.date' = 2011\n\n ---  Aggregation & Computation\n- If multiple records exist for 2011, calculate 'avg_overall_rating_2011' = average of 'player_attributes.overall_rating' across all 2011 records for Gabriel Tamas\n\n ---  Return\n- player.player_name\n- avg_overall_rating_2011",
+    "teps Count Total": 4,
+    "question_id": 1048,
+    "difficulty": "simple"
+  },
+  {
+    "question": "From 2010 to 2015, what was the average overall rating of players who are higher than 170?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'player' and 'player_attributes' tables using 'player.player_api_id' = 'player_attributes.player_api_id'\n\n ---  Filters\n- Year part of 'player_attributes.date' >= 2010\n- Year part of 'player_attributes.date' <= 2015\n- 'player.height' > 170\n\n ---  Aggregation & Computation\n- Calculate 'sum_overall_rating' = SUM('player_attributes.overall_rating') over all records that satisfy the filters\n- Calculate 'count_records' = COUNT('player_attributes.id') over all records that satisfy the filters\n- Calculate 'avg_overall_rating' = 'sum_overall_rating' / 'count_records'\n\n ---  Return\n- avg_overall_rating",
+    "teps Count Total": 7,
+    "question_id": 1068,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Among the players born before the year 1986, how many of them would remain in his position and defense while the team attacked?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'player' and 'player_attributes' tables using 'player.player_api_id' = 'player_attributes.player_api_id'\n\n ---  Filters\n- year part of 'player.birthday' < 1986\n- 'player_attributes.defensive_work_rate' = 'high'\n\n ---  Aggregation & Computation\n- From the joined and filtered records, identify each unique player using 'player.player_api_id'\n- Calculate 'player_count' = Count of DISTINCT 'player.player_api_id'\n\n ---  Return\n- player_count",
+    "teps Count Total": 5,
+    "question_id": 1084,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "List the names of all races that occurred in the earliest recorded year and month.",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'races' (no joins required)\n\n ---  Filters\n- Identify 'min_date' = the minimum value of 'races.date' across all records\n- Let 'target_year' = the year part of 'min_date'\n- Let 'target_month' = the month part of 'min_date'\n- Keep only rows where the year part of 'races.date' = 'target_year'\n- And the month part of 'races.date' = 'target_month'\n\n ---  Return\n- races.name",
+    "teps Count Total": 6,
+    "question_id": 884,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "How old is the youngest Japanese driver? What is his name?",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'drivers' (no joins required)\n\n ---  Filters\n- 'drivers.nationality' = 'Japanese'\n- 'drivers.dob' is not null\n\n ---  Aggregation & Computation\n- Identify 'youngest_dob' = the maximum value of 'drivers.dob' among rows that satisfy the filters (largest date of birth corresponds to youngest person)\n- Calculate 'age' for the youngest driver as: year part of CURRENT_TIMESTAMP - year part of 'youngest_dob'\n\n ---  Filters\n- Further restrict to rows where 'drivers.dob' = 'youngest_dob' (in case of ties, this may return multiple youngest drivers)\n\n ---  Return\n- age (derived from 'drivers.dob')\n- 'drivers.forename'\n- 'drivers.surname'",
+    "teps Count Total": 6,
+    "question_id": 898,
+    "difficulty": "simple"
+  },
+  {
+    "question": "Name the races along with its circuit name and location for f1 races hosted in September 2005.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'races' and 'circuits' tables using 'races.circuitId' = 'circuits.circuitId'\n\n ---  Filters\n- year part of 'races.date' = 2005\n- month part of 'races.date' = 9\n\n ---  Return\n- 'races.name' (race name)\n- 'circuits.name' (circuit name)\n- 'circuits.location'",
+    "teps Count Total": 3,
+    "question_id": 901,
+    "difficulty": "simple"
+  },
+  {
+    "question": "From 2000 to 2005, what percentage of drivers who were born before 1985 and the lap numbers were over 50?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'results' and 'races' using 'results.raceId' = 'races.raceId'\n- Link 'results' and 'drivers' using 'results.driverId' = 'drivers.driverId'\n\n ---  Filters\n- For the denominator set of drivers: 'races.year' between 2000 and 2005 (inclusive)\n- For the numerator set of drivers: 'races.year' between 2000 and 2005 (inclusive)\n- For the numerator set of drivers: year part of 'drivers.dob' < 1985\n- For the numerator set of drivers: 'results.laps' > 50\n\n ---  Aggregation & Computation\n- Calculate 'denominator_drivers' = Count of DISTINCT 'drivers.driverId' where 'races.year' between 2000 and 2005 (no restriction on dob or laps)\n- Calculate 'numerator_drivers' = Count of DISTINCT 'drivers.driverId' where 'races.year' between 2000 and 2005 AND year part of 'drivers.dob' < 1985 AND 'results.laps' > 50\n- Calculate 'percentage' = ('numerator_drivers' / 'denominator_drivers') * 100\n\n ---  Return\n- percentage",
+    "teps Count Total": 9,
+    "question_id": 962,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "Which drivers who were born in 1971 and has the fastest lap time on the race? Give id and code of these drivers.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'drivers' and 'results' tables using 'driverId'\n\n ---  Filters\n- year part of 'drivers.dob' = 1971\n- 'results.fastestLapTime' is not null (driver must have a recorded fastest lap time)\n- 'results.fastestLapTime' = the minimum 'results.fastestLapTime' value across all results in the same race ('results.raceId')\n\n ---  Aggregation & Computation\n- For each race ('results.raceId'), determine the minimum 'results.fastestLapTime'\n- Select drivers whose 'results.fastestLapTime' equals this per-race minimum and who satisfy the birth year filter\n\n ---  Return\n- Distinct drivers.driverId\n- Distinct drivers.code",
+    "teps Count Total": 6,
+    "question_id": 972,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "List down top 3 German drivers who has the shortest average pit stop duration and were born between 1980-1985.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'drivers' and 'pitstops' tables using 'driverId'\n\n ---  Filters\n- 'drivers.nationality' = 'German'\n- year part of 'drivers.dob' >= 1980\n- year part of 'drivers.dob' <= 1985\n- Consider only pitstops where 'pitstops.duration' is not null and represents a valid numeric duration value\n\n ---  Aggregation & Computation\n- For each 'pitstops.driverId', calculate 'avg_pitstop_duration' = SUM(numeric value of 'pitstops.duration') / COUNT(numeric value of 'pitstops.duration')\n\n ---  Ordering & Limit\n- Order drivers by 'avg_pitstop_duration' in ascending order (shortest average first)\n- Limit the result to the first 3 drivers\n\n ---  Return\n- Distinct concatenated full name of driver using 'drivers.forename' and 'drivers.surname'\n- 'avg_pitstop_duration'",
+    "teps Count Total": 8,
+    "question_id": 988,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "Please list the display names of all the users whose accounts were created in the year 2011.",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'users' (no joins required)\n\n ---  Filters\n- Year part of 'users.CreationDate' = 2011\n\n ---  Return\n- users.DisplayName",
+    "teps Count Total": 2,
+    "question_id": 532,
+    "difficulty": "simple"
+  },
+  {
+    "question": "What is the percentage difference of student badges given during 2010 and 2011?",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'badges' (no joins required for this question)\n\n ---  Filters\n- Badge type filter: 'badges.Name' = 'Student'\n\n ---  Aggregation & Computation\n- Calculate 'total_student_badges' = Count of 'badges.Id' where 'badges.Name' = 'Student'\n- Calculate 'student_badges_2010' = Count of 'badges.Id' where 'badges.Name' = 'Student' and the year part of 'badges.Date' = 2010\n- Calculate 'student_badges_2011' = Count of 'badges.Id' where 'badges.Name' = 'Student' and the year part of 'badges.Date' = 2011\n- Calculate 'pct_2010' = (student_badges_2010 / total_student_badges) * 100\n- Calculate 'pct_2011' = (student_badges_2011 / total_student_badges) * 100\n- Calculate 'percentage_difference' = pct_2010 - pct_2011\n\n ---  Return\n- percentage_difference",
+    "teps Count Total": 8,
+    "question_id": 598,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "Calculate the ratio of votes in 2010 and 2011.",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'votes' (no joins required)\n\n ---  Filters\n- For numerator: year part of 'votes.CreationDate' = 2010\n- For denominator: year part of 'votes.CreationDate' = 2011\n\n ---  Aggregation & Computation\n- Calculate 'count_2010' = Count of 'votes.Id' where year part of 'votes.CreationDate' = 2010\n- Calculate 'count_2011' = Count of 'votes.Id' where year part of 'votes.CreationDate' = 2011\n- Calculate 'ratio_2010_2011' = 'count_2010' / 'count_2011'\n\n ---  Return\n- ratio_2010_2011",
+    "teps Count Total": 6,
+    "question_id": 629,
+    "difficulty": "simple"
+  },
+  {
+    "question": "What is the average monthly number of links created in 2010 for posts that have no more than 2 answers?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'postlinks' and 'posts' using 'postlinks.PostId' = 'posts.Id'\n\n ---  Filters\n- year part of 'postlinks.CreationDate' = 2010\n- 'posts.AnswerCount' <= 2\n\n ---  Aggregation & Computation\n- Calculate 'total_links_2010' = Count of 'postlinks.Id' after applying all filters\n- Calculate 'average_monthly_links' = 'total_links_2010' / 12\n\n ---  Return\n- average_monthly_links",
+    "teps Count Total": 5,
+    "question_id": 665,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Which is the most valuable post in 2010? Please give its id and the owner's display name.",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'posts'\n- Join 'posts' to 'users' using 'posts.OwnerUserId' = 'users.Id'\n\n ---  Filters\n- year part of 'posts.CreaionDate' = 2010\n\n ---  Aggregation & Computation\n- Identify 'max_favorite_2010' = maximum value of 'posts.FavoriteCount' among posts where the year part of 'posts.CreaionDate' = 2010\n\n ---  Filters\n- Keep only rows where 'posts.FavoriteCount' = 'max_favorite_2010'\n\n ---  Return\n- 'posts.Id'\n- 'users.DisplayName'",
+    "teps Count Total": 5,
+    "question_id": 682,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "What is the percentage of posts whose owners had a reputation of over 1000 in 2011?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'posts' and 'users' tables using 'posts.OwnerUserId' = 'users.Id'\n\n ---  Filters\n- year part of 'posts.CreaionDate' = 2011\n\n ---  Aggregation & Computation\n- Calculate 'total_posts_2011' = Count of 'posts.Id' where year part of 'posts.CreaionDate' = 2011\n- Calculate 'high_rep_posts_2011' = Count of 'posts.Id' where year part of 'posts.CreaionDate' = 2011 and 'users.Reputation' > 1000\n- Calculate 'percentage' = ('high_rep_posts_2011' / 'total_posts_2011') * 100\n\n ---  Return\n- percentage",
+    "teps Count Total": 5,
+    "question_id": 683,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "What is the average score in writing for the schools that were opened after 1991 or closed before 2000? List the school names along with the score. Also, list the communication number of the schools if there is any.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'schools' and 'satscores' tables using 'schools.CDSCode' = 'satscores.cds'\n\n ---  Filters\n- Include rows where 'schools.OpenDate' > date value representing 1991-12-31 (schools opened after 1991)\n- OR include rows where 'schools.ClosedDate' < date value representing 2000-01-01 (schools closed before 2000)\n- Exclude rows where 'satscores.AvgScrWrite' is NULL (to compute averages only on valid scores)\n\n ---  Aggregation & Computation\n- For each school (group by 'schools.CDSCode', 'schools.School', 'schools.Phone'), calculate 'avg_write_score' = average of 'satscores.AvgScrWrite'\n\n ---  Return\n- 'schools.School'\n- 'avg_write_score'\n- 'schools.Phone' (communication number, may be NULL)",
+    "teps Count Total": 5,
+    "question_id": 27,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "What is the average number of test takers from Fresno schools that opened between 1/1/1980 and 12/31/1980?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'schools' and 'satscores' tables using 'schools.CDSCode' = 'satscores.cds'\n\n ---  Filters\n- 'schools.County' = 'Fresno'\n- year part of 'schools.OpenDate' = 1980\n\n ---  Aggregation & Computation\n- For all joined records that satisfy the filters, calculate 'average_num_test_takers' = average of 'satscores.NumTstTakr'\n\n ---  Return\n- average_num_test_takers",
+    "teps Count Total": 4,
+    "question_id": 39,
+    "difficulty": "simple"
+  },
+  {
+    "question": "What is the monthly average number of schools that opened in Alameda County under the jurisdiction of the Elementary School District in 1980?",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'schools' (no joins required)\n\n ---  Filters\n- 'schools.County' = 'Alameda'\n- 'schools.DOC' = '52' (representing Elementary School District)\n- year part of 'schools.OpenDate' = 1980\n\n ---  Aggregation & Computation\n- Calculate 'schools_opened_1980' = Count of DISTINCT 'schools.School' that satisfy all filters\n- Calculate 'monthly_average' = 'schools_opened_1980' / 12\n\n ---  Return\n- monthly_average",
+    "teps Count Total": 6,
+    "question_id": 47,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "What are the valid e-mail addresses of the administrator of the school located in the San Bernardino county, City of San Bernardino City Unified that opened between 1/1/2009 to 12/31/2010 whose school types are public Intermediate/Middle Schools and Unified Schools?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'schools' and 'frpm' tables using 'CDSCode'\n\n ---  Filters\n- 'schools.County' = 'San Bernardino'\n- 'schools.City' = 'San Bernardino City Unified'\n- 'schools.OpenDate' between 2009-01-01 and 2010-12-31 (inclusive)\n- ('schools.SOC' = '62' OR 'schools.DOC' = '54')\n- Exclude rows where both 'schools.AdmEmail1' and 'schools.AdmEmail2' are NULL or empty (only keep schools with at least one valid administrator e-mail address)\n\n ---  Return\n- Distinct 'schools.AdmEmail1'\n- Distinct 'schools.AdmEmail2'",
+    "teps Count Total": 6,
+    "question_id": 87,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "Among the accounts who have approved loan date in 1997, list out the accounts that have the lowest approved amount and choose weekly issuance statement.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'loan' and 'account' tables using 'loan.account_id' = 'account.account_id'\n\n ---  Filters\n- year part of 'loan.date' = 1997\n- 'account.frequency' = 'POPLATEK TYDNE' (weekly issuance)\n\n ---  Aggregation & Computation\n- Determine 'min_approved_amount_1997_weekly' = minimum value of 'loan.amount' across all loans that satisfy the Filters\n\n ---  Filters\n- Keep only rows where 'loan.amount' = 'min_approved_amount_1997_weekly'\n\n ---  Return\n- Distinct 'loan.account_id'\n- 'loan.amount'",
+    "teps Count Total": 5,
+    "question_id": 98,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Among the accounts who have loan validity more than 12 months, list out the accounts that have the highest approved amount and have account opening date in 1993.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'loan' and 'account' tables using 'loan.account_id' = 'account.account_id'\n\n ---  Filters\n- 'loan.duration' > 12 (loan validity more than 12 months)\n- year part of 'account.date' = 1993 (account opening date in 1993)\n\n ---  Aggregation & Computation\n- Within the filtered records, determine 'max_approved_amount' = maximum value of 'loan.amount'\n- Keep only records where 'loan.amount' = 'max_approved_amount'\n\n ---  Return\n- Distinct 'loan.account_id'\n- 'loan.amount' (approved amount)\n- 'account.date' (account opening date)",
+    "teps Count Total": 5,
+    "question_id": 99,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Among the account opened, how many female customers who were born before 1950 and stayed in Sokolov?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'client' and 'district' tables using 'district.district_id' = 'client.district_id'\n\n ---  Filters\n- 'client.gender' = 'F' (female customers)\n- 'client.birth_date' < date value representing '1950-01-01' (born before 1950)\n- 'district.A2' = 'Sokolov' (customers who stayed in Sokolov)\n\n ---  Aggregation & Computation\n- Calculate 'female_clients_count' = Count of DISTINCT 'client.client_id'\n\n ---  Return\n- female_clients_count",
+    "teps Count Total": 5,
+    "question_id": 100,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Who are the account holder identification numbers whose who have transactions on the credit card with the amount is less than the average, in 1998?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'trans' and 'account' tables using 'account.account_id' = 'trans.account_id'\n\n ---  Filters\n- 'trans.operation' = 'VYBER KARTOU' (credit card withdrawal)\n- year part of 'trans.date' = 1998\n\n ---  Aggregation & Computation\n- Calculate 'avg_amount_1998' = average of 'trans.amount' over all records where 'trans.operation' = 'VYBER KARTOU' and year part of 'trans.date' = 1998\n- From the same filtered set, keep only those records where 'trans.amount' < 'avg_amount_1998'\n- From these remaining records, identify distinct 'trans.account_id'\n\n ---  Return\n- Distinct trans.account_id",
+    "teps Count Total": 6,
+    "question_id": 145,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "What is the average number of crimes committed in 1995 in regions where the number exceeds 4000 and the region has accounts that are opened starting from the year 1997?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'district' and 'account' tables using 'district.district_id' = 'account.district_id'\n\n ---  Filters\n- 'district.A15' > 4000 (A15 = number of crimes committed in 1995)\n- 'account.date' has year part >= 1997 (accounts opened starting from the year 1997)\n\n ---  Aggregation & Computation\n- For each 'district.district_id' that satisfies the filters, take 'district.A15' as the number of crimes committed in 1995\n- Calculate 'avg_crimes_1995' = average of 'district.A15' across all such districts (use DISTINCT districts so each district contributes once regardless of number of accounts)\n\n ---  Return\n- avg_crimes_1995",
+    "teps Count Total": 5,
+    "question_id": 152,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "What was the growth rate of the total amount of loans across all accounts for a male client between 1996 and 1997?",
+    "nl2_rewrite": " ---  Source & Joins\n- Start from 'loan' as the source of loan amounts\n- Link 'loan' to 'account' using 'loan.account_id' = 'account.account_id' (to ensure valid accounts, even if not directly filtered by account attributes)\n- Link 'loan' to 'disp' using 'loan.account_id' = 'disp.account_id' to associate loans with clients\n- Link 'disp' to 'client' using 'disp.client_id' = 'client.client_id' to access client gender\n\n ---  Filters\n- 'client.gender' = 'M' (restrict to male clients)\n- For 1996 total: year part of 'loan.date' = 1996\n- For 1997 total: year part of 'loan.date' = 1997\n\n ---  Aggregation & Computation\n- Calculate 'sum_amount_1996' = Sum of 'loan.amount' for records where year part of 'loan.date' = 1996 and 'client.gender' = 'M'\n- Calculate 'sum_amount_1997' = Sum of 'loan.amount' for records where year part of 'loan.date' = 1997 and 'client.gender' = 'M'\n- Calculate 'growth_rate' = (sum_amount_1997 - sum_amount_1996) / sum_amount_1996 * 100\n\n ---  Return\n- growth_rate",
+    "teps Count Total": 10,
+    "question_id": 169,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "Provide the IDs and age of the client with high level credit card, which is eligible for loans.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'disp' and 'card' using 'disp.disp_id' = 'card.disp_id'\n- Link 'disp' and 'client' using 'disp.client_id' = 'client.client_id'\n\n ---  Filters\n- 'card.type' = 'gold' (high-level credit card)\n- 'disp.type' = 'OWNER' (eligible for loans)\n\n ---  Aggregation & Computation\n- For each 'client.client_id', derive 'age' as the difference between the current date and 'client.birth_date', expressed in whole years\n\n ---  Return\n- Distinct client.client_id\n- age",
+    "teps Count Total": 5,
+    "question_id": 194,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "For accounts in 1993 with statement issued after transaction, list the account ID, district name and district region.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'account' and 'district' tables using 'district.district_id' = 'account.district_id'\n\n ---  Filters\n- year part of 'account.date' = 1993\n- 'account.frequency' = 'POPLATEK PO OBRATU' (representing statement issued after transaction)\n\n ---  Return\n- 'account.account_id'\n- 'district.A2' as district name\n- 'district.A3' as district region",
+    "teps Count Total": 3,
+    "question_id": 119,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "From Year 1995 to 2000, who are the accounts holders from 'east Bohemia'. State the account ID the frequency of statement issuance.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'account' and 'district' tables using 'district.district_id' = 'account.district_id'\n\n ---  Filters\n- year part of 'account.date' >= 1995\n- year part of 'account.date' <= 2000\n- 'district.A3' = 'east Bohemia'\n\n ---  Return\n- 'account.account_id'\n- 'account.frequency'",
+    "teps Count Total": 4,
+    "question_id": 120,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "What is the ratio of customers who pay in EUR against customers who pay in CZK?",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'customers' (No joins required)\n\n ---  Filters\n- Consider all rows in 'customers' where 'customers.Currency' is not null\n\n ---  Aggregation & Computation\n- Calculate 'eur_customers' = Count of 'customers.CustomerID' where 'customers.Currency' = 'EUR'\n- Calculate 'czk_customers' = Count of 'customers.CustomerID' where 'customers.Currency' = 'CZK'\n- Calculate 'eur_to_czk_ratio' = eur_customers / czk_customers\n\n ---  Return\n- eur_to_czk_ratio",
+    "teps Count Total": 5,
+    "question_id": 1471,
+    "difficulty": "simple"
+  },
+  {
+    "question": "What was the difference in gas consumption between CZK-paying customers and EUR-paying customers in 2012?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'customers' and 'yearmonth' tables using 'CustomerID'\n\n ---  Filters\n- year part of 'yearmonth.Date' = 2012 (i.e., 'yearmonth.Date' between '201201' and '201212')\n\n ---  Aggregation & Computation\n- Calculate 'total_consumption_CZK' = Sum of 'yearmonth.Consumption' where 'customers.Currency' = 'CZK'\n- Calculate 'total_consumption_EUR' = Sum of 'yearmonth.Consumption' where 'customers.Currency' = 'EUR'\n- Calculate 'difference_consumption' = 'total_consumption_CZK' - 'total_consumption_EUR'\n\n ---  Return\n- difference_consumption",
+    "teps Count Total": 5,
+    "question_id": 1476,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "What is the difference in the annual average consumption of the customers with the least amount of consumption paid in CZK for 2013 between SME and LAM, LAM and KAM, and KAM and SME?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'customers' and 'yearmonth' tables using 'CustomerID'\n\n ---  Filters\n- year part of 'yearmonth.Date' = 2013 (i.e., 'yearmonth.Date' between '201301' and '201312')\n- 'customers.Currency' = 'CZK'\n\n ---  Aggregation & Computation\n- For each 'customers.CustomerID' and 'customers.Segment', calculate 'annual_consumption' = SUM of 'yearmonth.Consumption' over all 2013 months\n- For each 'customers.Segment', identify 'min_annual_consumption' = minimum value of 'annual_consumption' among customers in that segment\n- For each 'customers.Segment', select customers where 'annual_consumption' = 'min_annual_consumption' (these are the customers with the least amount of consumption in that segment for 2013)\n- For each 'customers.Segment', calculate 'annual_average_consumption' = (SUM of 'annual_consumption' for the selected minimum-consumption customers) / (COUNT of distinct 'customers.CustomerID' among those selected customers)\n- Let 'annual_avg_SME' be 'annual_average_consumption' where 'customers.Segment' = 'SME'\n- Let 'annual_avg_LAM' be 'annual_average_consumption' where 'customers.Segment' = 'LAM'\n- Let 'annual_avg_KAM' be 'annual_average_consumption' where 'customers.Segment' = 'KAM'\n- Calculate 'diff_SME_LAM' = annual_avg_SME - annual_avg_LAM\n- Calculate 'diff_LAM_KAM' = annual_avg_LAM - annual_avg_KAM\n- Calculate 'diff_KAM_SME' = annual_avg_KAM - annual_avg_SME\n\n ---  Return\n- diff_SME_LAM\n- diff_LAM_KAM\n- diff_KAM_SME",
+    "teps Count Total": 13,
+    "question_id": 1481,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "Which of the three segments—SME, LAM and KAM—has the biggest and lowest percentage increases in consumption paid in EUR between 2012 and 2013?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'customers' and 'yearmonth' tables using 'CustomerID'\n\n ---  Filters\n- 'customers.Currency' = 'EUR'\n- year part of 'yearmonth.Date' IN (2012, 2013)\n- 'customers.Segment' IN ('SME', 'LAM', 'KAM')\n\n ---  Aggregation & Computation\n- For each combination of 'customers.Segment' and year part of 'yearmonth.Date':\n  - Calculate 'total_consumption_year' = SUM('yearmonth.Consumption')\n- Reshape the aggregated data so that for each 'customers.Segment' there is one row with:\n  - 'consumption_2012' = total_consumption_year where year part of 'yearmonth.Date' = 2012\n  - 'consumption_2013' = total_consumption_year where year part of 'yearmonth.Date' = 2013\n- For each 'customers.Segment':\n  - Calculate 'increase_or_decrease' = consumption_2013 - consumption_2012\n  - Calculate 'percentage_increase' = (increase_or_decrease / consumption_2013) * 100\n- Identify:\n  - 'segment_with_biggest_percentage_increase' = segment where 'percentage_increase' is the maximum among SME, LAM, KAM\n  - 'segment_with_lowest_percentage_increase' = segment where 'percentage_increase' is the minimum among SME, LAM, KAM\n\n ---  Ordering & Limit\n- Order intermediate result by 'percentage_increase' in descending order when searching for the biggest percentage increase\n- Order intermediate result by 'percentage_increase' in ascending order when searching for the lowest percentage increase\n- Limit to 1 row for the biggest percentage increase and 1 row for the lowest percentage increase\n\n ---  Return\n- segment_with_biggest_percentage_increase\n- percentage_increase for segment_with_biggest_percentage_increase\n- segment_with_lowest_percentage_increase\n- percentage_increase for segment_with_lowest_percentage_increase",
+    "teps Count Total": 18,
+    "question_id": 1482,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "How many more \"discount\" gas stations does the Czech Republic have compared to Slovakia?",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'gasstations' (no joins required)\n\n ---  Filters\n- 'gasstations.Segment' = 'discount'\n- 'gasstations.Country' IN ('CZE', 'SVK')\n\n ---  Aggregation & Computation\n- Calculate 'discount_cz' = Count of 'gasstations.GasStationID' where 'gasstations.Country' = 'CZE'\n- Calculate 'discount_sk' = Count of 'gasstations.GasStationID' where 'gasstations.Country' = 'SVK'\n- Calculate 'difference' = discount_cz - discount_sk\n\n ---  Return\n- difference",
+    "teps Count Total": 6,
+    "question_id": 1484,
+    "difficulty": "simple"
+  },
+  {
+    "question": "How many percent of LAM customer consumed more than 46.73?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'customers' and 'yearmonth' tables using 'CustomerID'\n\n ---  Filters\n- 'customers.Segment' = 'LAM'\n\n ---  Aggregation & Computation\n- Calculate 'total_LAM_customers' = Count of DISTINCT 'customers.CustomerID'\n- Calculate 'LAM_customers_high_consumption' = Count of DISTINCT 'customers.CustomerID' where 'yearmonth.Consumption' > 46.73\n- Calculate 'percentage_LAM_high_consumption' = ('LAM_customers_high_consumption' / 'total_LAM_customers') * 100\n\n ---  Return\n- percentage_LAM_high_consumption",
+    "teps Count Total": 5,
+    "question_id": 1490,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "In February 2012, what percentage of customers consumed more than 528.3?",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'yearmonth' (no joins required)\n\n ---  Filters\n- 'yearmonth.Date' = '201202' (representing February 2012)\n\n ---  Aggregation & Computation\n- Calculate 'total_customers' = count of DISTINCT 'yearmonth.CustomerID' for rows that satisfy the filters\n- Calculate 'high_consumers' = count of DISTINCT 'yearmonth.CustomerID' where 'yearmonth.Consumption' > 528.3 and rows satisfy the filters\n- Calculate 'percentage' = ('high_consumers' / 'total_customers') * 100\n\n ---  Return\n- percentage",
+    "teps Count Total": 5,
+    "question_id": 1493,
+    "difficulty": "simple"
+  },
+  {
+    "question": "What is the percentage of the customers who used EUR in 2012/8/25?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'transactions_1k' and 'customers' tables using 'CustomerID'\n\n ---  Filters\n- 'transactions_1k.Date' = '2012-08-25'\n\n ---  Aggregation & Computation\n- Calculate 'total_customers' = Count of DISTINCT 'transactions_1k.CustomerID' for rows that satisfy the date filter\n- Calculate 'eur_customers' = Count of DISTINCT 'transactions_1k.CustomerID' for rows that satisfy the date filter and where 'customers.Currency' = 'EUR'\n- Calculate 'percentage_eur' = ('eur_customers' / 'total_customers') * 100\n\n ---  Return\n- percentage_eur",
+    "teps Count Total": 5,
+    "question_id": 1525,
+    "difficulty": "simple"
+  },
+  {
+    "question": "For the customer who paid 634.8 in 2012/8/25, what was the consumption decrease rate from Year 2012 to 2013?",
+    "nl2_rewrite": " ---  Source & Joins\n- Source tables: 'transactions_1k' and 'yearmonth' (no need to use 'gasstations' for this question)\n- Identify the target customer in 'transactions_1k' using 'CustomerID'\n- Link the identified 'CustomerID' to the 'yearmonth' table using 'CustomerID'\n\n ---  Filters\n- In 'transactions_1k', filter rows where 'transactions_1k.Date' = '2012-08-25'\n- In 'transactions_1k', filter rows where 'transactions_1k.Price' = 634.8\n- From the filtered 'transactions_1k' rows, select the corresponding 'transactions_1k.CustomerID' (assume a single customer or, if multiple, treat each customer separately)\n- In 'yearmonth', keep only rows where 'yearmonth.CustomerID' = the identified 'CustomerID'\n- In 'yearmonth', keep only rows where the year part of 'yearmonth.Date' = 2012 or 2013\n\n ---  Aggregation & Computation\n- For the identified customer, calculate 'consumption_2012' = sum of 'yearmonth.Consumption' where the year part of 'yearmonth.Date' = 2012\n- For the identified customer, calculate 'consumption_2013' = sum of 'yearmonth.Consumption' where the year part of 'yearmonth.Date' = 2013\n- Calculate 'consumption_decrease_rate' = (consumption_2012 - consumption_2013) / consumption_2012\n\n ---  Return\n- Distinct 'transactions_1k.CustomerID' (the customer who paid 634.8 on 2012-08-25)\n- consumption_2012\n- consumption_2013\n- consumption_decrease_rate",
+    "teps Count Total": 11,
+    "question_id": 1526,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "What is the percentage of \"premium\" against the overall segment in Country = \"SVK\"?",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'gasstations' (no joins required)\n\n ---  Filters\n- 'gasstations.Country' = 'SVK'\n\n ---  Aggregation & Computation\n- Calculate 'total_in_SVK' = Count of 'gasstations.GasStationID' where 'gasstations.Country' = 'SVK'\n- Calculate 'premium_in_SVK' = Count of 'gasstations.GasStationID' where 'gasstations.Country' = 'SVK' and 'gasstations.Segment' = 'premium'\n- Calculate 'percentage_premium' = ('premium_in_SVK' / 'total_in_SVK') * 100\n\n ---  Return\n- percentage_premium",
+    "teps Count Total": 5,
+    "question_id": 1528,
+    "difficulty": "simple"
+  },
+  {
+    "question": "What is the amount spent by customer \"38508\" at the gas stations? How much had the customer spent in January 2012?",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'transactions_1k'\n- Join 'transactions_1k' to 'gasstations' using 'transactions_1k.GasStationID' = 'gasstations.GasStationID' to ensure spending is at gas stations\n\n ---  Filters\n- 'transactions_1k.CustomerID' = 38508\n- For the January 2012 part of the question: filter 'transactions_1k.Date' to dates where the year part = 2012 and the month part = 1\n\n ---  Aggregation & Computation\n- Calculate 'total_spent_all_time' = Sum of 'transactions_1k.Price' over all transactions that satisfy the customer and gas station filters (no date restriction)\n- Calculate 'total_spent_jan_2012' = Sum of 'transactions_1k.Price' over all transactions that satisfy the customer and gas station filters and where the year part of 'transactions_1k.Date' = 2012 and the month part of 'transactions_1k.Date' = 1\n\n ---  Return\n- total_spent_all_time\n- total_spent_jan_2012",
+    "teps Count Total": 6,
+    "question_id": 1529,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Identify the type of expenses and their total value approved for 'October Meeting' event.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'event' and 'budget' tables using 'event.event_id' = 'budget.link_to_event'\n- Link 'budget' and 'expense' tables using 'budget.budget_id' = 'expense.link_to_budget'\n\n ---  Filters\n- 'event.event_name' = 'October Meeting'\n- 'expense.approved' indicates the expense is approved (use the value(s) that represent approval status in this column)\n\n ---  Aggregation & Computation\n- Group records by 'event.type'\n- For each group, calculate 'total_value' = SUM('expense.cost')\n\n ---  Return\n- event.type\n- total_value",
+    "teps Count Total": 6,
+    "question_id": 1404,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Please provide the diagnosis of patients with ALT glutamic pylvic transaminase beyond the normal range by ascending order of their date of birth.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'patient' and 'laboratory' tables using 'ID'\n\n ---  Filters\n- 'laboratory.GPT' > 60 (ALT glutamic pylvic transaminase beyond the normal range)\n\n ---  Ordering & Limit\n- Order results by 'patient.Birthday' in ascending order (older patients first, younger patients later)\n\n ---  Return\n- Distinct 'patient.Diagnosis'\n- 'patient.Birthday'",
+    "teps Count Total": 3,
+    "question_id": 1209,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Give the name of the league had the most goals in the 2016 season?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'match' and 'league' tables using 'match.league_id' = 'league.id'\n\n ---  Filters\n- 'match.season' = '2015/2016' (representing the 2016 season per Evidence)\n\n ---  Aggregation & Computation\n- For each 'league.id', calculate 'total_goals' = SUM('match.home_team_goal' + 'match.away_team_goal') across all its matches in the filtered season\n- Identify the league with the maximum 'total_goals' value (MAX over the per-league 'total_goals')\n\n ---  Ordering & Limit\n- Order leagues by 'total_goals' in descending order\n- Limit the result to the top 1 league\n\n ---  Return\n- 'league.name'",
+    "teps Count Total": 6,
+    "question_id": 1025,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "In Scotland Premier League, which away team won the most during the 2010 season?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'league' and 'match' using 'league.id' = 'match.league_id'\n- Link 'match' and 'team' using 'match.away_team_api_id' = 'team.team_api_id'\n\n ---  Filters\n- 'league.name' = 'Scotland Premier League'\n- 'match.season' = '2009/2010'\n- 'match.away_team_goal' - 'match.home_team_goal' > 0 (away team won the match)\n\n ---  Aggregation & Computation\n- Group by 'match.away_team_api_id'\n- For each away team, calculate 'away_wins' = Count of matches in the group\n- Identify the maximum value of 'away_wins' across all away teams\n- Select only the away team(s) whose 'away_wins' is equal to this maximum value\n\n ---  Ordering & Limit\n- Optionally order the result by 'away_wins' in descending order\n- Optionally limit to the top 1 row if only a single team name is desired\n\n ---  Return\n- Distinct 'team.team_long_name'",
+    "teps Count Total": 11,
+    "question_id": 1028,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "Give the name of the league had the most matches end as draw in the 2016 season?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'match' and 'league' tables using 'match.league_id' = 'league.id'\n\n ---  Filters\n- 'match.season' = '2015/2016' (representing the 2016 season per Evidence)\n\n ---  Aggregation & Computation\n- For each 'match.league_id', count the number of matches where 'match.home_team_goal' = 'match.away_team_goal'; name this count 'draw_matches'\n- Identify the league_id with the maximum value of 'draw_matches'\n\n ---  Ordering & Limit\n- Order leagues by 'draw_matches' in descending order\n- Limit the result to 1 league (the one with the most draws)\n\n ---  Return\n- 'league.name'",
+    "teps Count Total": 6,
+    "question_id": 1030,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Give the name of the league with the highest matches of all time and how many matches were played in the said league.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'match' and 'league' tables using 'match.league_id' = 'league.id'\n\n ---  Aggregation & Computation\n- Group records by 'match.league_id' and 'league.name'\n- For each group, calculate 'match_count' = Count of 'match.id'\n- Identify the group where 'match_count' is the maximum across all leagues (MAX of the per-league 'match_count')\n\n ---  Return\n- league.name\n- match_count",
+    "teps Count Total": 4,
+    "question_id": 1032,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "List the name of leagues in which the average goals by the home team is higher than the away team in the 2009/2010 season.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'league' and 'match' tables using 'league.id' = 'match.league_id'\n\n ---  Filters\n- 'match.season' = '2009/2010'\n\n ---  Aggregation & Computation\n- Group records by 'league.id' and 'league.name'\n- For each group, calculate 'avg_home_goals' = SUM('match.home_team_goal') / COUNT(DISTINCT 'match.id')\n- For each group, calculate 'avg_away_goals' = SUM('match.away_team_goal') / COUNT(DISTINCT 'match.id')\n- Keep only groups where 'avg_home_goals' > 'avg_away_goals'\n\n ---  Return\n- Distinct 'league.name'",
+    "teps Count Total": 6,
+    "question_id": 1042,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "Calculate the average home team goal in the 2010/2011 season in the country of Poland.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'match' and 'country' tables using 'match.country_id' = 'country.id'\n\n ---  Filters\n- 'country.name' = 'Poland'\n- 'match.season' = '2010/2011'\n\n ---  Aggregation & Computation\n- Calculate 'total_home_goals' = SUM('match.home_team_goal') over all filtered matches\n- Calculate 'match_count' = COUNT(DISTINCT 'match.id') over all filtered matches\n- Calculate 'average_home_team_goal' = 'total_home_goals' / 'match_count'\n\n ---  Return\n- average_home_team_goal",
+    "teps Count Total": 6,
+    "question_id": 1057,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Who has the highest average finishing rate between the highest and shortest football player?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'player' and 'player_attributes' tables using 'player.player_api_id' = 'player_attributes.player_api_id'\n\n ---  Aggregation & Computation\n- For each player, calculate 'avg_finishing' = AVG('player_attributes.finishing') grouped by 'player.player_api_id'\n- Identify 'max_height' = MAX('player.height') across all players\n- Identify 'min_height' = MIN('player.height') across all players\n- Among players with 'player.height' = 'max_height', calculate 'highest_avg_finishing_tall' = MAX('avg_finishing')\n- Among players with 'player.height' = 'min_height', calculate 'highest_avg_finishing_short' = MAX('avg_finishing')\n- Compare 'highest_avg_finishing_tall' and 'highest_avg_finishing_short' and select the greater value; if needed, return the corresponding player(s)\n\n ---  Return\n- Distinct 'player.player_api_id' of the player(s) with the highest value between 'highest_avg_finishing_tall' and 'highest_avg_finishing_short'\n- Corresponding 'player.height'\n- Corresponding 'avg_finishing'",
+    "teps Count Total": 7,
+    "question_id": 1058,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "How many matches were held in the Belgium Jupiler League in April, 2009?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'league' and 'match' tables using 'league.id' = 'match.league_id'\n\n ---  Filters\n- 'league.name' = 'Belgium Jupiler League'\n- Year-month part of 'match.date' = '2009-04' (representing April 2009, using the first 7 characters of the date string)\n\n ---  Aggregation & Computation\n- Calculate 'match_count' = Count of 'match.id'\n\n ---  Return\n- match_count",
+    "teps Count Total": 4,
+    "question_id": 1091,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Give the name of the league had the most matches in the 2008/2009 season?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'match' and 'league' tables using 'match.league_id' = 'league.id'\n\n ---  Filters\n- 'match.season' = '2008/2009'\n\n ---  Aggregation & Computation\n- Group records by 'league.id' and 'league.name'\n- For each group, calculate 'match_count' = Count of 'match.id'\n- Identify the league with the maximum 'match_count' across all groups\n\n ---  Ordering & Limit\n- Order groups by 'match_count' in descending order\n- Limit the result to 1 league (the one with the highest 'match_count')\n\n ---  Return\n- league.name",
+    "teps Count Total": 7,
+    "question_id": 1092,
+    "difficulty": "simple"
+  },
+  {
+    "question": "When was the first time did Kevin Constant have his highest crossing score? Give the date.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'player' and 'player_attributes' using 'player.player_fifa_api_id' = 'player_attributes.player_fifa_api_id'\n\n ---  Filters\n- 'player.player_name' = 'Kevin Constant'\n\n ---  Aggregation & Computation\n- For the filtered records, determine 'max_crossing' = maximum value of 'player_attributes.crossing'\n\n ---  Filters\n- Keep only records where 'player_attributes.crossing' = 'max_crossing'\n- From these records, identify the earliest record by the 'player_attributes.date' value (the minimum date value)\n\n ---  Return\n- 'player_attributes.date' for the earliest record where 'player_attributes.crossing' = 'max_crossing'",
+    "teps Count Total": 5,
+    "question_id": 1107,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "List down most tallest players' name.",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'player' (no joins required)\n\n ---  Filters\n- 'player.height' is not NULL\n- 'player.height' = the maximum value of 'player.height' across all players\n\n ---  Return\n- Distinct 'player.player_name'",
+    "teps Count Total": 3,
+    "question_id": 1116,
+    "difficulty": "simple"
+  },
+  {
+    "question": "What was the final score for the match on September 24, 2008, in the Belgian Jupiler League between the home team and the away team?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'league' and 'match' tables using 'league.id' = 'match.league_id'\n\n ---  Filters\n- 'league.name' = 'Belgium Jupiler League'\n- 'match.date' starts with '2008-09-24' (pattern '2008-09-24%')\n\n ---  Return\n- match.home_team_goal (final score for the home team)\n- match.away_team_goal (final score for the away team)",
+    "teps Count Total": 3,
+    "question_id": 1139,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "Which top 4 leagues had the most games in the 2015-2016 season?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'match' and 'league' tables using 'match.league_id' = 'league.id'\n\n ---  Filters\n- 'match.season' = '2015/2016'\n\n ---  Aggregation & Computation\n- Group records by 'league.id' and 'league.name'\n- For each group, calculate 'games_count' = Count of 'match.id'\n\n ---  Ordering & Limit\n- Order groups by 'games_count' in descending order\n- Limit the result to the top 4 leagues\n\n ---  Return\n- league.name\n- games_count",
+    "teps Count Total": 6,
+    "question_id": 1145,
+    "difficulty": "simple"
+  },
+  {
+    "question": "Please provide the full name of the away team that scored the most goals.",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'match'\n- Join 'match' to 'team' using 'match.away_team_api_id' = 'team.team_api_id'\n\n ---  Aggregation & Computation\n- Calculate 'max_away_goals' = maximum value of 'match.away_team_goal' across all matches\n\n ---  Filters\n- Keep only rows where 'match.away_team_goal' = 'max_away_goals'\n\n ---  Return\n- Distinct 'team.team_long_name'",
+    "teps Count Total": 4,
+    "question_id": 1146,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Paul di Resta was in the No. 853 race, what percent faster did he finish in the 853rd race than the next race for the fastest lap speed?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'drivers' and 'results' tables using 'driverId'\n\n ---  Filters\n- 'drivers.forename' = 'Paul'\n- 'drivers.surname' = 'di Resta'\n- Restrict to 'results.raceId' in {853, 854}\n\n ---  Aggregation & Computation\n- For race 853: calculate 'fastestLapSpeed_853' = the maximum numeric value of 'results.fastestLapSpeed' where 'results.raceId' = 853 and the driver is Paul di Resta\n- For race 854: calculate 'fastestLapSpeed_854' = the maximum numeric value of 'results.fastestLapSpeed' where 'results.raceId' = 854 and the driver is Paul di Resta\n- Calculate 'difference' = fastestLapSpeed_853 - fastestLapSpeed_854\n- Calculate 'percentage_faster' = (difference * 100) / fastestLapSpeed_853\n\n ---  Return\n- percentage_faster",
+    "teps Count Total": 8,
+    "question_id": 880,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "In which Formula_1 race did Lewis Hamilton rank the highest?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'drivers' and 'results' using 'drivers.driverId' = 'results.driverId'\n- Link 'results' and 'races' using 'results.raceId' = 'races.raceId'\n\n ---  Filters\n- 'drivers.forename' = 'Lewis'\n- 'drivers.surname' = 'Hamilton'\n- Exclude records where 'results.rank' is NULL (only consider rows with a defined rank)\n\n ---  Aggregation & Computation\n- For the filtered Lewis Hamilton records, determine 'best_rank' = minimum value of 'results.rank'\n- Identify the race(s) where 'results.rank' = 'best_rank' for Lewis Hamilton\n\n ---  Return\n- Distinct 'races.name'",
+    "teps Count Total": 7,
+    "question_id": 930,
+    "difficulty": "simple"
+  },
+  {
+    "question": "Among the drivers that finished the race in the 2008 Chinese Grand Prix, how many of them have participated in Formula_1 races?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'races' and 'results' using 'races.raceId' = 'results.raceId'\n\n ---  Filters\n- 'races.year' = 2008\n- 'races.name' = 'Chinese Grand Prix'\n- 'results.time' has a non-null and non-empty value (driver finished the race)\n- Driver has participated in Formula_1 races: COUNT of 'results.raceId' for that 'results.driverId' > 0 (implicitly satisfied by being present in 'results')\n\n ---  Aggregation & Computation\n- From the filtered dataset, identify DISTINCT 'results.driverId' (drivers who finished the 2008 Chinese Grand Prix)\n- Calculate 'driver_count' = Count of DISTINCT 'results.driverId'\n\n ---  Return\n- driver_count",
+    "teps Count Total": 7,
+    "question_id": 940,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Please calculate the race completion percentage of Japanese drivers from 2007 to 2009.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'results' and 'races' using 'results.raceId' = 'races.raceId'\n- Link 'results' and 'drivers' using 'results.driverId' = 'drivers.driverId'\n\n ---  Filters\n- 'races.year' >= 2007\n- 'races.year' <= 2009\n- 'drivers.nationality' = 'Japanese'\n\n ---  Aggregation & Computation\n- Calculate 'total_japanese_race_entries' = Count of 'results.driverId' after applying the Filters (all Japanese driver participations from 2007 to 2009)\n- Calculate 'completed_japanese_race_entries' = Count of 'results.driverId' where 'results.time' is not null, after applying the Filters\n- Calculate 'race_completion_percentage' = ('completed_japanese_race_entries' / 'total_japanese_race_entries') * 100\n\n ---  Return\n- race_completion_percentage",
+    "teps Count Total": 8,
+    "question_id": 954,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "How many French drivers who obtain the laptime less than 02:00.00?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'drivers' and 'laptimes' tables using 'driverId'\n\n ---  Filters\n- 'drivers.nationality' = 'French'\n- Convert 'laptimes.time' to total seconds and keep rows where total seconds < 120 (lap time less than 02:00.00)\n\n ---  Aggregation & Computation\n- Calculate 'french_drivers_under_2min' = Count of DISTINCT 'drivers.driverId' that satisfy the filters\n\n ---  Return\n- french_drivers_under_2min",
+    "teps Count Total": 4,
+    "question_id": 963,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "State code numbers of top 3 yougest drivers. How many Netherlandic drivers among them?",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'drivers' (no joins required)\n\n ---  Filters\n- Exclude records where 'drivers.dob' is NULL (only consider drivers with known date of birth)\n\n ---  Aggregation & Computation\n- For each driver, derive 'birth_year' = year part of 'drivers.dob'\n- Order all drivers by 'birth_year' in descending order (larger year = younger), and if needed by 'drivers.dob' in descending order to break ties (later date = younger)\n- Select the first 3 rows from this ordered list (top 3 youngest drivers)\n- Among these 3 selected drivers, count how many have 'drivers.nationality' corresponding to Netherlands (including values like 'Dutch' or 'Netherlandic', as they refer to the same country)\n\n ---  Ordering & Limit\n- Order by year part of 'drivers.dob' DESC, then by 'drivers.dob' DESC\n- Limit to 3 rows\n\n ---  Return\n- 'drivers.code' for each of the top 3 youngest drivers\n- 'netherlandic_count' = number of drivers among the top 3 whose nationality is Netherlands/Dutch/Netherlandic",
+    "teps Count Total": 8,
+    "question_id": 967,
+    "difficulty": "simple"
+  },
+  {
+    "question": "Please state the reference name of the oldest German driver.",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'drivers' (no joins required)\n\n ---  Filters\n- 'drivers.nationality' = 'German'\n\n ---  Aggregation & Computation\n- Determine 'oldest_year' = MIN(year part of 'drivers.dob') among rows where 'drivers.nationality' = 'German'\n- From the same filtered set, keep only rows where the year part of 'drivers.dob' = 'oldest_year'\n\n ---  Return\n- Distinct 'drivers.driverRef'",
+    "teps Count Total": 4,
+    "question_id": 971,
+    "difficulty": "simple"
+  },
+  {
+    "question": "From race no. 50 to 100, how many finishers have been disqualified?",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'results' (no joins required)\n\n ---  Filters\n- 'results.raceId' > 50\n- 'results.raceId' < 100\n- 'results.statusId' = 2 (disqualified)\n- 'results.time' IS NOT NULL (finisher)\n\n ---  Aggregation & Computation\n- Calculate 'disqualified_finishers_count' = Count of rows that satisfy all filters\n\n ---  Return\n- disqualified_finishers_count",
+    "teps Count Total": 6,
+    "question_id": 977,
+    "difficulty": "simple"
+  },
+  {
+    "question": "What is full name of the racer who ranked 1st in the 3rd qualifying race held in the Marina Bay Street Circuit in 2008?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'races' and 'circuits' using 'races.circuitId' = 'circuits.circuitId'\n- Link 'qualifying' and 'races' using 'qualifying.raceId' = 'races.raceId'\n- Link 'qualifying' and 'drivers' using 'qualifying.driverId' = 'drivers.driverId'\n\n ---  Filters\n- 'races.year' = 2008\n- 'circuits.name' = 'Marina Bay Street Circuit'\n- 'qualifying.q3' is not null (only consider drivers who participated in Q3)\n- 'qualifying.q3' = the minimum value of 'qualifying.q3' among all qualifying records that satisfy the above filters\n\n ---  Return\n- 'drivers.forename'\n- 'drivers.surname'",
+    "teps Count Total": 7,
+    "question_id": 1001,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "As of the present, what is the full name of the youngest racer? Indicate her nationality and the name of the race to which he/she first joined.",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'drivers'\n- Link 'drivers' to 'driverstandings' using 'drivers.driverId' = 'driverstandings.driverId'\n- Link 'driverstandings' to 'races' using 'driverstandings.raceId' = 'races.raceId'\n\n ---  Filters\n- Identify the youngest driver by selecting the record(s) in 'drivers' where 'dob' = the maximum value of 'drivers.dob' across all drivers\n\n ---  Aggregation & Computation\n- For the youngest driver, find all related records in 'driverstandings'\n- For those records, determine the earliest race they joined by selecting the minimum value of 'races.date'\n- If multiple races share this same earliest date for that driver, select the one(s) with that minimum 'races.date'\n- Create a derived column 'full_name' = concatenation of 'drivers.forename' and 'drivers.surname'\n\n ---  Ordering & Limit\n- When identifying the youngest driver, order drivers by 'dob' in descending order and select the top 1 (or equivalently use MAX(dob))\n- When identifying the first race for that driver, order the joined races by 'races.date' in ascending order and select the top 1\n\n ---  Return\n- full_name (drivers.forename + drivers.surname)\n- drivers.nationality\n- races.name",
+    "teps Count Total": 10,
+    "question_id": 1002,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Among the posts with a score of over 5, what is the percentage of them being owned by an elder user?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'posts' and 'users' tables using 'posts.OwnerUserId' = 'users.Id'\n\n ---  Filters\n- 'posts.Score' > 5\n\n ---  Aggregation & Computation\n- Calculate 'total_posts' = Count of 'posts.Id' after applying filters\n- Calculate 'elder_posts' = Count of 'posts.Id' where 'users.Age' > 65 after applying filters\n- Calculate 'percentage_elder_owned' = ('elder_posts' / 'total_posts') * 100\n\n ---  Return\n- percentage_elder_owned",
+    "teps Count Total": 5,
+    "question_id": 557,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "User No.23853 gave a comment to a post at 9:08:18 on 2013/7/12, was that post well-finished?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'comments' and 'posts' tables using 'comments.PostId' = 'posts.Id'\n\n ---  Filters\n- 'comments.UserId' = 23853\n- 'comments.CreationDate' = '2013-07-12 09:08:18.0'\n\n ---  Aggregation & Computation\n- For the post associated with the filtered comment, derive a boolean flag 'is_well_finished' defined as: 'is_well_finished' = TRUE if 'posts.ClosedDate' IS NOT NULL, otherwise FALSE\n\n ---  Return\n- 'is_well_finished'",
+    "teps Count Total": 4,
+    "question_id": 565,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Based on posts posted by Community, calculate the percentage of posts that use the R language.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'users' and 'posthistory' using 'users.Id' = 'posthistory.UserId'\n- Link 'posthistory' and 'tags' using 'posthistory.PostId' = 'tags.ExcerptPostId'\n\n ---  Filters\n- 'users.DisplayName' = 'Community'\n\n ---  Aggregation & Computation\n- Calculate 'total_posts_by_community' = Count of DISTINCT 'posthistory.PostId' where 'users.DisplayName' = 'Community'\n- Calculate 'r_posts_by_community' = Count of DISTINCT 'posthistory.PostId' where 'users.DisplayName' = 'Community' and 'tags.TagName' = 'r'\n- Calculate 'percentage' = ('r_posts_by_community' / 'total_posts_by_community') * 100\n\n ---  Return\n- percentage",
+    "teps Count Total": 6,
+    "question_id": 639,
+    "difficulty": "challenging"
+  },
+  {
+    "question": "Calculate the difference in view count from post posted by Mornington and view count from posts posted by Amos.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'users' and 'posthistory' using 'users.Id' = 'posthistory.UserId'\n- Link 'posthistory' and 'posts' using 'posthistory.PostId' = 'posts.Id'\n\n ---  Filters\n- For Mornington view count: 'users.DisplayName' = 'Mornington'\n- For Amos view count: 'users.DisplayName' = 'Amos'\n\n ---  Aggregation & Computation\n- Calculate 'sum_mornington_views' = SUM('posts.ViewCount') over all posts linked (via 'posthistory') to users where 'users.DisplayName' = 'Mornington'\n- Calculate 'sum_amos_views' = SUM('posts.ViewCount') over all posts linked (via 'posthistory') to users where 'users.DisplayName' = 'Amos'\n- Calculate 'viewcount_difference' = sum_mornington_views - sum_amos_views\n\n ---  Return\n- viewcount_difference",
+    "teps Count Total": 7,
+    "question_id": 640,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Among the comments with scores between 5 to 10, what is the percentage of the users with 0 up votes?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'comments' and 'users' tables using 'comments.UserId' = 'users.Id'\n\n ---  Filters\n- 'comments.Score' >= 5\n- 'comments.Score' <= 10\n\n ---  Aggregation & Computation\n- Calculate 'total_users_in_range' = Count of DISTINCT 'comments.UserId' where 'comments.Score' BETWEEN 5 and 10\n- Calculate 'zero_upvote_users_in_range' = Count of DISTINCT 'comments.UserId' where 'comments.Score' BETWEEN 5 and 10 and 'users.UpVotes' = 0\n- Calculate 'percentage_zero_upvotes' = ('zero_upvote_users_in_range' / 'total_users_in_range') * 100\n\n ---  Return\n- percentage_zero_upvotes",
+    "teps Count Total": 6,
+    "question_id": 716,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Name the card and artist with the most ruling information. Also state if the card is a promotional printing.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'cards' and 'rulings' tables using 'cards.uuid' = 'rulings.uuid'\n\n ---  Aggregation & Computation\n- For each 'cards.uuid', calculate 'ruling_count' = Count of 'rulings.uuid'\n- Identify the maximum 'ruling_count' across all cards\n\n ---  Filters\n- Keep only the card(s) where 'ruling_count' is equal to this maximum value\n\n ---  Return\n- 'cards.name'\n- 'cards.artist'\n- 'cards.isPromo' (state whether the card is a promotional printing, where promotional printing corresponds to 'cards.isPromo' = 1)",
+    "teps Count Total": 4,
+    "question_id": 349,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "For the set of cards with \"Ancestor's Chosen\" in it, is there a Korean version of it?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'cards' and 'set_translations' using matching 'cards.setCode' = 'set_translations.setCode'\n\n ---  Filters\n- 'cards.name' = 'Ancestor''s Chosen'\n- 'set_translations.language' = 'Korean'\n\n ---  Return\n- Distinct 'cards.setCode'\n- 'set_translations.translation'",
+    "teps Count Total": 3,
+    "question_id": 465,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Did the set of cards with \"Angel of Mercy\" appear on Magic: The Gathering Online?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'cards' and 'sets' tables using 'cards.setCode' = 'sets.code'\n\n ---  Filters\n- 'cards.name' = 'Angel of Mercy'\n\n ---  Aggregation & Computation\n- For the joined rows, determine whether there exists at least one record where 'sets.mtgoCode' IS NOT NULL (indicating appearance on Magic: The Gathering Online)\n\n ---  Return\n- A boolean-style result indicating: Does there exist any set containing a card named 'Angel of Mercy' where 'sets.mtgoCode' IS NOT NULL?",
+    "teps Count Total": 3,
+    "question_id": 469,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Is the set of cards with Adarkar Valkyrie only available outside the United States?",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'cards' and 'sets' tables using 'cards.setCode' = 'sets.code'\n\n ---  Filters\n- 'cards.name' = 'Adarkar Valkyrie'\n\n ---  Aggregation & Computation\n- For all distinct 'sets.code' that have at least one card where 'cards.name' = 'Adarkar Valkyrie', check the corresponding 'sets.isForeignOnly' values\n- Determine whether all such sets satisfy 'sets.isForeignOnly' = 1\n- Also determine whether there exists at least one such set where 'sets.isForeignOnly' != 1\n\n ---  Return\n- A boolean or yes/no indicator answering: \"Are all sets that contain 'Adarkar Valkyrie' marked as foreign-only (isForeignOnly = 1), with no set having isForeignOnly != 1?\"",
+    "teps Count Total": 5,
+    "question_id": 473,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "List all the frame styles and cards Allen Williams worked on and find any banned cards if there are any.",
+    "nl2_rewrite": " ---  Source & Joins\n- Link 'cards' and 'legalities' tables using 'uuid' (cards.uuid = legalities.uuid)\n\n ---  Filters\n- 'cards.artist' = 'Allen Williams'\n\n ---  Aggregation & Computation\n- For each card by Allen Williams, determine if it has any associated 'legalities.status' = 'Banned'\n- Create a derived flag or indicator column 'is_banned' that is true if at least one related legality record has status = 'Banned', otherwise false\n\n ---  Return\n- 'cards.name'\n- 'cards.frameVersion'\n- 'cards.uuid'\n- 'legalities.status' (only for related records, may be null if no legality rows)\n- Derived column 'is_banned' indicating whether the card is banned in any format",
+    "teps Count Total": 4,
+    "question_id": 530,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "Between San Diego and Santa Barbara, which county offers the most number of schools that does not offer physical building? Indicate the amount.",
+    "nl2_rewrite": " ---  Source & Joins\n- Source table: 'schools' (no joins required)\n\n ---  Filters\n- 'schools.County' IN ('San Diego', 'Santa Barbara')\n- 'schools.Virtual' = 'F' (represents schools that do not offer a physical building)\n\n ---  Aggregation & Computation\n- Group records by 'schools.County'\n- For each county, calculate 'num_schools_no_physical' = Count of rows in that county after filters\n- Identify the county with the maximum 'num_schools_no_physical' between the two grouped results\n\n ---  Return\n- County with the maximum 'num_schools_no_physical'\n- num_schools_no_physical",
+    "teps Count Total": 6,
+    "question_id": 79,
+    "difficulty": "moderate"
+  },
+  {
+    "question": "For the client whose loan was approved first in 1993/7/5, what is the increase rate of his/her account balance from 1993/3/22 to 1998/12/27?",
+    "nl2_rewrite": " ---  Source & Joins\n- Source tables: 'loan', 'account', 'trans'\n- Link 'loan' and 'account' using 'loan.account_id' = 'account.account_id'\n- Link 'account' and 'trans' using 'account.account_id' = 'trans.account_id'\n\n ---  Filters\n- For identifying the client: filter 'loan.date' = 1993-07-05\n- Among loans on 1993-07-05, identify the loan with the earliest approval time on that date (if only date is stored and no time exists, treat all loans on that date as tied and select the one with the minimum 'loan.loan_id' as a deterministic tie-breaker)\n- After selecting that single 'loan.account_id', filter 'trans.account_id' to this account only\n- For balance on Date B: filter 'trans.date' = 1993-03-22\n- For balance on Date A: filter 'trans.date' = 1998-12-27\n\n ---  Aggregation & Computation\n- For the selected account, determine 'balance_B' as the 'trans.balance' on 1993-03-22 (if multiple transactions exist on that date, use the record with the latest transaction time on that date; if time is not available, use the record with the maximum 'trans_id' on that date)\n- For the selected account, determine 'balance_A' as the 'trans.balance' on 1998-12-27 (same rule: if multiple records, use the one with the latest transaction on that date, or maximum 'trans_id' if no time)\n- Calculate 'increase_rate' = ((balance_A - balance_B) / balance_B) * 100\n\n ---  Return\n- increase_rate",
+    "teps Count Total": 11,
+    "question_id": 116,
+    "difficulty": "challenging"
+  }
+]
