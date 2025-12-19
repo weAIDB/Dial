@@ -22,7 +22,7 @@ JSON_BLOCK_PATTERN = re.compile(r'^```json\s*|\s*```$', re.MULTILINE)
 # 在这里配置你的 API 信息。concurrency 控制该模型的最大并发数。
 API_CONFIGS = [
     {
-        "api_key": "sk-537b00fe9a444de096505eca44f7c6bc",
+        "api_key": "",
         "base_url": "https://api.deepseek.com",
         "model": "deepseek-chat",
         "output_file": "数据/deepseekV3.2/sql98.json",
