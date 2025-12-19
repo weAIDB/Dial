@@ -3,21 +3,26 @@ import pymysql
 import sqlite3
 import time
 import os
-import psycopg2
-from tqdm import tqdm
 import threading
-
-
+from tqdm import tqdm
 from typing import Dict, Any
+
+# 尝试导入 psycopg2，若环境没有则定义空异常类防止崩溃
+try:
+    import psycopg2
+    from psycopg2 import OperationalError as PGError
+except ImportError:
+    psycopg2 = None
+    PGError = Exception
+
 from config import EXECUTE_ENGINES
 from common_utils import logger, save_json, load_json
-
 
 class BaseExecutor:
     def __init__(self, db_config):
         self.db_config = db_config
         self.max_rows = 1000
-        self.timeout = 60
+        self.timeout = 60  # 设置全局 SQL 执行超时时间（秒）
 
     def get_connection(self, db_id: str):
         raise NotImplementedError
@@ -30,30 +35,26 @@ class BaseExecutor:
             connection = self.get_connection(db_id)
             cursor = connection.cursor()
 
-            # 定义中断函数
-            def interrupt_connection():
-                if connection:
-                    logger.warning(f"SQL 执行超时 ({self.timeout}s)，正在强制中断...")
-                    connection.interrupt()
-
-            # 启动计时器
-            timer = threading.Timer(self.timeout, interrupt_connection)
-            timer.start()
+            # --- 针对 SQLite 的线程中断机制 ---
+            # 只有 SQLite 具备 connection.interrupt() 且需要这种方式处理复杂计算
+            if isinstance(connection, sqlite3.Connection):
+                def interrupt_sqlite():
+                    if connection:
+                        logger.warning(f"SQLite 执行超时 ({self.timeout}s)，正在中断...")
+                        connection.interrupt()
+                timer = threading.Timer(self.timeout, interrupt_sqlite)
+                timer.start()
+            # --------------------------------
 
             start_time = time.time()
             cursor.execute(sql)
-            # 对于 SQLite, cursor.execute 只能执行单条，如果是 script 需要 executescript 但一般评估是单条
 
             sql_upper = sql.strip().upper()
             is_select = sql_upper.startswith(('SELECT', 'SHOW', 'DESCRIBE', 'DESC', 'WITH'))
 
             if is_select:
                 results = cursor.fetchall()
-                if cursor.description:
-                    column_names = [desc[0] for desc in cursor.description]
-                else:
-                    column_names = []
-
+                column_names = [desc[0] for desc in cursor.description] if cursor.description else []
                 execution_time = time.time() - start_time
 
                 truncated = False
@@ -73,31 +74,34 @@ class BaseExecutor:
                     'execution_time': round(execution_time, 3), 'row_count': 1
                 }
         except Exception as e:
-            return {'success': False, 'error': f"Execute Error: {str(e)}", 'execution_time': 0}
+            # 捕获超时或执行错误
+            return {'success': False, 'error': f"Execute Error/Timeout: {str(e)}", 'execution_time': 0}
         finally:
             if timer:
-                timer.cancel()
+                timer.cancel()  # 必须取消计时器，否则会误伤后续查询
             if cursor: cursor.close()
             if connection: connection.close()
-
 
 class MySQLExecutor(BaseExecutor):
     def get_connection(self, db_id: str):
         config = self.db_config.copy()
-        config['database'] = db_id  # 动态指定 DB
+        config['database'] = db_id
         config['charset'] = 'utf8mb4'
         config['autocommit'] = True
+        # MySQL 驱动自带读取超时设置 (单位: 秒)
+        config['read_timeout'] = self.timeout
         return pymysql.connect(**config)
-
 
 class PostgreSQLExecutor(BaseExecutor):
     def get_connection(self, db_id: str):
         if not psycopg2:
             raise ImportError("psycopg2 module not found")
         config = self.db_config.copy()
-        config['dbname'] = db_id  # PG 使用 dbname
+        config['dbname'] = db_id
+        # 通过 options 发送 statement_timeout (单位: 毫秒)
+        ms_timeout = self.timeout * 1000
+        config['options'] = f"-c statement_timeout={ms_timeout}"
         return psycopg2.connect(**config)
-
 
 class SQLiteExecutor(BaseExecutor):
     def __init__(self, sqlite_dir):
@@ -105,17 +109,15 @@ class SQLiteExecutor(BaseExecutor):
         self.sqlite_dir = sqlite_dir
 
     def get_connection(self, db_id: str):
-        # 假设路径结构为: root_dir/db_id/db_id.sqlite
         db_path = os.path.join(self.sqlite_dir, db_id, f"{db_id}.sqlite")
         if not os.path.exists(db_path):
-            # 尝试直接在 root_dir/db_id.sqlite
             db_path = os.path.join(self.sqlite_dir, f"{db_id}.sqlite")
 
         if not os.path.exists(db_path):
             raise FileNotFoundError(f"SQLite DB not found: {db_path}")
 
-        return sqlite3.connect(db_path)
-
+        # SQLite 的 timeout 是锁等待超时，不是执行超时
+        return sqlite3.connect(db_path, timeout=10.0)
 
 def get_executor(engine_type, db_config_all):
     if engine_type == 'mysql':
@@ -127,35 +129,25 @@ def get_executor(engine_type, db_config_all):
     else:
         raise ValueError(f"Unknown engine: {engine_type}")
 
-
 def run_execution(input_file, output_file, db_config_all, target_engine=None):
-    """执行单个文件的SQL处理"""
+    """执行 SQL 逻辑保持不变"""
     logger.info(f"[Step 1] 开始执行SQL: {input_file} | 目标引擎: {target_engine}")
     data = load_json(input_file)
     if not data: return False
 
     final_output = []
-
-    # 如果指定了引擎，则只跑那一个；否则跑配置里的所有
     engines_to_run = [target_engine] if target_engine else EXECUTE_ENGINES
 
     for engine in engines_to_run:
         executor = get_executor(engine, db_config_all)
-        for index, item in enumerate(tqdm(data, desc="执行SQL进度", unit="条")):
+        for index, item in enumerate(tqdm(data, desc=f"执行{engine}进度", unit="条")):
             try:
                 item_core = item if 'item' in item else item
-
                 question_id = item_core.get('question_id', f'index_{index}')
-                # 动态获取 db_id
-                db_id = item_core.get('db_id', 'bird')  # 默认 fallback 到 bird，或者改为报错
+                db_id = item_core.get('db_id', 'bird')
 
-                # 动态获取对应引擎的 SQL
-                # 尝试多种路径获取 SQL，优先获取 target_engine 对应的字段
                 gen_obj = item_core.get("sql_generation", {}) or item_core.get("gold_sql", {})
-
-                generated_sql = (
-                    gen_obj.get(engine)
-                )
+                generated_sql = gen_obj.get(engine)
 
                 output_item = {
                     'question_id': question_id,
@@ -166,7 +158,6 @@ def run_execution(input_file, output_file, db_config_all, target_engine=None):
                 }
 
                 if generated_sql and isinstance(generated_sql, str) and generated_sql.strip():
-                    # 传入 db_id 进行执行
                     res = executor.execute_sql(generated_sql, db_id)
                     if res['success']:
                         output_item['result'] = {
