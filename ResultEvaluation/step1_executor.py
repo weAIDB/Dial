@@ -5,6 +5,7 @@ import time
 import os
 import psycopg2
 from tqdm import tqdm
+import threading
 
 
 from typing import Dict, Any
@@ -16,6 +17,7 @@ class BaseExecutor:
     def __init__(self, db_config):
         self.db_config = db_config
         self.max_rows = 1000
+        self.timeout = 60
 
     def get_connection(self, db_id: str):
         raise NotImplementedError
@@ -23,9 +25,20 @@ class BaseExecutor:
     def execute_sql(self, sql: str, db_id: str) -> Dict[str, Any]:
         connection = None
         cursor = None
+        timer = None
         try:
             connection = self.get_connection(db_id)
             cursor = connection.cursor()
+
+            # 定义中断函数
+            def interrupt_connection():
+                if connection:
+                    logger.warning(f"SQL 执行超时 ({self.timeout}s)，正在强制中断...")
+                    connection.interrupt()
+
+            # 启动计时器
+            timer = threading.Timer(self.timeout, interrupt_connection)
+            timer.start()
 
             start_time = time.time()
             cursor.execute(sql)
@@ -60,8 +73,10 @@ class BaseExecutor:
                     'execution_time': round(execution_time, 3), 'row_count': 1
                 }
         except Exception as e:
-            return {'success': False, 'error': str(e), 'execution_time': 0}
+            return {'success': False, 'error': f"Execute Error: {str(e)}", 'execution_time': 0}
         finally:
+            if timer:
+                timer.cancel()
             if cursor: cursor.close()
             if connection: connection.close()
 
