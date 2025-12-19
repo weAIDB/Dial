@@ -9,6 +9,10 @@
 
 -dataset_no_empty.json  剔除数据集sql执行结果为空的条目，共749条
 
+-datasetEX.json   通过baseline筛选出的会出错的数据集，共692条
+
 -true_result_all.json   dataset.json里sql语句执行的结果（mysql、sqlite、pgsql答案完全相同），供与generated_sql对比使用
 
--true_result_all_no_empty.json   dataset_no_empty.json里sql语句执行的结果（mysql、sqlite、pgsql答案完全相同），供与generated_sql对比使用
+-true_result_no_empty.json   dataset_no_empty.json里sql语句执行的结果（mysql、sqlite、pgsql答案完全相同），供与generated_sql对比使用
+
+-true_resultEX.json   datasetEX.json里sql语句执行的结果（mysql、sqlite、pgsql答案完全相同），供与generated_sql对比使用
