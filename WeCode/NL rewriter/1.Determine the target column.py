@@ -11,7 +11,7 @@ import time
 # ==========================================
 
 OPENAI_CONFIG = {
-    "api_key": "sk-537b00fe9a444de096505eca44f7c6bc",
+    "api_key": "",
     "base_url": "https://api.deepseek.com",
     "model": "deepseek-chat",
 }
