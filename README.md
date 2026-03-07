@@ -6,6 +6,8 @@ The following sections detail the structure of the codebase, setup instructions,
 
 ## Overview
 
+![Framework](Framework.pdf)
+
 The project is organized into three main workflows:
 
 1. **Dial pipeline** (`Dial/`): End-to-end NL → LQP → dialect-aware tagging → RAG retrieval → SQL translation with execution and semantic verification. It produces per-dialect SQL from natural language questions and schema.
