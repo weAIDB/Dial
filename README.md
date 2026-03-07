@@ -77,7 +77,7 @@ Install DB and driver packages as needed for your target engines (MySQL, Postgre
 ### Data Preparation
 
 1. **Dial pipeline**: Place input JSON (e.g. `filtered_Dialects.json` or the bundled `dataset/DS-NL2SQL.json`) and schema/DB paths as specified in `Dial/conf/settings.py`. Set `BASE_DATA_DIR`, `SQLITE_DB_DIR`, `DUCKDB_DIR`, and pipeline input/output paths (or use environment variables). The repo includes **DS-NL2SQL.json** with `true_tables_columns`; in that case **Schema linking (Step 0) is skipped**. For your own data without `true_tables_columns`, you can optionally run Step 0 (see [Schema linking (Step 0)](#schema-linking-step-0)).
-2. **Dataset migration**: The **duckdb_sqlite_databases** (SQLite + DuckDB databases) are too large to host on GitHub. Download from Hugging Face: **[duckdb_sqlite_databases](https://huggingface.co/datasets/zhangxiang666/DS-NL2SQL)** (link to be updated; replace `YOUR_ORG` with the actual repo). After download, extract and set `SQLITE_BASE_DIR` (or per-source `sqlite_db_dir`) in `dataset/config.py`. Configure `DB_CONFIG` for MySQL, Postgres, SQL Server.
+2. **Dataset migration**: The **duckdb_sqlite_databases** (SQLite + DuckDB databases) are too large to host on GitHub. Download from Hugging Face: **[duckdb_sqlite_databases](https://huggingface.co/datasets/zhangxiang666/DS-NL2SQL)** . After download, extract and set `SQLITE_BASE_DIR` (or per-source `sqlite_db_dir`) in `dataset/config.py`. Configure `DB_CONFIG` for MySQL, Postgres, SQL Server.
 3. **Evaluation**: Set `GOLD_RESULT_FILE`, `PIPELINE_TASKS` (input_sql / output_exec paths), and `EXECUTE_ENGINES` in `evaluation/config.py`. Ensure gold result JSON and generated SQL files exist.
 
 ## Configuration
