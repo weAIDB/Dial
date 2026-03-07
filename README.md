@@ -6,7 +6,7 @@ The following sections detail the structure of the codebase, setup instructions,
 
 ## Overview
 
-![Framework](Framework.pdf)
+![Framework](Framework.jpg)
 
 The project is organized into three main workflows:
 
