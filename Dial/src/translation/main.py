@@ -49,13 +49,13 @@ def main():
         global_target_db_type = select_target_db()
         print(f"\nLoading complete rule file for {global_target_db_type}...")
         db_rule_content = load_db_rule_file(global_target_db_type)
-        
+
         # [Initialization] Intelligent Error Analyzer
         print("🛠️  Initializing Intelligent Error Analyzer...")
         error_analyzer = get_error_analyzer(global_target_db_type)
 
         print("\n📥 Loading input data...")
-        retrieval_items = get_retrieval_items()
+        retrieval_items = get_retrieval_items(global_target_db_type)
 
         final_results = []
         total_items = len(retrieval_items)

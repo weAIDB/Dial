@@ -208,10 +208,9 @@ async def main_async():
         if os.path.exists(temp_path):
             with open(temp_path, "r", encoding="utf-8") as f:
                 cached_item = json.load(f)
-                if all(
-                    f"Dialect_Aware_LQP_{d}" in cached_item
-                    for d in TARGET_DIALECTS
-                    if f"final_NL_{d}" in item
+                dialects_with_nl = [d for d in TARGET_DIALECTS if f"final_NL_{d}" in item]
+                if dialects_with_nl and all(
+                    f"Dialect_Aware_LQP_{d}" in cached_item for d in dialects_with_nl
                 ):
                     continue
         todo_data.append(item)

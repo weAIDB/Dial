@@ -114,13 +114,64 @@ def run_all_dialects(
     return output_paths
 
 
-def merge_rag_results_to_single_file(result_files: List[Path], output_path: str = None) -> str:
-    """Merge first dialect's result to output_path for translation input."""
+def merge_rag_results_to_single_file(
+    result_files: List[Path],
+    output_path: str = None,
+    target_dialect: str = None,
+) -> str:
+    """Merge RAG results to output_path for translation input.
+
+    If target_dialect is specified, uses only that dialect's result.
+    Otherwise merges all dialects: each item has per_dialect data keyed by dialect.
+    """
     output_path = output_path or RESULT_JSON_PATH
     if not result_files:
         return output_path
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy(result_files[0], output_path)
+    out_dir = Path(output_path).parent
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    if target_dialect:
+        # Use single dialect: find matching file
+        for pf in result_files:
+            if pf.stem.startswith(f"{target_dialect}_"):
+                with open(pf, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                with open(output_path, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+                return output_path
+        # Fallback to first file if dialect not found
+        shutil.copy(result_files[0], output_path)
+        return output_path
+
+    # Merge all dialects by question_id
+    qid_to_item: Dict = {}
+    dialect_to_key = {}  # file stem prefix -> dialect
+    for pf in result_files:
+        stem = pf.stem
+        dialect = stem.replace("_lqp_rag_result", "") if "_lqp_rag_result" in stem else stem
+        dialect_to_key[pf] = dialect
+    for pf in result_files:
+        dialect = dialect_to_key[pf]
+        with open(pf, "r", encoding="utf-8") as f:
+            items = json.load(f)
+        for item in items:
+            qid = item.get("question_id")
+            if qid not in qid_to_item:
+                qid_to_item[qid] = {
+                    "question_id": qid,
+                    "question": item.get("question", ""),
+                    "db_id": item.get("db_id", ""),
+                    "true_tables_columns": item.get("true_tables_columns", ""),
+                    "difficulty": item.get("difficulty"),
+                    "per_dialect": {},
+                }
+            qid_to_item[qid]["per_dialect"][dialect] = {
+                "nl2_rewrite": item.get("nl2_rewrite", ""),
+                "retrieval_results": item.get("retrieval_results", {}),
+            }
+    merged = list(qid_to_item.values())
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(merged, f, ensure_ascii=False, indent=2)
     return output_path
 
 
@@ -128,8 +179,12 @@ def main():
     output_paths = run_all_dialects()
     print("RAG retrieval done. Outputs:", [str(p) for p in output_paths])
     if output_paths:
-        merge_rag_results_to_single_file([output_paths[0]], output_path=RESULT_JSON_PATH)
-        print(f"Default translation input: {RESULT_JSON_PATH}")
+        import os
+        target_dialect = os.environ.get("DIAL_TRANSLATION_DIALECT", "").strip() or None
+        merge_rag_results_to_single_file(
+            output_paths, output_path=RESULT_JSON_PATH, target_dialect=target_dialect
+        )
+        print(f"Translation input: {RESULT_JSON_PATH}" + (f" (dialect={target_dialect})" if target_dialect else " (merged all dialects)"))
 
 
 if __name__ == "__main__":

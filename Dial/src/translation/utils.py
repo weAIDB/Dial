@@ -61,34 +61,65 @@ def load_db_rule_file(db_type):
     except Exception as e:
         raise RuntimeError(f"Failed to load {db_type} rule file: {str(e)}") from e
 
-def get_retrieval_items():
-    """Get data items and parse db_id"""
+# Mapping from SUPPORTED_DBS display name to RAG dialect key (used in per_dialect merged format)
+DB_TYPE_TO_DIALECT_KEY = {
+    "PostgreSQL": "postgres",
+    "SQL Server": "sqlserver",
+    "Oracle": "oracle",
+    "MySQL": "mysql",
+    "SQLite": "sqlite",
+    "duckdb": "duckdb",
+}
+
+
+def get_retrieval_items(target_db_type=None):
+    """Get data items and parse db_id.
+
+    If target_db_type is provided and input has per_dialect format (merged RAG),
+    extracts nl2_rewrite and retrieval_results for that dialect.
+    """
     try:
         if not os.path.exists(RESULT_JSON_PATH):
             raise FileNotFoundError(f"Data file does not exist: {RESULT_JSON_PATH}")
 
-        with open(RESULT_JSON_PATH, 'r', encoding='utf-8') as f:
+        with open(RESULT_JSON_PATH, "r", encoding="utf-8") as f:
             input_data = json.load(f)
-        
+
+        dialect_key = DB_TYPE_TO_DIALECT_KEY.get(target_db_type, "") if target_db_type else None
+
         items = []
         if isinstance(input_data, list):
             for idx, entry in enumerate(input_data):
-                if "question" not in entry: continue
-                
-                # [Read db_id]
+                if "question" not in entry:
+                    continue
+
                 db_id = entry.get("db_id", "").strip()
-                
+
+                if "per_dialect" in entry and dialect_key:
+                    pd = entry["per_dialect"].get(dialect_key)
+                    if pd:
+                        nl2_rewrite = pd.get("nl2_rewrite", "")
+                        retrieval_results = pd.get("retrieval_results", {})
+                    else:
+                        first_dialect = next(iter(entry["per_dialect"]), None)
+                        pd = entry["per_dialect"].get(first_dialect, {}) if first_dialect else {}
+                        nl2_rewrite = pd.get("nl2_rewrite", "")
+                        retrieval_results = pd.get("retrieval_results", {})
+                else:
+                    nl2_rewrite = entry.get("nl2_rewrite", "")
+                    retrieval_results = entry.get("retrieval_results", {})
+
                 items.append({
                     "index": idx + 1,
                     "question": entry.get("question", "").strip(),
-                    "nl2_rewrite": clean_nl2_rewrite(entry.get("nl2_rewrite", "")),
-                    "db_id": db_id,  # Core field
+                    "nl2_rewrite": clean_nl2_rewrite(nl2_rewrite),
+                    "db_id": db_id,
                     "question_id": entry.get("question_id"),
                     "difficulty": entry.get("difficulty"),
                     "true_tables_columns": entry.get("true_tables_columns", ""),
-                    "retrieval_results": entry.get("retrieval_results", {})
+                    "retrieval_results": retrieval_results,
                 })
-        
+
         print(f"Successfully loaded {len(items)} data items")
         return items
     except Exception as e:
@@ -181,22 +212,33 @@ def get_final_sql(item_result, target_db_type):
     return "Generation failed"
 
 def select_target_db():
-    """Select target database via command line"""
+    """Select target database via env var (non-interactive) or command line.
+
+    Env DIAL_TARGET_DB: database name (e.g. PostgreSQL, MySQL) or index 1-6.
+    When set, skips interactive prompt for CI/batch usage.
+    """
+    env_val = os.environ.get("DIAL_TARGET_DB", "").strip()
+    if env_val:
+        if env_val in SUPPORTED_DBS:
+            print(f"\n✅ Target database (from DIAL_TARGET_DB): {env_val}")
+            return env_val
+        if env_val.isdigit():
+            idx = int(env_val) - 1
+            if 0 <= idx < len(SUPPORTED_DBS):
+                target_db = SUPPORTED_DBS[idx]
+                print(f"\n✅ Target database (from DIAL_TARGET_DB): {target_db}")
+                return target_db
+
     print("\n=== Please select the database type for SQL generation ===")
     for i, db_type in enumerate(SUPPORTED_DBS, 1):
         print(f"{i}. {db_type}")
-    
+
     while True:
-        user_input = input("\nPlease enter a number (1-5) to select the database: ").strip()
+        user_input = input("\nPlease enter a number (1-6) to select the database: ").strip()
         if user_input.isdigit():
             selected_idx = int(user_input) - 1
             if 0 <= selected_idx < len(SUPPORTED_DBS):
                 target_db = SUPPORTED_DBS[selected_idx]
-                # Check if connection is configured
-                if target_db in ["MySQL", "PostgreSQL", "SQLite"]:
-                     if target_db not in os.getenv("DB_CONNECT_CONFIGS", {}):
-                         # Simple logic check here, actually in config
-                         pass
                 print(f"\n✅ Target database selected: {target_db}")
                 return target_db
             else:
