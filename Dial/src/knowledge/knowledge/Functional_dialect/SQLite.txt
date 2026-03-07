@@ -1,0 +1,1252 @@
+@dialect2sql@
+1.4 Date and Time Functions: Frequent Operations with Significant Differences
+
+1.4.1 Getting Current Time:
+   1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+      Questions like "current time", "what time is it now", "today's date", "current timestamp" typically use this syntax.  
+   2. Relevant Function Description:  
+      This syntax is used to get the database server's current date, time, or timestamp. It is commonly used for recording operation times, calculating time intervals, filtering time ranges, etc.
+
+
+ 	-- SQLite
+
+ 	SELECT date('now'); -- Output: Format YYYY-MM-DD
+
+ 	SELECT datetime('now');-- Output: Format YYYY-MM-DD HH:MM:SS
+
+ 	SELECT strftime('%Y-%m', 'now');-- Using the strftime function allows custom time formats. Output: YYYY-MM
+
+ 	SELECT strftime('%s', 'now');-- Output: Seconds since 1970-01-01
+@dialect2sql@
+
+@dialect2sql@
+1.4.2 Extracting Date Components:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Situations requiring extraction of date components include: asking about "specific year/month/quarter", "day of the week", "day of the year", "hour/minute number", and other specific time unit questions.
+
+2. Relevant Function Description:
+   This syntax function includes: obtaining specified parts (like year, month, day, hour, minute, second) from a date or time value, supports extraction of components like week, quarter, and can be combined with conditional filtering or aggregation to achieve grouping statistics by time dimensions.
+
+
+ 	--SQLite
+
+ 	  SELECT DATE('order\_date');-- Example: SELECT DATE('2025-09-05 14:30:00'); Output: 2025-09-05
+
+ 	SELECT STRFTIME('%Y', '2025-09-05 14:30:00');-- Extract year, Output: 2025
+
+ 	SELECT STRFTIME('%m', '2025-09-05 14:30:00');-- Extract month, Output: 09
+
+ 	SELECT STRFTIME('%d', '2025-09-05 14:30:00');-- Extract day, Output: 05
+
+ 	SELECT STRFTIME('%H', '2025-09-05 14:30:00');-- Extract hour, Output: 14
+
+ 	SELECT STRFTIME('%M', '2025-09-05 14:30:00');-- Extract minute, Output: 30
+
+ 	SELECT STRFTIME('%S', '2025-09-05 14:30:00');-- Extract second, Output: 00
+@dialect2sql@
+
+
+@dialect2sql@
+1.4.3 Date Calculation:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+   - Calculating the number of days to/from a specific date (e.g., "How many days until National Day from today?")  
+   - Calculating past or future dates (e.g., "What is the date 3 months from now?")  
+   - Calculating durations like age, length of service (e.g., "Someone's age")  
+   - Determining the period a date belongs to (e.g., "What day of the week is a specific date?")  
+
+2. Relevant Function Description:  
+   - Supports date addition and subtraction operations (e.g., adding/subtracting days/months/years)  
+   - Calculates the number of days/months/years between two dates  
+   - Extracts date components (e.g., year, month, weekday value)  
+   - Implements date truncation (e.g., truncating to the start of the month or year)  
+   - Timezone conversion and cross-timezone calculations
+
+
+ 	-- SQLite
+
+ 	SELECT DATE('2025-09-05', '+7 days');-- Add 7 days
+
+ 	SELECT DATE('2025-09-05', '-1 month');-- Subtract 1 month
+@dialect2sql@
+
+
+@dialect2sql@
+1.4.4 Date Truncation Functions:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+   - Calculating age (e.g., "Someone's age")  
+   - Statistical analysis of monthly/quarterly/annual data (e.g., "This month's sales", "This quarter's order volume")  
+   - Weekly grouping analysis (e.g., "Weekly active user count")  
+   - Comparing period-over-period data (e.g., "Profit for the same period last year")  
+
+2. Relevant Function Description:  
+   - Truncates date-time values to a specified precision (e.g., start of year, month, day, hour, etc.)  
+   - Used for date grouping statistics or time interval comparisons  
+   - Assists in calculating date differences (e.g., calculating day difference ignoring the time part)  
+   - Generates standardized time coordinates for correlated queries
+
+
+ 	--SQLite: Also achieved via strftime formatting.
+
+ 	eg:
+
+ 		Truncate to "year": strftime('%Y-01-01', lastaccessdate).
+
+ 		Truncate to "month": strftime('%Y-%m-01', lastaccessdate).
+
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.4.5 Age Calculation:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+   - Calculating age (e.g., "Someone's age")  
+   - Calculating birthday (e.g., "What is someone's birthday and how many days until it from today?")
+   - Calculating exact age in years (e.g., "What is someone's exact age in years this year?")
+   - Determining legal age (e.g., "Has someone reached the legal adult age / legal marriage age?")
+   - Age group statistics (e.g., "Purchase preferences of users aged 30-40")
+   - Retirement age calculation (e.g., "How many years until someone reaches the legal retirement age?")
+   - Birthday cycle calculation (e.g., "Which week of the month is someone's birthday, how many days until the next birthday?")
+
+2. Relevant Function Description:  
+   - Truncates date-time values to a specified precision (e.g., start of year, month, day, hour, etc.)
+   - Used for date grouping statistics or time interval comparisons
+   - Assists in calculating date differences (e.g., calculating day difference ignoring the time part)
+   - Generates standardized time coordinates for correlated queries
+   - Truncates birth date to year dimension, calculates difference from current year for exact age in years
+   - Truncates date to month-day dimension, compares birthday with current date to determine if birthday has passed
+   - Calculates age difference at year granularity, assists in legal age threshold determination
+   - Standardizes birth date (truncate to year/month) for age group analysis
+
+
+-- SQLite:
+   Method: Calculate year difference via strftime, adjust based on whether birthday has passed (no built-in age function, requires manual handling)
+   eg:
+      Calculate current age: CAST((strftime('%Y', 'now') - strftime('%Y', birthdate)) AS INTEGER) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthdate))
+      Calculate current age for specified birth date (1995-03-05): CAST((strftime('%Y', 'now') - 1995) AS INTEGER) - (strftime('%m-%d', 'now') < '03-05')
+
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.5 Pagination Queries
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Viewing data lists for a specified page (e.g., "Show the user list for page 3")
+   - Retrieving the top N records (e.g., "Query the top 10 products with the highest sales")
+   - Fetching data after skipping some records (e.g., "Display 10 records starting from the 21st record")
+   - Loading large amounts of data in batches (e.g., "Load the next batch of 20 order records")
+
+2. Relevant Function Description
+   - Supports specifying the limit on the number of records returned
+   - Supports skipping a specified number of records (offset setting)
+   - Supports pagination queries combined with sorting conditions
+   - Supports efficient pagination implementation via window functions
+
+
+    --SQLite
+        -- LIMIT/OFFSET: Clear and intuitive
+        SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 items per page)
+        -- LIMIT OFFSET,ROW_COUNT
+        SELECT * FROM products ORDER BY price DESC LIMIT 20, 10;-- Page 3 (10 items per page)
+
+@dialect2sql@
+
+@dialect2sql@
+1.6 Join Syntax
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Querying associated information involving multiple entities (e.g., "List all employees and their department names" where "and their" implies association)
+   - Summarizing aggregated data across joined tables (e.g., "Count the number of employees per department" where "per department" implies grouping)
+   - Filtering records that require data from other tables (e.g., "Find employees not assigned to any department" where "not assigned to any department" implies a check for non-existence in another table)
+   - Comparing relationships between multiple entities (e.g., "Query common customers of the Sales and Marketing departments" where "common customers" implies an intersection)
+
+2. Relevant Function Description
+   - Supports multi-table join queries (including INNER JOIN, LEFT/RIGHT/FULL OUTER JOIN)
+   - Implements record filtering and matching based on join conditions
+   - Provides cross-table data aggregation and grouped statistical capabilities
+   - Supports existence checks for relationships (e.g., checking if a record in one table has a corresponding entry in another table)
+
+1.6.1 Two-Table Joins
+* INNER JOIN: Recommended standard form
+     SELECT e.name, d.department_name
+     FROM employees e
+     INNER JOIN departments d ON e.dept_id = d.id; -- Clearly expresses the join condition
+
+* Old-style comma list + WHERE: Legacy style (not recommended, poor readability, error-prone)
+     SELECT e.name, d.department_name
+     FROM employees e, departments d
+     WHERE e.dept_id = d.id; -- Implicit inner join, easy to forget conditions leading to Cartesian products
+
+Important: All modern versions recommend using explicit LEFT/RIGHT/FULL OUTER JOIN syntax.
+@dialect2sql@
+
+
+@dialect2sql@
+1.6.2 Multi-Table Joins (Three Tables or More)
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   Multi-entity association queries (e.g., "Query competition scores, athlete information, and associated profile data", "Get four-table association results for loans, accounts, authorization records, and customer information", "Match test records, patient information, and test item data across three tables")
+   Multi-table joins with filter conditions (e.g., "Filter athletes with competition scores greater than 80 and their profile information", "Query test records after 2023 and their corresponding patients and test items", "Get competition results for athletes born before 1985")
+   Association queries with multi-column composite conditions (e.g., "Associate orders with store information based on store ID and region dual conditions", "Associate order and product data via foreign key + status condition")
+   LEFT JOIN requirements preserving primary table data (e.g., "Query all customers and their order and product information, display NULL if no orders exist")
+   Custom requirements for specific join order (e.g., "Force join order by specified table sequence to optimize query efficiency")
+
+2. Relevant Function Description
+   Supports chained multi-table associations (three tables or more), adapting to multi-level entity relationships in business (e.g., competition→athlete→profile, loan→account→customer)
+   Flexible control over join order (MySQL/SQLite execute in written order; PostgreSQL/Oracle/SQL Server auto-adjust via optimizer; supports LEADING hint or OPTION (FORCE ORDER) to force order)
+   Diverse ON condition support (foreign key association, multi-column composite association, nested conditions / subquery association, ensuring accuracy of association logic)
+   Adaptation of different join types (INNER JOIN for matching data filtering, LEFT JOIN for preserving full primary table data, avoiding Cartesian products)
+   Performance optimization mechanisms (relying on indexes for join columns, prioritizing HASH JOIN / MERGE JOIN for large tables, NESTED LOOP for small tables, filtering data early to reduce intermediate result sets)
+   Cross-data type association adaptation (requires matching data types for join columns, avoiding implicit conversion, unifying text field formats before association)
+   Support for complex business scenario associations (deep associations of four tables or more, covering entity association needs in finance, healthcare, sports events, and other fields)
+
+
+-- SQLite:
+   Method:
+   Join Order: Executes strictly according to the written order, no automatic optimization;
+   ON Condition Logic: Must specify join conditions clearly (otherwise triggers Cartesian products), non-foreign key associations require value matching (e.g., text-type dates need uniform format);
+   Performance Optimization: Place small tables earlier in the join order, create indexes for join columns (CREATE INDEX idx_a_id ON a(id)), avoid LEFT JOIN with more than three tables (easily generates many NULL values).
+   eg:
+   Three-table join filtering data:
+   SELECT t1.laps, t2.name, t3.dob FROM race_results t1 JOIN athletes t2 ON t1.athlete_id = t2.id JOIN athlete_info t3 ON t2.id = t3.id WHERE STRFTIME('%Y', t3.dob) < '1985';
+   LEFT JOIN preserving primary table data:
+   SELECT c.cust_id, o.order_id, p.product_name FROM customers c LEFT JOIN orders o ON c.cust_id = o.cust_id LEFT JOIN products p ON o.product_id = p.id;
+
+@dialect2sql@
+
+@dialect2sql@
+1.7 Grouping Queries
+
+1.7.1 GROUP BY
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Counting quantities per category (e.g., "What is the sales quantity per product category?")
+   - Calculating averages per department (e.g., "What is the average salary per department?")
+   - Summarizing data per time period (e.g., "Monthly sales statistics")
+   - Analyzing maximum values per region (e.g., "What is the maximum temperature per province?")
+
+2. Relevant Function Description
+   - Supports grouping data statistics by specified columns
+   - Works with aggregate functions to calculate summary values per group (e.g., COUNT, SUM, AVG)
+   - Implements multi-column composite grouping (e.g., grouping simultaneously by department and position)
+   - Provides result filtering capability after grouping (using the HAVING clause)
+
+     (1) SQLite: Must include all non-aggregated columns, consistent with SQL standard, eg: GROUP BY "t2"."name", "t2"."nationality"
+
+@dialect2sql@
+
+@dialect2sql@
+1.8 NULL Usage
+
+1.8.1 NULL Sorting
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Querying the highest score and placing NULLs last (e.g., "Find the highest score, place NULL scores last")
+   - Getting the latest records and placing missing dates first (e.g., "Show the latest orders, prioritize orders without dates")
+   - Ranking sales figures and handling NULL sales (e.g., "Rank sales, place NULLs at the bottom")
+   - Filtering for the lowest price and placing unpriced items last (e.g., "Lowest priced product, place unpriced items last")
+
+2. Relevant Function Description
+   - Supports explicit control over NULL position during sorting (NULLS FIRST/NULLS LAST)
+   - Manually implements NULL sorting via conditional expressions (CASE WHEN handling)
+   - Simulates NULL sorting using value replacement (e.g., ISNULL replacement)
+   - Combines type conversion and NULL handling for sorting (using CAST with NULLIF)
+
+     (1) SQLite: No native NULLS FIRST/NULLS LAST, requires manual control with CASE WHEN, eg: ORDER BY CASE WHEN score IS NULL THEN 1 ELSE 0 END, score DESC LIMIT 1 (simulates NULLS LAST);
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.8.3 NULL Value Checking:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Filter records with valid information (e.g., "List all users who have filled in their email" where "have filled in" implies non-null)
+   - Exclude entries with missing data (e.g., "Query customers whose phone number is not empty" where "not empty" implies IS NOT NULL)
+   - Count the number of valid data entries (e.g., "Count the number of users who have completed real-name authentication" where "have completed" implies the field is not NULL)
+   - Verify the completeness of required fields (e.g., "Check if all orders have a shipping address" where "have" implies the field is not NULL)
+
+2. Relevant Function Description:
+   - Supports IS NOT NULL syntax to check for non-null values in a field
+   - Supports IS NULL syntax to check for null value status in a field
+   - Provides the `columnname notnull` shorthand syntax (supported by some databases)
+   - Implements record filtering and statistics based on null value conditions
+
+- General Cases
+
+  (1)SQLite: Must use IS NOT NULL
+
+- Aggregate Function (MAX()/AVG() etc.) Handling of NULL Values
+
+-- SQLite:
+   Method:
+   MAX()/MIN()/AVG() ignore NULL values by default; if the column contains only NULLs, AVG()/SUM() return NULL, MAX()/MIN() return NULL;
+   No significant performance difference between explicitly excluding NULLs and automatic ignoring (SQLite performs full table scans without indexes);
+   In conditional aggregation, NULLs are automatically skipped, only non-NULL data where the condition is true is calculated.
+   eg:
+   AVG() handling all NULLs: `SELECT AVG(age) FROM test WHERE age IS NULL;` (returns NULL)
+   MIN() ignores NULL: `SELECT MIN(price) FROM products;` (products with NULL price are ignored)
+   Conditional aggregation: `SELECT MAX(CASE WHEN status = 'active' THEN login_time ELSE NULL END) FROM users;` (only takes the latest login time for active users)
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.9 Functions for Calculating Age Difference:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Calculate a person's age (e.g., "What is someone's age?")
+   - Determine if an age condition is met (e.g., "Is he/she 18 years or older?")
+   - Calculate service years (e.g., "How long is the employee's length of service?")
+   - Compare age differences (e.g., "What is the age difference between two people?")
+
+2. Relevant Function Description:
+   - Calculates the year difference between two dates
+   - Handles age correction for birthdays not yet passed in the current year
+   - Supports precise age calculation down to year, month, and day
+   - Provides multiple date difference calculation methods (year difference, month difference, etc.)
+
+
+    (1)SQLite: Use strftime to get year difference separately, then subtract the boolean value for "current month-day < birthday month-day" (True is 1, False is 0) to achieve precise age, e.g.: `(strftime('%Y', 'now') - strftime('%Y', birthday)) - (strftime('%m-%d', 'now') < strftime('%m-%d', birthday))`
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.10 Splitting Strings:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Extract a substring at a specific position (e.g., "Get the username part from the email address" where "username part" implies a specific segment)
+   - Analyze structured text data (e.g., "Extract the third column data from CSV format" where "extract the third column" implies splitting)
+   - Process path or hierarchical information (e.g., "Get the filename from the file path" where "filename" implies the last segment)
+   - Parse composite identifiers (e.g., "Extract the specification code from the product code" where "specification code" implies a specific segment)
+
+2. Relevant Function Description:
+   - Splits a string by a specified delimiter and returns the substring at the specified position
+   - Supports counting and extracting segments from the beginning or end of the string
+   - Provides regular expression pattern matching for extracting complex format string segments
+   - Implements substring extraction based on delimiter position
+
+
+    (1)SQLite:
+    -- Method 1: Combined functions SUBSTR + INSTR
+    Syntax and logic are consistent with Oracle's SUBSTR + INSTR (SQLite's SUBSTR/INSTR parameters and behavior are similar).
+    eg (get 1st part):
+    `SUBSTR('a:b:c', 1, INSTR('a:b:c', ':', 1, 1) - 1)` → returns 'a'.
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.11 Usage of Virtual Tables:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query system information or constant values (e.g., "What is the current system time?" where "current system time" implies a function call)
+   - Execute simple calculation expressions (e.g., "Calculate what is 1 plus 1" where "calculate...equals" implies an expression)
+   - Get database function results (e.g., "What is the database version number?" where "version number" implies a system function)
+   - Test database connection status (e.g., "Is the database connection normal?" where "connection normal" might involve a simple query)
+
+2. Relevant Function Description:
+   - Supports table-less queries returning constant values and expression results
+   - Provides system function call interface (e.g., time functions, version functions)
+   - Implements virtual table mechanism to satisfy SELECT syntax completeness requirements
+   - Allows direct execution of functions and expressions without relying on actual data tables
+
+(1)SQLite: Completely no need for dual, table-less queries are executed directly, e.g.: `SELECT 1;` -- Returns constant 1. `SELECT datetime('now');` -- Queries current time
+
+@dialect2sql@
+
+@dialect2sql@
+1.12 BETWEEN Conditional Operator
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Numeric range filtering (e.g., "Students aged between 18 and 22", "Products priced between 100 and 200 yuan")
+   - Date/Time range queries (e.g., "Orders from 1990 to 1993", "Customers registered in 2020", "Log records within this week")
+   - String lexicographical range matching (e.g., "Users whose username starts with A to C", "Students whose last name is between Li and Zhang")
+   - Reverse range filtering (e.g., "Products not priced between 100 and 200 yuan", "Students not aged between 18 and 22")
+   - Business indicator range queries (e.g., "Employees with salary between 5000 and 8000 yuan", "Products with stock not between 10 and 50")
+   - Time granularity range statistics (e.g., "Sales from Q1 to Q2 2023", "Access records from 9 AM to 6 PM daily")
+   - Reverse filtering with quantity limit (e.g., "Top 10 sales records where amount is not between 1000 and 5000")
+
+2. Relevant Function Description:
+   - Implements closed interval range filtering, directly matching the natural language requirement of "between X and Y"
+   - Supports range comparison for multiple data types like numeric, date, string, adapting to different business field types
+   - Implements reverse range query "not between X and Y" via NOT BETWEEN, meeting exclusion filtering needs
+   - Combines with date formatting/type conversion functions (e.g., TO_DATE, strftime) to adapt to different database date range query logic
+   - Supports string lexicographical range matching, meeting interval filtering scenarios for text fields
+   - Can combine with TOP/LIMIT clauses to implement range filtering with quantity limits
+   - Adapts to different database implicit/explicit type conversion rules, ensuring accuracy in date, string, and numeric range comparisons
+   - Meets interval statistics and filtering needs for business indicators like salary, stock, sales, supporting business analysis scenarios
+
+
+-- SQLite:
+Method:
+   BETWEEN is a closed interval, follows the comparison logic of "left_value BETWEEN lower_bound AND upper_bound";
+   No implicit conversion between date and string, need to compare after unifying format via strftime;
+   NOT BETWEEN implements reverse range filtering, result excludes values within the closed interval.
+   eg:
+      Numeric range filtering: `SELECT * FROM books WHERE pages BETWEEN 200 AND 500;` (includes 200 and 500 pages)
+      Date format unified then filtered: `SELECT * FROM logs WHERE strftime('%Y', log_date) BETWEEN '1990' AND '1993';`
+      NOT BETWEEN reverse query: `SELECT * FROM customers WHERE register_date NOT BETWEEN '2020-01-01' AND '2020-12-31';`
+
+@dialect2sql@
+
+
+@dialect2sql@
+II. Data Types: Underlying Differences in Basic Storage Definitions
+
+2.1 Numeric Types: Precision, Range, and Storage Optimization
+
+2.1.1 Integer Types:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query integer data within a specific range (e.g., "Query users aged between 18 and 25")
+   - Count or sum integer types (e.g., "Calculate the number of orders with total amount exceeding 1000")
+   - Compare integer size relationships (e.g., "Find products with stock quantity less than 50")
+   - Perform integer operations and conversions (e.g., "Convert user points to levels")
+
+2. Relevant Function Description:
+   - Supports querying and filtering integer ranges (e.g., BETWEEN, comparison operators)
+   - Provides integer aggregate functions (e.g., COUNT, SUM, AVG for statistical calculations)
+   - Implements integer comparison and sorting operations (e.g., greater than, less than, equal to)
+   - Supports integer type conversion and arithmetic operations (e.g., addition, subtraction, multiplication, division, type conversion functions)
+
+
+(1)SQLite: Integer INTEGER (value is a signed integer, stored in 1, 2, 3, 4, 6, or 8 bytes depending on the value size), Affinity INTEGER, INTEGER, TINYINT, SMALLINT, MEDIUMINT, BIGINT, UNSIGNED BIG INT, INT2, INT8. When text data is inserted into a column with INTEGER affinity, if the conversion operation does not cause data loss and is fully reversible, SQLite converts the text data to INTEGER or REAL type. If conversion fails, SQLite still stores the data as TEXT. For new data of NULL or BLOB type, SQLite does no conversion, storing the data directly as NULL or BLOB. It should be additionally noted that for floating-point format constant text, such as "30000.0", if the value can be converted to INTEGER without losing numerical information, SQLite converts it to INTEGER storage.
+@dialect2sql@
+
+
+
+
+@dialect2sql@
+2.1.2 Exact Decimal Types:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Precise calculation of monetary amounts (e.g., "What is the price of this product after discount?" where "price" implies precision)
+   - Statistical precision of financial data (e.g., "This month's sales rounded to two decimal places" where "rounded to two decimal places" implies fixed scale)
+   - Processing scientific calculation data (e.g., "Experimental data needs to be precise to four decimal places" where "precise to four decimal places" implies high precision)
+   - Calculating percentages or ratios (e.g., "Calculate profit margin precise to three decimal places" where "precise to three decimal places" implies fixed scale)
+
+2. Relevant Function Description:
+   - Supports specifying precision and scale (e.g., DECIMAL(10,2) means total 10 digits, 2 decimal places)
+   - Ensures precision in numerical calculations, avoiding floating-point precision errors
+   - Provides high-precision numerical storage, suitable for financial, scientific computing, etc.
+   - Supports special handling for currency types, such as rounding and formatted output
+
+
+-- SQLite
+
+REAL: Value is a floating-point value, stored as an 8-byte IEEE floating-point number. Affinity REAL, DOUBLE, DOUBLE PRECISION, FLOAT. Its rules are basically the same as INTEGER, the only difference is that it will not convert text data like "30000.0" to INTEGER storage.
+@dialect2sql@
+
+
+@dialect2sql@
+2.2 String Types: Fixed-length, Variable-length, and Encoding Handling
+
+2.2.1 CHAR vs VARCHAR Behavior Comparison:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query fixed-length encoded information (e.g., "Query employee IDs, required to display as 5 digits" where "display as 5 digits" implies fixed length)
+   - Process data sensitive to trailing spaces (e.g., "Find all department codes ending with 'ABC '" where "ending with 'ABC '" implies trailing spaces matter)
+   - Storage space optimization scenarios (e.g., "Store user remarks, requiring space saving" where "space saving" implies variable length)
+   - Exact matching of character data (e.g., "Exactly find the customer named 'Smith '" where "exactly find" implies exact string match including potential spaces)
+
+2. Relevant Function Description:
+   - Fixed-length storage guarantee (ensures all values have the same byte length)
+   - Trailing space handling control (supports preserving or automatically removing trailing spaces)
+   - Variable-length storage optimization (dynamically allocates storage space based on actual data length)
+   - Character comparison semantics definition (defines rules for comparing strings with and without spaces)
+
+-- SQLite:
+   Method:Mandatory Constraint: No strict distinction between CHAR(N) and VARCHAR(N); both are parsed as TEXT type, N is only a suggestive length (no mandatory validation, inserting data exceeding N will not report error); trailing spaces are fully retained in retrieval/comparison; storage is variable-length (no fixed-length feature for CHAR);Error Scenario: Relying on CHAR(N) to pad trailing spaces (expecting '123' stored as '123 ' for CHAR(5)); relying on N to restrict VARCHAR length (expecting error when inserting data exceeding N);Solution: Do not depend on CHAR fixed-length/padding behavior; manually validate data length if length restriction is needed; explicitly handle trailing spaces in comparison.eg:Error example (CHAR relies on padding spaces, no matching result):CREATE TABLE emp (emp_id CHAR(5)); INSERT INTO emp VALUES ('123'); SELECT * FROM emp WHERE emp_id = '123 ';Error example (VARCHAR relies on length validation, no error but logical mistake):CREATE TABLE dept (dept_code VARCHAR(5)); INSERT INTO dept VALUES ('123456');Correct example (CHAR treated as TEXT, no padding):CREATE TABLE emp (emp_id CHAR(5)); INSERT INTO emp VALUES ('123456'); SELECT emp_id FROM emp;Correct example (VARCHAR retains trailing spaces):CREATE TABLE dept (dept_code VARCHAR(20)); INSERT INTO dept VALUES ('ABC '); SELECT * FROM dept WHERE dept_code = 'ABC ';
+@dialect2sql@
+
+
+@dialect2sql@
+2.2.2 Large Object (LOB) Types:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Store very long article content (e.g., "Save the full text of this novel over 100,000 words")
+   - Record detailed product description information (e.g., "Upload the complete technical specification document for this product")
+   - Store user-generated long content (e.g., "Save the long comment content submitted by the user")
+   - Handle file content storage (e.g., "Store the entire log file content into the database")
+
+2. Relevant Function Description:
+   - Supports storing very large capacity text data (from MB to TB level)
+   - Provides specialized read/write operation methods (e.g., stream reading, segmented writing)
+   - Implements text content integrity and consistency guarantees
+   - Supports large text storage with different character set encodings
+
+
+    (1)SQLite: TEXT affinity type (no special large object type), uses database encoding (UTF-8, UTF-16BE, or UTF-16LE) for storage. Affinity CHARACTER(20), VARCHAR(255), VARYING CHARACTER(255), NCHAR(55), NATIVE CHARACTER(70), NVARCHAR(100), TEXT, CLOB. Numeric data needs to be converted to text format before being inserted into the target column.
+@dialect2sql@
+
+@dialect2sql@
+2.2.3 Fixed-Length String:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query fixed-length codes or identifiers (e.g., "Query employee ID, must be 6 digits" where "must be 6 digits" implies fixed length)
+   - Process fixed-format data validation (e.g., "Is the ID card number in the correct format?" where "correct format" implies specific length and pattern)
+   - Match strings of specific length (e.g., "Find all 3-letter country codes" where "3-letter" implies fixed length)
+   - Generate fixed-length output results (e.g., "Generate a fixed 8-digit order number" where "fixed 8-digit" implies fixed length)
+
+2. Relevant Function Description:
+   - Defines fixed-length string storage structure
+   - Automatically pads with spaces to the specified length
+   - Validates if input data length meets requirements
+   - Ensures consistent length during data storage and comparison
+
+
+    (1)SQLite: None (declaring CHAR(n) actually has TEXT affinity)
+
+@dialect2sql@
+
+
+@dialect2sql@
+2.2.4 Variable-Length String:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query user-input variable length information (e.g., "Find all users whose username contains 'Zhang'" where "username contains" implies variable content)
+   - Process variable-length text fields like addresses, remarks (e.g., "Count records where the address field length exceeds 50 characters" where "field length exceeds" implies variable length)
+   - Store long text data like product descriptions, comments (e.g., "Query products whose description contains 'discount'" where "description contains" implies searching within variable content)
+   - Process strings of uncertain length like names, titles (e.g., "Find documents whose title ends with 'Report'" where "title ends with" implies variable length matching)
+
+2. Relevant Function Description:
+   - Supports storing variable-length character data, allocating storage based on actual space used
+   - Provides string matching and search functions (e.g., LIKE operation, regular expression matching)
+   - Implements string length calculation and substring operations
+   - Supports basic text processing functions like string concatenation, replacement
+
+
+(1)SQLite: None (declaring VARCHAR(n) actually has TEXT affinity)
+@dialect2sql@
+
+
+@dialect2sql@
+2.3 Date and Time Types: Differences in Time Representation Precision
+
+2.3.1 Basic Date and Time Type Comparison:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying data within a specific time range (e.g., "today" in "query all orders for today")
+   - Comparing data at different time points (e.g., "this month" and "last month" in "compare this month's sales with last month's")
+   - Aggregating statistics by time dimension (e.g., "per hour" in "count visits per hour")
+   - Handling timezone-related queries (e.g., "convert to" in "convert Beijing time to New York time")
+
+2. Relevant Function Description:
+   - Supports storage and formatted output of date and time types
+   - Provides date and time extraction and conversion functions (e.g., extract hour, convert to different timezone)
+   - Implements comparison and filtering for date and time ranges
+   - Supports time interval calculation and date-time arithmetic operations
+
+
+ 	   (1)SQLite: SQLite does not have a separate storage class for storing dates and/or times, but SQLite can store dates and times as TEXT, REAL, or INTEGER values, and can use built-in date and time functions to freely convert between different formats.
+
+ 	1)TEXT: Date in the format "YYYY-MM-DD HH:MM:SS.SSS".
+
+ 	2)REAL: Number of days since noon in Greenwich on November 24, 4714 BC.
+
+ 	3)INTEGER: Number of seconds since 1970-01-01 00:00:00 UTC.
+@dialect2sql@
+
+
+
+@dialect2sql@
+2.3.2 Important Parameters for Time Precision:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Recording timestamps with millisecond precision (e.g., "record the exact time of the operation, precise to milliseconds")
+   - Controlling timestamp precision (e.g., "store the current time, including microsecond precision")
+   - Precise measurement of time intervals (e.g., "calculate the time difference between two events, precise to nanoseconds")
+   - Formatted output of time data (e.g., "display time, keeping three decimal places")
+
+2. Relevant Function Description:
+   - Supports definition of fractional seconds precision (e.g., storage of milliseconds, microseconds)
+   - Controls storage precision and display format of time types
+   - Implements high-precision time calculation and comparison
+   - Manages the balance between storage space and precision for time data
+
+-- SQLite:
+   Method:
+      Mandatory Constraint: No explicit fsp/p parameter for time precision; TIME/DATETIME/TIMESTAMP are stored as TEXT/REAL/INTEGER (TEXT supports arbitrary fractional seconds precision, INTEGER stores only second-level); fsp/p in type definition (e.g., TIME(3)) is ignored (no syntax error but no precision control); no built-in precision validation, manual handling required;
+      Error Scenario: Attempting to use fsp/p for precision control (e.g., TIME(3) expecting millisecond restriction); using INTEGER storage (second-level) but expecting millisecond precision; assuming SQLite auto-validates fractional seconds precision;
+      Solution: Store time as TEXT to retain specified precision (e.g., '15:30:45.123'); manually truncate/validate fractional seconds precision via SQL functions; use strftime() to format output precision.
+   eg:
+      Error example (fsp/p is ignored, logical error):
+      CREATE TABLE err_sqlite (op_time TIME(3));
+      INSERT INTO err_sqlite VALUES ('15:30:45.1234'); -- No error, but precision not restricted
+      Error example (INTEGER storage lacks fractional seconds, no matching result):
+      CREATE TABLE log_int (t INTEGER);
+      INSERT INTO log_int VALUES (strftime('%s', 'now'));
+      SELECT * FROM log_int WHERE t = 1733587845.123;
+      Correct example (TEXT stores millisecond precision):
+      CREATE TABLE log_txt (op_time TEXT);
+      INSERT INTO log_txt VALUES ('2025-12-07 15:30:45.123');
+      Correct example (format output to 3 decimal places):
+      SELECT strftime('%H:%M:%S.%f', op_time) FROM log_txt; -- %f returns microseconds, first 3 digits are milliseconds
+@dialect2sql@
+
+
+@dialect2sql@
+2.5 Type Conversion
+
+2.5.1 LIKE Operator:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying data for a specific year (e.g., "find all orders from 1991")
+   - Searching for information for a specific month (e.g., "find sales records for October")
+   - Matching patterns with date prefixes (e.g., "query all dates starting with 1991-10")
+   - Filtering records by date pattern (e.g., "filter employees whose birthday is in October")
+
+2. Relevant Function Description:
+   - Supports string pattern matching on date fields
+   - Implements fuzzy queries by time dimensions like year/month
+   - Provides conversion functions from date type to string type
+   - Allows partial date matching using wildcards
+
+
+ 	  (1)SQLite: If the date is stored as TEXT type (e.g., in 'YYYY-MM-DD' format), can directly use "t2"."date" LIKE '1991-10-%'; If stored as INTEGER or REAL type, need to first convert to TEXT (e.g., datetime("t2"."date", 'unixepoch') LIKE '1991-10-%')
+@dialect2sql@
+
+@dialect2sql@
+2.5.2 Comparison Rules for Date/Time and Strings:
+
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying data records for a specific date (e.g., "October 1, 2023" in "query sales data for October 1, 2023")
+   - Filtering records within a time range (e.g., "last 7 days" in "find orders from the last 7 days")
+   - Aggregating statistics by time period (e.g., "each month of this quarter" in "aggregate sales for each month of this quarter")
+   - Comparing chronological relationships (e.g., "earlier than a certain date" in "find contracts earlier than a certain date")
+
+2. Relevant Function Description:
+   - Supports implicit or explicit conversion comparison between date/time types and strings
+   - Provides date format parsing functions to adapt to different string input formats
+   - Implements date range queries and interval filtering
+   - Supports partial date matching (e.g., comparing by year, month, day separately)
+
+
+       (1)SQLite: SQLite has no dedicated DATE/TIME type, dates and times are usually stored as TEXT (e.g., in 'YYYY-MM-DD' format), INTEGER (Unix timestamp), or REAL (Julian day). If stored as TEXT type and the format matches, can be directly compared with strings; If the storage type is INTEGER/REAL, need to use functions (e.g., datetime(t1.ts_col, 'unixepoch')) to convert it to string format before comparison.
+
+@dialect2sql@
+
+@dialect2sql@
+2.5.3 General Type Conversion:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Numeric strings participating in calculations (e.g., "convert the string '100' to a number for calculation")
+   - Date format conversion for display (e.g., "display the current date as 'YYYY year MM month DD day' format")
+   - Handling type compatibility (e.g., "convert text field to number for sorting")
+   - Data formatting output (e.g., "convert amount number to a string with thousand separators")
+
+2. Relevant Function Description:
+   - Supports mutual conversion between strings and numeric types
+   - Provides formatted output functions for date-time types
+   - Implements explicit conversion operations between different data types
+   - Supports data conversion with custom format templates
+
+
+(1)SQLite: Uses CAST(expression AS target_type), but limited by SQLite's type affinity (dynamic typing feature), supported target types are only INTEGER/REAL/TEXT/BLOB. eg: string to integer → CAST('123' AS INTEGER), integer to floating-point → CAST(123 AS REAL); Implicit conversion: Allows a certain degree of "automatic type conversion" (e.g., numeric strings automatically convert to numbers when participating in numerical operations
+@dialect2sql@
+
+
+@dialect2sql@
+2.5.4 Explicit Field Type Conversion (Non-Basic Types):
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Conditional filtering after converting text to numeric (e.g., "records where the DOC field converted to integer equals 54 and the SOC field converted to integer equals 62", "filter data where the text field converted to numeric is greater than 100", "query the result of converting non-pure-numeric text to numeric")
+   Operations and filtering after converting text to date (e.g., "convert '2023-10-01' to date type", "convert text to date according to MM/DD/YYYY format", "filter records where the text date converted to standard date is within a specified range")
+   Handling conversion of malformed data (e.g., "get the result of converting text containing non-numeric characters to numeric", "handle the result of converting text that does not conform to standard format to date", "requirement to return a default value when invalid text is converted to numeric")
+   Type conversion with specified format (e.g., "convert text to numeric with decimals according to '999.99' format", "convert text to date according to YYYY/MM/DD format")
+
+2. Relevant Function Description:
+   Diverse conversion syntax support (PostgreSQL exclusive ::target_type syntax, CAST/CONVERT for MySQL/SQLite/SQL Server, TO_NUMBER/TO_DATE functions for Oracle, meeting the syntactic habits of different databases)
+   Differentiated format validation rules (PostgreSQL/Oracle/SQL Server have strict validation, non-standard formats directly report errors; MySQL in loose mode automatically truncates valid parts, strict mode reports errors; SQLite validation is very loose, invalid conversions return default values)
+   Error tolerance and default value mechanism (SQLite/MySQL in loose mode, text to numeric returns 0 if no valid digits, text to date returns NULL for non-standard formats, avoiding query interruption)
+   Multi-format adaptation capability (MySQL compatible with YYYY/MM/DD and other non-standard date formats, SQL Server supports multiple date formats like MM/DD/YYYY via format codes, Oracle requires explicit format string specification for matching conversion)
+   Coverage of non-basic type conversions (Supports conversion of text to integer/date/numeric and other non-basic types, meeting conversion needs for heterogeneous data types in business)
+   Syntax priority and conciseness (PostgreSQL's :: syntax has higher priority than function conversion, syntax is more concise; Oracle relies on dedicated conversion functions, allowing finer format control)
+
+-- SQLite:
+   Method:
+      Only supports CAST(expression AS target_type), no exclusive syntax;
+      Very loose format validation: When converting text to numeric, takes the leading valid digits (including signs, decimal point), returns 0 if no valid digits; Text to date only recognizes YYYY-MM-DD format, other formats return NULL;
+      Conversion failure does not report error, returns default value (e.g., text to integer failure returns 0).
+   eg:
+      Text to integer (scenario adaptation): SELECT * FROM table WHERE CAST(T2.DOC AS INTEGER) = 54;
+      Non-pure-numeric text conversion: SELECT CAST('54a' AS INTEGER); (returns 54)
+      Invalid text conversion: SELECT CAST('abc' AS INTEGER); (returns 0)
+
+@dialect2sql@
+
+
+@dialect2sql@
+III. Functional Features: Performance and Support for Complex Business
+
+**3.1 Window Functions:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Calculating rankings and ordering (e.g., "rank" in "rank employees by sales")
+   - Analyzing changes in adjacent data (e.g., "compared to last month" in "see how much sales grew each month compared to last month")
+   - Calculating cumulative values and moving averages (e.g., "cumulative sum" in "calculate the cumulative sum of salaries by department")
+   - Performing data bucket analysis (e.g., "divide into levels" in "divide student grades into 4 levels")
+
+2. Relevant Function Description:
+   - Supports sorting and numbering within data partitions (e.g., ranking functions like ROW_NUMBER, RANK)
+   - Provides access to preceding and following row data (e.g., offset functions like LAG, LEAD)
+   - Implements aggregate calculations within window frames (e.g., aggregate functions like SUM, AVG combined with window frame clauses)
+   - Supports data equi-frequency bucketing (e.g., bucketing function like NTILE)
+
+1) **Syntax Structure: function_name([expression]) OVER ([PARTITION BY partition_expression, ... ][ORDER BY sort_expression [ASC | DESC], ... ][frame_clause] -- e.g., ROWS/RANGE BETWEEN...)**
+2) **MySQL 8.0+, PostgreSQL, Oracle, SQL Server, SQLite all have these functions:
+Ranking: ROW_NUMBER(), RANK(), DENSE_RANK(); Offset: LAG(), LEAD(); First/Last Value: FIRST_VALUE(); Bucketing: NTILE()
+
+-- SQLite:
+   Method:
+      Mandatory Constraint: Window functions supported in SQLite 3.25.0+ (older versions trigger "no such function: ROW_NUMBER" error); OVER() clause is mandatory; PARTITION BY supported (omitting means whole result set as partition); ORDER BY in OVER() is required for ranking functions (omitting ROW_NUMBER() returns 1 for all rows); frame_clause supports ROWS/RANGE (GROUPS not supported); NTILE(n) requires n ≥1 (n=0 triggers error);
+      Error Scenario: Using window functions in SQLite 3.24.0 or lower; omitting ORDER BY in ROW_NUMBER() (expecting meaningful ranking); using GROUPS in frame_clause;
+      Solution: Upgrade to SQLite 3.25.0+; include ORDER BY in OVER() for ranking functions; use ROWS/RANGE instead of GROUPS in frame_clause; set NTILE(n) with n ≥1.
+   eg:
+      Error example (SQLite 3.24.0 unsupported, triggers "no such function: ROW_NUMBER" error):
+      SELECT product_id, sales, RANK() OVER (PARTITION BY category ORDER BY sales DESC) AS sales_rank FROM product_sales;
+      Error example (omit ORDER BY in ROW_NUMBER(), all rows get 1):
+      SELECT emp_id, salary, ROW_NUMBER() OVER (PARTITION BY dept_id) AS row_num FROM emp_salary;
+      Correct example (LEAD() to get next month's sales forecast):
+      SELECT month, sales, LEAD(sales, 1, 0) OVER (ORDER BY month) AS next_month_sales FROM monthly_sales;
+      Correct example (SUM() as cumulative sales with frame_clause):
+      SELECT month, sales, SUM(sales) OVER (ORDER BY month ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS cumulative_sales FROM monthly_sales;
+
+@dialect2sql@
+
+
+
+@dialect2sql@
+3.1.1 Aggregate: SUM(Conditional Expression):
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Counting the number of records satisfying specific conditions (e.g., "how many employees have a salary over 10,000")
+   - Calculating the proportion of data meeting conditions (e.g., "the proportion of orders with sales over 100,000 to total orders")
+   - Summarizing data entries with specific statuses (e.g., "how many orders are in completed status")
+   - Counting data volume within a specific time range (e.g., "how many new registered users this month")
+
+2. Relevant Function Description:
+   - Supports conditional counting statistics (by converting Boolean values to 1 and 0 for summation)
+   - Implements conditional ratio calculation (combining SUM and COUNT functions)
+   - Provides multi-condition grouped statistics capability (used with GROUP BY)
+   - Supports direct participation of Boolean expressions in aggregate operations (some database dialects)
+
+
+(1)SQLite: SQLite has no dedicated Boolean type, supports SUM(conditional expression) shorthand (returns 1 when condition is TRUE, 0 when FALSE)
+
+@dialect2sql@
+
+@dialect2sql@
+3.2 Common Table Expressions (CTE) and Recursive Queries:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying organizational hierarchy (e.g., "find all subordinates of a certain employee")
+   - Traversing category tree structures (e.g., "get all subcategories of a certain category")
+   - Analyzing path dependencies (e.g., "find the complete assembly path of a product")
+   - Handling graph data traversal (e.g., "find all indirect relationships of a person")
+
+2. Relevant Function Description:
+   - Supports recursive query definition, connecting initial query and recursive part via UNION ALL
+   - Implements infinite level traversal of tree-like structures, can set recursion depth control
+   - Provides path tracking capability, recording the complete path from root node to current node
+   - Supports cycle detection to prevent performance issues caused by infinite recursion
+
+* Basic CTE Syntax (Universal):
+
+  WITH cte_name (col1, col2) AS (
+
+      SELECT ...
+
+      FROM ...
+
+      WHERE ...
+
+  )
+
+  SELECT * FROM cte_name ...
+
+  
+
+* Recursive CTE Capability:
+
+  (1)All platforms support it, it is the ideal choice for handling tree structures (organizational charts, category directories), graph traversal.
+
+       Example: Find employee and all their subordinates (recursive infinite levels):
+
+   	WITH RECURSIVE EmployeeHierarchy AS (
+
+      		-- Anchor member(s)
+
+      		SELECT id, name, manager_id, 0 AS level
+
+      		FROM employees WHERE manager_id IS NULL
+
+      		UNION ALL
+
+      		-- Recursive member
+
+      		SELECT e.id, e.name, e.manager_id, eh.level + 1
+
+      		FROM employees e
+
+      		INNER JOIN EmployeeHierarchy eh ON e.manager_id = eh.id
+
+   	)
+
+   	SELECT * FROM EmployeeHierarchy ORDER BY level, name;
+
+  
+@dialect2sql@
+
+@dialect2sql@
+  3.3 JSON Support: Comparison of Semi-Structured Data Processing Capabilities
+
+  3.3.1 Basic JSON Operation Function Comparison:
+
+  3.3.1.1  Construct JSON Object:
+  1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying complete user information and packaging as JSON (e.g., "get all information of user Zhang San and form a JSON object")
+   - Building nested configuration data (e.g., "build system configuration items into JSON format and return")
+   - Combining multiple fields into structured data (e.g., "form product name, price, inventory into a JSON object")
+   - Generating response data needed by API interfaces (e.g., "return order details JSON, containing order number, amount, status")
+
+2. Relevant Function Description:
+   - Supports combining multiple key-value pairs into a JSON object (e.g., field names as keys, field values as values)
+   - Supports nested JSON structure construction (e.g., object containing arrays, arrays containing objects)
+   - Supports automatic data type conversion (e.g., numbers, strings, Boolean values automatically converted to corresponding JSON types)
+   - Supports NULL handling and special character escaping (e.g., NULL value handling, quote escaping, etc.)
+  
+  1)SQLite: json(), json_array(), json_group_object(), json_object(), json_quote()
+-- SQLite:
+   Method:
+      Mandatory Constraint: json_object()/json_array()/json() are supported in SQLite 3.38.0+ (older versions trigger "no such function: json_object" error); json_object() requires an even number of key-value arguments (odd count triggers "wrong number of arguments to function json_object()" error); json() parses string to JSON, json_quote() escapes special characters; NULL values are converted to JSON null; nested JSON is supported by nesting json_object()/json_array();
+      Error Scenario: Using json_object() in SQLite 3.37.0 or earlier; passing an odd number of arguments to json_object(); using unescaped special characters in json() input (e.g., json('{"name":"Zhang "San""}'));
+      Solution: Upgrade to SQLite 3.38.0+; ensure json_object() has even number of key-value arguments; use json_quote() to escape special characters before json() parsing; nest functions to build complex JSON structures.
+   eg:
+      Error example (odd arguments for json_object(), triggers "wrong number of arguments to function json_object()" error):
+      SELECT json_object('name', 'Zhang San', 'age') AS user_info;
+      Error example (SQLite 3.37.0 unsupported, triggers "no such function: json_object" error):
+      SELECT json_object('order_id', 1001, 'amount', 99.9) AS order_info;
+      Correct example (basic json_object() construction):
+      SELECT json_object('name', 'Zhang San', 'age', 30, 'is_vip', 1) AS user_info; -- SQLite uses 1/0 for Boolean values
+      Correct example (nested JSON with json_array()):
+      SELECT json_object('order_id', 1001, 'items', json_array(json_object('prod_name', 'Phone', 'price', 9999))) AS order_info;
+@dialect2sql@
+
+
+@dialect2sql@
+  3.3.1.2  Path Extraction:
+  1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Extracting user information from JSON documents (e.g., "mobile number in the user profile" in "get the mobile number in the user profile")
+   - Querying specific attributes of nested objects (e.g., "price of the product in the order" in "find the price of the product in the order")
+   - Getting specific fields of array elements (e.g., "first comment content in the comment list" in "view the first comment content in the comment list")
+   - Accessing data values in deep nesting (e.g., "department manager's email address in the company" in "get the department manager's email address in the company")
+
+2. Relevant Function Description:
+   - Supports extracting specific field values from JSON documents via path expressions
+   - Capable of handling queries for nested objects and multi-level paths
+   - Provides indexed access and field extraction capabilities for array elements
+   - Implements direct access and retrieval of data at any depth in JSON documents
+  
+  1)SQLite: json_extract()
+-- SQLite:
+   Method:
+      Mandatory Constraint: json_extract(column, '$.path') is supported in SQLite 3.38.0+ (older versions trigger "no such function: json_extract" error); path expressions follow JSONPath rules (array 0-based); non-existent path returns NULL (no error); json_extract() returns unquoted values; supports deep nesting and array extraction; no dedicated operators (only json_extract() function);
+      Error Scenario: Using json_extract() in SQLite 3.37.0 or earlier; incorrect JSONPath syntax (e.g., $.array[1] for 1-element array); passing non-JSON text to json_extract() (returns NULL); expecting non-existent path to throw error (instead returns NULL);
+      Solution: Upgrade to SQLite 3.38.0+; follow standard JSONPath syntax (0-based array indexes); validate JSON format before extraction; check for NULL results when extracting non-existent paths;
+   eg:
+      Error example (SQLite 3.37.0 unsupported, triggers "no such function: json_extract" error):
+      SELECT json_extract(user_info, '$.mobile') FROM users WHERE user_id=1;
+      Error example (incorrect array index, returns NULL (logical error)):
+      SELECT json_extract(order_info, '$.items[1].price') FROM orders WHERE order_id=1001; -- items array only has index 0
+      Correct example (basic top-level extraction):
+      SELECT json_extract(user_info, '$.name') AS user_name FROM users WHERE user_id=1;
+      Correct example (nested array extraction):
+      SELECT json_extract(order_info, '$.items[0].prod_name') AS first_product FROM orders WHERE order_id=1001;
+      Correct example (deep nesting extraction):
+      SELECT json_extract(company_info, '$.dept.sales.manager.email') AS manager_email FROM company WHERE id=1;
+@dialect2sql@
+
+
+@dialect2sql@
+  3.3.1.3  Existence Check:
+  1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Checking if a specific key exists in a JSON field (e.g., "whether the user information contains a mobile number field")
+   - Verifying if an array contains a specific element (e.g., "whether the order product list contains a laptop")
+   - Judging if a path exists in a nested structure (e.g., "whether there is address information in the user profile")
+   - Confirming the validity of a JSON document (e.g., "whether this JSON data format is correct")
+
+2. Relevant Function Description:
+   - Supports checking the existence of specified paths in JSON documents
+   - Capable of verifying if JSON arrays contain specific values
+   - Provides multi-level path query capability for nested structures
+   - Implements validity verification of JSON document format
+  
+   (1)SQLite (requires JSON1 extension enabled)：
+      Key/Path existence: json_extract(json_doc, path) IS NOT NULL or json_has(json_doc, path) (SQLite 3.38.0+ supports json_has)
+      Array element containment: json_contains(json_doc, value, path)
+      Example 1 (Check key existence): SELECT * FROM users WHERE json_has(info, '$.phone')
+      Example 2 (Check array containment): SELECT * FROM orders WHERE json_contains(products, '"laptop"') (String values need to be wrapped in double quotes)
+@dialect2sql@
+
+
+@dialect2sql@
+3.3.1.4 Modifying Properties
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Modify specific property values in JSON objects (e.g., "change to" in "change the theme in user configuration to dark mode")
+       - Update element content in arrays (e.g., "change to" in "change the quantity of the second item in the shopping cart to 3")
+       - Add or replace fields in nested objects (e.g., "add" in "add zip code information to the user address")
+       - Adjust values of configuration parameters (e.g., "modify to" in "modify the timeout in system settings to 30 minutes")
+
+    2. Relevant Function Description:
+       - Supports modifying property values at specified paths in JSON documents
+       - Capable of adding new property fields to existing JSON objects
+       - Provides replacement or update of specific elements in nested structures
+       - Implements modification operations on elements at specified positions in JSON arrays
+
+      (1) SQLite: json_insert(), json_remove(), json_replace(), json_set()
+@dialect2sql@
+
+
+
+@dialect2sql@
+3.3.2 Deep Differences in Storage Methods
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Query specific property values in JSON fields (e.g., "find the theme setting in user configuration")
+       - Verify if data conforms to JSON format (e.g., "check if this field is valid JSON")
+       - Update partial content of a JSON document (e.g., "change the city in the user address to Beijing")
+       - Search for elements in JSON arrays (e.g., "find employees with Python skills")
+
+    2. Relevant Function Description:
+       - Supports JSON path expression queries (e.g., $.user.name)
+       - Provides JSON format validation functions (e.g., ISJSON())
+       - Implements partial updates of JSON fields (e.g., jsonb_set, JSON_MODIFY)
+       - Supports retrieval and manipulation of JSON array elements (e.g., array unnesting, element existence check)
+
+      (1) SQLite: 1) Stores JSON data as TEXT type in SQLite. SQLite does not distinguish data types strictly, so any string can be stored as TEXT. 2) SQLite provides a JSON1 extension module, which allows storing and querying true JSON data in the database. 3) ORM (Object-Relational Mapping) libraries can be used to store and process JSON data, such as using SQLAlchemy. 4) Supports jsonb type and GIN indexes. 5) Supports storing JSON as BLOB type (binary representation of JSON).
+@dialect2sql@
+
+
+
+@dialect2sql@
+    3.4 Stored Procedures and Custom Functions: Programming Interface Capabilities
+
+    3.4.1 Language Ecosystem Differences
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Execute data update operations (e.g., "increase" in "increase Zhang San's monthly salary by 1000 yuan")
+       - Handle conditional judgments in business logic (e.g., "if...then" in "if stock is insufficient, automatically replenish")
+       - Implement complex data processing workflows (e.g., "statistics...generate" in "statistically generate sales reports by month")
+       - Handle exceptions during program execution (e.g., "when...prompt" in "prompt an error message when inserting duplicate data")
+
+    2. Relevant Function Description:
+       - Supports creation and invocation of stored procedures and functions
+       - Provides conditional branching and loop control structures
+       - Implements explicit or implicit control of transactions
+       - Includes exception handling mechanisms (e.g., TRY-CATCH or EXCEPTION blocks)
+
+      (1) SQLite: Supports PL/SQL, supports .NET integration, can be written in C language, Python. sqlite3 uses try-catch blocks to catch exceptions.
+@dialect2sql@
+
+@dialect2sql@
+    IV. Behavioral Characteristics: Fundamental Differences in Execution Mechanisms and Security Practices
+
+    4.1 Transaction Isolation and Locking Mechanisms
+
+    4.1.1 Default Isolation Level Comparison
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Query the default transaction isolation level of the database (e.g., "What is MySQL's default isolation level?")
+       - Compare isolation level differences between databases (e.g., "Which has a higher default isolation level, Oracle or PostgreSQL?")
+       - Analyze data consistency issues under specific isolation levels (e.g., "Will phantom reads occur under the default isolation level?")
+       - Choose a database suitable for the business scenario (e.g., "Which database's default isolation level can prevent dirty reads?")
+
+    2. Relevant Function Description:
+       - Supports querying the database's default transaction isolation level configuration
+       - Provides comparison of concurrency control mechanisms for different isolation levels
+       - Implements MVCC-based multi-version data access control
+       - Ensures the performance of transaction ACID properties under different isolation levels
+
+      (1) SQLite: Default is READ COMMITTED, supports MVCC.
+@dialect2sql@
+
+@dialect2sql@
+    4.1.2 Lock Contention Handling Strategies
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Query current lock wait situations in the database (e.g., "view which sessions are blocked by locks")
+       - Handle deadlock or lock timeout issues (e.g., "how to resolve database deadlocks?")
+       - Optimize lock contention in high-concurrency scenarios (e.g., "how to reduce lock waits during update operations?")
+       - Set session lock wait behavior (e.g., "set query to return immediately without waiting for lock")
+
+    2. Relevant Function Description:
+       - Provides lock monitoring and diagnostic views (e.g., query lock wait chains, blocking sessions)
+       - Supports automatic deadlock detection and transaction rollback mechanisms
+       - Implements row-level locks and gap locks to prevent phantom reads
+       - Provides non-blocking lock acquisition options like NOWAIT, SKIP LOCKED
+
+      (1) SQLite: Does not support "write does not block read". Uses file-level locks (not row-level or table-level), includes Shared Lock (SHARED_LOCK), Reserved Lock (RESERVED_LOCK), Pending Lock (PENDING_LOCK), and Exclusive Lock (EXCLUSIVE_LOCK). Reduces lock contention effectively under the single-file database constraint through multi-level lock escalation (Shared→Reserved→Pending→Exclusive), combined with WAL mode separating read/write data sources, supplemented by automatic retry and short transaction design.
+@dialect2sql@
+
+@dialect2sql@
+    4.2 Role Management and Permission System
+
+    4.2.1 Authorization Model
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Create new permission roles (e.g., "create a read-only report role")
+       - Assign data access permissions to roles (e.g., "grant query permission on sales data to the report role")
+       - Assign roles to specific users (e.g., "assign the report role to user Mike")
+       - Manage user permission hierarchies (e.g., "which users have data query permissions?")
+
+    2. Relevant Function Description:
+       - Supports creating and managing database roles
+       - Implements table-level permission control (e.g., granting operations like SELECT, INSERT, UPDATE)
+       - Provides permission assignment mechanism from roles to users
+       - Establishes a multi-level permission management system
+
+
+      -- SQLite
+      As SQLite stores data in files, operating system file permissions can be used to control access to the database file. The native embedded SQLite does not have RBAC.
+      CREATE USER 'readonly_user' WITH PASSWORD 'password';
+      GRANT SELECT ON database.* TO 'readonly_user';
+@dialect2sql@
+
+
+@dialect2sql@
+    4.2.2 Permission Inheritance Behavior Differences
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Query user permission scope (e.g., "which tables can user A access?" in "can access which tables")
+       - Verify operation permissions (e.g., "does this role have permission to delete data?" in "has delete permission")
+       - Manage permission inheritance relationships (e.g., "grant all permissions of role A to role B" in "grant all permissions")
+       - Analyze permission impact scope (e.g., "which users will be affected by modifying role permissions?" in "affect which users")
+
+    2. Relevant Function Description:
+       - Supports role hierarchy nesting and automatic permission inheritance
+       - Provides permission verification mechanism (check user's operation permissions on specific objects)
+       - Implements permission transfer and batch granting functions
+       - Supports permission impact scope analysis (tracking permission inheritance paths)
+
+      (1) SQLite: Lacks traditional role-permission inheritance logic. The database internally does not perform additional fine-grained "user-level permission inheritance" (such as inheritance of table/column permissions for different users). All permission control "granularity" is determined by the file system.
+@dialect2sql@
+
+
+@dialect2sql@
+    4.3 Database Internal Mechanisms
+
+    4.3.1 Sequence (Sequence) or Auto-increment Mechanisms
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Get the next available unique identifier (e.g., "what is the next order number?")
+       - Automatically generate primary keys when creating new records (e.g., "automatically assign user ID when adding a new user")
+       - Consecutive numbering during batch data insertion (e.g., "import 100 product records and auto-number them")
+       - Reset the starting value of a sequence (e.g., "restart employee numbers from 1000")
+
+    2. Relevant Function Description:
+       - Supports automatically generating unique, incrementing numerical sequences
+       - Provides methods to get the next sequence value (e.g., NEXTVAL, AUTO_INCREMENT)
+       - Allows customizing sequence start value, step size, and cache size
+       - Supports resetting and cycling sequence values
+
+
+      -- SQLite:
+          1) SQLite tables have a hidden "Rowid" column (64-bit signed integer) by default, used to uniquely identify each row, and it auto-increments. If a column is explicitly defined as INTEGER PRIMARY KEY (e.g., id INTEGER PRIMARY KEY), that column becomes an alias for "Rowid", inheriting the "auto-increment, unique"特性.
+          CREATE TABLE orders (id INTEGER PRIMARY KEY, name TEXT); INSERT INTO orders (name) VALUES ('Example');
+          2) AUTOINCREMENT in SQLite is a keyword used for auto-incrementing field values in a table. It can be applied to a specific column name when creating the table to achieve auto-increment for that field. The AUTOINCREMENT keyword can only be used on integer (INTEGER) fields.
+          CREATE TABLE table_name(column1 INTEGER AUTOINCREMENT,column2 datatype,column3 datatype,..... columnN datatype,);
+@dialect2sql@
+
+@dialect2sql@
+    V. Supplementary Syntax
+    5.1 COUNT (DISTINCT column) Deduplication Aggregation Syntax:
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       Single-column unique value count (e.g., "Count distinct patient IDs", "Calculate the number of distinct customer IDs in orders", "Query the total number of distinct course IDs in the course selection system")
+       Multi-dimensional combination deduplication count (e.g., "Count the number of unique user + product purchase combinations", "Calculate the number of unique department + job combinations", "Query the number of unique doctor + patient consultation combinations")
+       Deduplication statistics under grouping dimensions (e.g., "Count monthly new distinct users by month", "Count distinct customers by region", "Count distinct students enrolled per semester by semester", "Count distinct users placing orders per year by year")
+       NULL value related counting (e.g., "Count the number of distinct non-NULL values in a column", "Query the result when NULL values participate in distinct count")
+       Unique entity statistics in business scenarios (e.g., "Count distinct patients treated by each department", "Calculate the number of distinct product SKUs in inventory")
+
+    2. Relevant Function Description:
+       Supports single-column COUNT(DISTINCT) for deduplication counting, accurately统计 the number of unique values in a single dimension
+       Multi-column combination deduplication count (natively supported by some databases, requires string concatenation / CONCAT in others), meeting multi-dimensional unique entity statistics needs
+       Combined with GROUP BY, performs deduplication counting on the target column after grouping by specified dimensions, supporting time-period / regional distinct analysis
+       Automatically ignores NULL values (COUNT(DISTINCT NULL) returns 0), ensuring counting result accuracy
+       Adapts to syntax characteristics of different databases (e.g., concatenation implementation in SQLite/Oracle, native multi-column support in PostgreSQL/MySQL), compatible with multi-environment deduplication counting
+       Can combine with WHERE filter conditions, filter data first then perform deduplication counting, meeting refined statistical needs
+       Supports combination with time formatting functions (e.g., DATE_FORMAT, YEAR) to achieve distinct statistics in time dimensions
+
+    -- SQLite:
+        Methods:
+        Natively supports single-column COUNT(DISTINCT column); multi-column deduplication requires string concatenation (e.g., col1 || col2);
+        When combined with GROUP BY, performs deduplication counting per group dimension;
+        COUNT(DISTINCT NULL) returns 0 (NULL has no actual value, does not participate in counting).
+        Examples:
+        Single-column distinct count (Count distinct course IDs): SELECT COUNT(DISTINCT course_id) FROM enrollments;
+        Multi-column concatenation distinct count (Count unique student + course combinations): SELECT COUNT(DISTINCT student_id || '-' || course_id) FROM enrollments;
+        Combined with GROUP BY (Count distinct enrolled students per semester): SELECT semester, COUNT(DISTINCT student_id) FROM enrollments GROUP BY semester;
+        NULL value handling: SELECT COUNT(DISTINCT NULL) FROM test_table; (Returns 0)
+
+@dialect2sql@
+
+
+@dialect2sql@
+    5.2 SUBSTR String Substring Function:
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       Partial extraction from date strings (e.g., "Extract year from date string", "Extract month/date part from date", "Get the last two digits representing the day from a date string")
+       Segment extraction from fixed-format strings (e.g., "Extract the first four digits as identifier from a code", "Get the last two characters of a string")
+       Filtering based on extracted content (e.g., "Query records from the year 2012", "Filter data where the month is October")
+       Handling strings with abnormal length (e.g., "When substring length exceeds actual string length", "Omit length parameter to extract remaining all characters")
+       Substring combined with date conversion (e.g., "Extract current month from system date converted string")
+
+    2. Relevant Function Description:
+       Supports extracting substring from a specified start index (start index defaults to 1, some databases support negative index counting from the end)
+       Flexible handling of length parameter: returns remaining characters if exceeds string length; some databases support omitting length parameter to extract to the end
+       Adapts to TEXT/VARCHAR string types and date-converted strings, enabling extraction of time fragments like year/month/day
+       Negative index function allows directly extracting specified length content from the end of the string (e.g., last two characters)
+       Can combine with WHERE clause to filter data based on extraction result (e.g., filter records by extracted year)
+       Compatible with TO_CHAR and other date conversion functions, extracting specified time dimension from formatted date strings
+       Supports alias usage of SUBSTR/SUBSTRING, adapting to syntax habits of different databases
+       Automatically returns remaining characters when length exceeds boundary, avoiding abnormal substring results
+
+
+    -- SQLite:
+        Methods:
+        Only supports SUBSTR(string, start_index, length), start index starts from 1;
+        If length parameter is omitted, extracts to the end of the string; if exceeds remaining length, returns all remaining characters;
+        Often used to extract year/month/day from TEXT type date fields (when no native date type).
+        Examples:
+        Extract year (corresponding scenario): SELECT SUBSTR(date_column, 1, 4) FROM table WHERE SUBSTR(date_column, 1, 4) = '2012';
+        Omit length to extract remainder: SELECT SUBSTR('2023-05', 6); (Returns '05')
+        Length exceeds boundary: SELECT SUBSTR('2024', 2, 5); (Returns '024')
+
+@dialect2sql@
+
+
+@dialect2sql@
+5.3 Subquery (IN Subquery, Scalar Subquery) Syntax:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Set matching filtering with IN subqueries (e.g., "Filter patients with lab test HCT≥52 and count≥2", "Query Table1 records where ID is in Table2 with value≥100", "Get patient information belonging to a specific ID set")
+   Numerical calculation / single value extraction with scalar subqueries (e.g., "Calculate the average order amount", "Get the earliest year/year-month from records", "Calculate the total exam score for a student", "Query the average price for the electronics category")
+   Group extreme value filtering with correlated subqueries (e.g., "Filter the employee with the highest salary in each department", "Get the latest order for each user", "Find the student with the lowest score in each class", "Filter the most recently hired employee in each department")
+   Row-level filtering with correlated subqueries combined with extended syntax (e.g., "Get the top 3 orders for each customer", "Correlated query for the latest transaction record for each user")
+   Multi-level filtering with nested IN subqueries (e.g., "Filter target records through multi-level ID matching", "Record query for multi-level set membership")
+
+2. Relevant Function Description:
+   IN subqueries support multi-row result matching, fulfilling the filtering requirement of "belonging to a set" (some databases have limits on IN constant lists, but subquery results are not subject to this restriction)
+   Scalar subqueries return a single value, used for conditional comparison, field assignment, or aggregate calculation (different databases handle multi-row returns differently: PostgreSQL/Oracle/SQL Server report errors, MySQL/SQLite take the first row)
+   Correlated subqueries depend on outer table fields, enabling grouped filtering by outer dimensions (e.g., matching extreme values by department, class, etc.)
+   Combined with LATERAL (PostgreSQL)/APPLY (SQL Server) syntax, supports row-level calculation for correlated tables (e.g., getting the latest / top N records for each user)
+   Non-correlated subqueries execute independently, suitable for matching fixed sets; correlated subqueries execute row-by-row, adapting to dynamic correlation filtering
+   Performance optimization adaptation: For large result set IN subqueries, it's recommended to use JOIN/EXISTS instead to improve query efficiency
+   Supports nested IN subqueries, enabling multi-level set matching filtering
+   Combined with aggregate functions (MAX/MIN/AVG/SUM), implements statistical calculations by grouping dimensions through subqueries
+
+-- SQLite:
+   Method:
+      IN Subquery: No row limit, supports nested IN subqueries;
+      Scalar Subquery: Takes the first row result when multiple rows are returned (no error), commonly used in SELECT list or WHERE conditions;
+      Correlated subquery performance is weak; for large data volumes, it's recommended to refactor using JOIN.
+   eg:
+      IN Subquery Filtering Qualified IDs:
+      SELECT * FROM Table1 WHERE ID IN (SELECT ID FROM Table2 WHERE value >= 100);
+      Scalar Subquery Calculating Sum:
+      SELECT (SELECT SUM(score) FROM Scores WHERE student_id = 101) AS total_score;
+      Correlated Subquery (Filter student with lowest score per class):
+      SELECT s.name, s.score FROM Students s WHERE score = (SELECT MIN(score) FROM Students WHERE class = s.class);
+@dialect2sql@
+
+
+@dialect2sql@
+5.4 TEXT Type Date Processing Rules:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Time dimension extraction from TEXT dates (e.g., "Extract birth year from player birthday (TEXT type)", "Get the month from the game attribute record date (TEXT type)")
+   Range filtering for TEXT dates (e.g., "Query players born after 1990", "Filter game attribute records from the year 2012")
+   Processing non-standard format TEXT dates (e.g., "Process TEXT date in YYYY/MM/DD format, extract year", "Convert slash-separated TEXT date to standard date")
+   Comparison of TEXT dates (e.g., "Find players born before 2000", "Filter attribute records with date later than 2012-01-01")
+   Compatible processing of TEXT dates in different formats (e.g., "Unified processing of TEXT dates in YYYY-MM-DD and YYYYMMDD formats")
+
+2. Relevant Function Description:
+   Supports implicit conversion for TEXT dates conforming to standard format (MySQL), allowing direct use of date functions (DATE_FORMAT/YEAR) to extract time dimensions
+   Explicit conversion adaptation for non-standard format TEXT dates (PostgreSQL/Oracle/SQL Server require specifying format, SQLite requires manual parsing)
+   Direct comparison of standard format TEXT dates (SQLite can compare directly because string order matches date order; other databases require conversion for logical date comparison)
+   Combined use of date functions (strftime/TO_CHAR/EXTRACT) with TEXT dates to extract dimensions like year/month/day
+   Compatible with various TEXT date storage formats (YYYY-MM-DD/YYYYMMDD/YYYY/MM/DD), adapted through format conversion functions for different scenarios
+   Avoid errors from string dictionary order comparison by using explicit conversion to ensure TEXT dates are filtered according to actual date logic
+   Error tolerance handling for illegal format TEXT dates (MySQL converts to NULL, Oracle/PostgreSQL report error for format mismatch)
+
+-- SQLite:
+   Method:
+      Natively recommends storing dates as TEXT type (standard format YYYY-MM-DD), supports direct processing with date functions (date()/strftime()), no explicit conversion needed;
+      Compatible with YYYY-MM-DD/YYYYMMDD/YYYY-MM-DD HH:MM:SS formats; non-standard formats require manual parsing using strftime;
+      TEXT date comparison can be done directly as strings (under standard format, string order matches date order) or via the date() function.
+   eg:
+      TEXT Date extracting year (Player.birthday scenario): SELECT strftime('%Y', birthday) FROM Player;
+      Non-standard format processing: SELECT date('2023/10/01', 'unixepoch') (requires replacing separator with - first);
+      Direct TEXT date comparison: SELECT * FROM Player_Attributes WHERE date > '2012-01-01';
+@dialect2sql@
+
+
+@dialect2sql@
+5.5 SQLite Exclusive IIF Function and Equivalent Implementations in Other Databases:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Simple conditional judgment returning specified values (e.g., "Judge if birth year is earlier than 1985 and laps greater than 50, return 1 if satisfied otherwise 0", "Judge if date year is 2010, return 1 if yes otherwise 0", "Judge if creation date year is 2011 and reputation value greater than 1000, return 1 if satisfied otherwise 0")
+   Multi-condition nested grading / classification (e.g., "Grade based on score: A for 90 and above, B for 80-89, C for 60-79, F below 60", "Group by age: senior for 60 and above, adult for 18-59, minor below 18", "Categorize by order quantity: bulk for greater than 100, regular for 10-100, small for less than or equal to 10", "Grade by salary: high for greater than 10000, medium for 5000-10000, low below 5000")
+   NULL condition handling (e.g., "Return invalid when condition is NULL, return valid when not NULL")
+   Simple equality judgment (e.g., "Judge if date year is 2010, return corresponding identifier")
+   Complex combined condition judgment (e.g., "Filter and return identifier combining year and numerical conditions")
+
+2. Relevant Function Description:
+   Supports conditional branch return (IIF/IF/CASE/DECODE can implement "if... then... else..." logic, returning specified values based on condition truth)
+   Multi-condition nesting capability (Through nested IIF/IF/CASE expressions, implements multi-layer progressive condition judgment, meeting grading/classification needs)
+   NULL condition error tolerance handling (When condition is NULL, treated as false, uniformly returns else/val_false branch value, avoiding result anomalies caused by NULL)
+   Cross-database equivalent implementation adaptation (SQLite/SQL Server natively support IIF, MySQL supports IF function, PostgreSQL/Oracle rely on standard CASE expression, Oracle additionally provides DECODE for simple equality scenarios)
+   Compatible with standard CASE expression (All databases support CASE WHEN THEN ELSE END, as a universal replacement for IIF/IF, adapting to complex combined conditions)
+   Syntax simplification and performance balance (IIF/IF only simplify conditional judgment syntax, performance is close to CASE expression, complex conditions recommend using CASE for better readability)
+   Covers equality and range conditions (DECODE is suitable for simple equality judgment, CASE/IIF/IF support complex scenarios like ranges, multi-condition combinations)
+
+-- SQLite:
+   Method:
+      Supports exclusive IIF(condition, val_true, val_false) function; returns val_true if condition is true, val_false if false (equivalent to CASE WHEN condition THEN val_true ELSE val_false END, syntax is more concise);
+      When condition is NULL, treated as false, returns val_false; supports nesting for multi-condition judgment;
+      Performance is close to CASE expression, only simplifies syntax, no significant performance difference.
+   eg:
+      Basic condition judgment: SELECT IIF(STRFTIME('%Y', T3.dob) < '1985' AND T1.laps > 50, 1, 0) FROM competition;
+      Date filtering: SELECT IIF(STRFTIME('%Y', Date) = '2010', 1, 0) AS is_year_2010 FROM sales;
+      Nested IIF multi-condition: SELECT IIF(score >= 90, 'A', IIF(score >= 80, 'B', IIF(score >= 60, 'C', 'F'))) AS grade FROM exams;
+      NULL condition handling: SELECT IIF(NULL, 'valid', 'invalid'); (Returns 'invalid')
+@dialect2sql@
+
+@dialect2sql@
+5.6 Syntax Specification for Ratio and Growth Rate Calculation:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Ratio calculation scenarios (e.g., "Calculate the proportion of affirmative votes in voting", "Calculate the proportion of a certain type of data in the total", "Get the proportion of records meeting conditions")
+   Fixed period average calculation (e.g., "Calculate the monthly average of annual link counts", "Monthly average amount of annual sales", "Daily average value of quarterly indicators")
+   Growth rate calculation requirements (e.g., "Calculate the growth rate of loan amount", "Year-over-year growth rate of sales", "Growth percentage of current period vs. previous period indicators")
+   Percentage difference analysis (e.g., "Percentage difference between this year's and last year's sales", "Percentage change between current and previous period data", "Percentage gap between two sets of data")
+   Result presentation with precision/format requirements (e.g., "Loan growth rate rounded to two decimal places", "Formatted percentage ratio result", "Mean calculation with decimal places")
+
+2. Relevant Function Description:
+   Type conversion to prevent truncation (Via CAST(...) AS DECIMAL/REAL/FLOAT, ::FLOAT or *1.0 etc., convert integers to floating-point/high-precision numeric types, avoiding result truncation from integer division, ensuring calculation precision)
+   Division by zero error avoidance (Use NULLIF(denominator, 0) function to handle scenarios where denominator is 0, preventing division operation errors, ensuring robust calculation logic)
+   Fixed period calculation adaptation (Convert total to floating-point type then divide by fixed period number (e.g., 12 months), achieving accurate average/apportioned calculation)
+   Standardized growth rate calculation (Supports the universal growth rate formula (current_period_value - previous_period_value)/previous_period_value*100, implemented adapting to different database syntax characteristics)
+   Precision and formatting control (Use ROUND function to retain specified decimal places, TO_CHAR/FORMAT functions to format percentage results, improving data readability)
+   Aggregated data linkage calculation (Combined with COUNT/SUM etc. aggregate functions, implements ratio, average calculation based on aggregate results, supporting statistical analysis needs)
+   Cross-database syntax compatibility (Adapts to MySQL's DECIMAL, PostgreSQL's ::FLOAT, Oracle's NUMBER, SQL Server's FORMAT etc. characteristics, ensuring calculation logic universality)
+
+-- SQLite:
+   Method:
+      Ratio calculation: Integer division truncates by default, requires conversion using CAST(aggregate_value AS REAL) or aggregate_value*1.0;
+      Fixed number division: Total converted to REAL then divided by fixed number (e.g., SUM(links)*1.0/12);
+      Growth rate calculation: (current_period_value - previous_period_value)*1.0/NULLIF(previous_period_value,0)*100, NULLIF handles division by zero, no extra syntax needed.
+   eg:
+      Vote ratio: SELECT CAST(COUNT(CASE WHEN vote=1 THEN 1 END) AS REAL)/COUNT(*) AS vote_ratio FROM votes;
+      Monthly average links: SELECT SUM(links)*1.0/12 AS monthly_avg_links FROM site_metrics;
+      Loan growth rate: SELECT (current_loan-prev_loan)*1.0/NULLIF(prev_loan,0)*100 AS loan_growth_rate FROM loan_stats;
+      Percentage difference: SELECT (this_year_sales-last_year_sales)*1.0/last_year_sales*100 AS sales_percent_diff FROM annual_sales;
+
+@dialect2sql@
+
+@dialect2sql@
+5.7 Multi-Condition Combination Filtering (OR + Date Range):
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Date filtering with multiple OR conditions (e.g., "Schools where the open date year is greater than 1991 or the close date year is less than 2000", "Orders where the order date is between 2000-2005 or the amount is greater than 10000", "Log records where the log date is earlier than 2000 or later than 2020 or the level is error")
+   Combined conditional queries with priority (e.g., "Schools where the open date is greater than 1991 or the close date is less than 2000 and the status is active", "Sales records where the sale date is between 2010-2015 or the total amount is greater than 5000", "Records where (date is earlier than 2000 or later than 2020) and the region is north")
+   Performance optimization needs for OR conditions (e.g., "Solving full table scan issues caused by multiple OR conditions", "Rewriting OR conditions with UNION/UNION ALL to improve query efficiency", "Optimizing index utilization for single-field multiple OR conditions")
+   Combined queries of text dates and OR+BETWEEN (e.g., "Filtering orders where the text format date is in the 2000-2005 range or the amount exceeds 1000", "Performing OR range filtering after unifying text date formats via strftime")
+   Queries avoiding AND/OR priority ambiguity (e.g., "Explicitly using parentheses to clarify conditional logic, preventing result errors due to priority")
+
+2. Relevant Function Description:
+   Conditional priority control (AND has higher priority than OR, supports explicit parentheses to adjust logical order, avoids ambiguity, ensures query logic aligns with business requirements)
+   OR condition optimization mechanism (MySQL supports index merge, PostgreSQL supports BitmapOr bitmap OR, Oracle supports OR-expansion, databases with weaker optimization like SQLite can rewrite OR conditions via UNION/UNION ALL to solve full table scan issues)
+   Syntax adaptation for OR and BETWEEN (Supports mixing date range BETWEEN with other conditions using OR; text dates require format unification through formatting/conversion to avoid string lexicographical comparison errors)
+   Type consistency guarantee (When combining date fields with OR conditions, ensure field types match; text dates require explicit conversion/formatting to avoid index failure caused by implicit conversion)
+   Cross-database feature compatibility (Adapts to different databases' OR optimization strategies, such as MySQL's index_merge, PostgreSQL's Bitmap Merge, SQL Server's index merge, ensuring effective execution of OR conditions across multiple environments)
+   Complex logic splitting capability (Splits multiple OR conditions via UNION/UNION ALL, converting full table scans to index scans, improving large table query performance)
+   Date format fault tolerance (When combining text dates with OR conditions, supports format conversion/standardization to ensure accuracy of date range filtering)
+
+-- SQLite:
+   Method:
+      Conditional Priority: AND has higher priority than OR; A OR B AND C is equivalent to A OR (B AND C); requires using parentheses to adjust logic (e.g., (A OR B) AND C);
+      OR Condition Optimization: SQLite has weak optimization for OR; multiple condition OR easily triggers full table scan, recommended to split with UNION ALL (e.g., SELECT * FROM t WHERE date < '2000' UNION ALL SELECT * FROM t WHERE date > '1991');
+      OR+BETWEEN Syntax: Text dates need to be combined with BETWEEN after unifying format via strftime to avoid string lexicographical errors.
+   eg:
+      Text Date OR Condition (adapted for question 27): SELECT * FROM schools WHERE strftime('%Y', OpenDate) > '1991' OR strftime('%Y', ClosedDate) < '2000';
+      OR+BETWEEN Combination: SELECT * FROM orders WHERE strftime('%Y-%m-%d', order_date) BETWEEN '2000-01-01' AND '2005-12-31' OR amount > 1000;
+      UNION ALL Rewrite for OR: SELECT * FROM schools WHERE strftime('%Y', OpenDate) > '1991' UNION ALL SELECT * FROM schools WHERE strftime('%Y', ClosedDate) < '2000';
+@dialect2sql@

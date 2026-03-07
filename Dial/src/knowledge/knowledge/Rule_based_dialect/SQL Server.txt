@@ -1,0 +1,194 @@
+@dialect2sql@
+1.1 Alias Definition and Reference
+-- SQL Server:Method: Standard usage: Define alias using AS keyword; Exclusive syntax uses "=" to define alias (e.g., fn=first_name); Use double quotes for aliases with spaces (requires QUOTED_IDENTIFIER enabled); Single quotes for aliases parsed as strings; eg: Error example (single quote error): SELECT salary 'Annual Salary' FROM employees; Correct example (AS keyword): SELECT first_name AS fn FROM employees; Exclusive syntax example (= definition): SELECT fn = first_name, ln = last_name FROM employees; Special alias example (double quotes): SELECT salary AS "Annual Salary" FROM employees;
+
+@dialect2sql@
+
+@dialect2sql@
+1.2.1 String Literal
+-- SQL Server:
+   Method:
+      Standard usage: String literals use single quotes '; Double quotes require QUOTED_IDENTIFIER ON to be treated as identifiers, otherwise compatible with strings (not recommended);
+      Error scenario: Wrapping strings with double quotes (specification issue + potential error);
+  eg:
+      Error example (double quotes not recommended):
+      WHERE name = "John Doe";
+      Correct example (single quotes):
+      WHERE name = 'John Doe';
+@dialect2sql@
+
+@dialect2sql@
+1.2.2 Identifier Quoting (Object Names)
+-- SQL Server:
+   Method:
+      Standard usage: Use double quotes "" when QUOTED_IDENTIFIER is ON, otherwise use square brackets [];
+      Error scenario: Using keywords as object names without quotes/brackets;
+  eg:
+      Error example (keyword not escaped):
+      SELECT name, group FROM users;
+      Correct example (double quotes/square brackets):
+      SELECT "name", "group" FROM "users";
+      SELECT [name], [group] FROM [users];
+@dialect2sql@
+
+@dialect2sql@
+1.2.3 Explicit Escaping of Keywords as Table/Column Names
+-- SQL Server:
+   Method:
+      Keywords used as identifiers must be wrapped in square brackets [] for escaping, or enable QUOTED_IDENTIFIER ON and use double quotes " for escaping;
+      Common keywords requiring escaping: Match, Order, User, Date, Group, etc.; Match is not a SQL Server reserved word, but still recommended to escape when used as table names.
+  eg:
+      Escaping keyword table name (recommended square brackets):
+      SELECT * FROM [Match] WHERE id = 1; ([Match] as table name)
+      Double quote escaping (requires QUOTED_IDENTIFIER enabled):
+      SET QUOTED_IDENTIFIER ON;
+      SELECT * FROM "Match" WHERE id = 1;
+      Escaping keyword column names:
+      SELECT [Order], [User] FROM products; ([Order]/[User] as column names)
+@dialect2sql@
+
+@dialect2sql@
+1.3.1 String Case Sensitivity
+-- SQL Server:
+   Method:
+      Default rule: String case-insensitive (controlled by collation);
+      Example: Default 'apple' = 'APPLE' returns true;
+  eg:
+      Default scenario:
+      SELECT * FROM fruits WHERE name = 'APPLE'; -- Matches name='apple'
+      Sensitive scenario (Latin1_General_CS_AS):
+      SELECT * FROM fruits WHERE name = 'APPLE' COLLATE Latin1_General_CS_AS; -- Only matches name='APPLE'
+@dialect2sql@
+
+
+@dialect2sql@
+1.6.3 NULL Handling Details in LEFT JOIN
+-- SQL Server:
+   Method:
+      NULL retention rule: Left table fully retained, unmatched fields from right table are NULL; Use COALESCE/ISNULL to fill (ISNULL(right_table_field, default_value) commonly used in SQL Server);
+      Difference from INNER JOIN: INNER JOIN only returns matching records, LEFT JOIN includes unmatched rows from left table;
+      Performance optimization: Join columns should have index, use hash join for large tables, supports OPTION(FORCE ORDER) to force join order, right table filtering in ON clause.
+  eg:
+      Basic LEFT JOIN (issue 27):
+      SELECT s.SchoolID, s.SchoolName, ss.AvgScrWrite FROM schools s LEFT JOIN satscores ss ON s.SchoolID = ss.SchoolID;
+      ISNULL filling NULL values:
+      SELECT s.SchoolName, ISNULL(ss.AvgScrWrite, 0) AS AvgScore FROM schools s LEFT JOIN satscores ss ON s.SchoolID = ss.SchoolID;
+      Forcing join order:
+      SELECT s.SchoolName, ss.AvgScrWrite FROM schools s LEFT JOIN satscores ss ON s.SchoolID = ss.SchoolID OPTION(FORCE ORDER);
+@dialect2sql@
+
+@dialect2sql@
+1.8.2 Division NULL Protection
+--SQL Server: Use NULLIF(denominator, 0) to prevent division by zero, combined with ISNULL to replace NULL results, eg: SELECT ISNULL(CAST(col1 AS FLOAT) / NULLIF(col2, 0), 0) AS res FROM table1 (When denominator is 0 or NULL, result replaced with 0).
+@dialect2sql@
+
+@dialect2sql@
+2.4 Boolean Type: Representation of Abstract Logic
+2.4.1 BOOLEAN Type Support
+--SQL Server: No native boolean type, commonly uses BIT type (0/1).
+@dialect2sql@
+
+@dialect2sql@
+2.4.2 BIT Type Handling Differences
+--SQL Server: BIT is a true boolean value container (0/1), can store NULL. Use WHERE flag = 1 directly in query conditions.
+@dialect2sql@
+
+@dialect2sql@
+4.3.1 Sequence or Auto-increment Mechanism
+-- SQL Server:
+   Method:
+      Core rule: Supports IDENTITY column property (table-level binding) or independent SEQUENCE object; IDENTITY more commonly used;
+  eg:
+      IDENTITY column example:
+      CREATE TABLE orders (id INT IDENTITY(1,1) PRIMARY KEY, name TEXT);
+      INSERT INTO orders (name) VALUES ('Test Order'); -- id auto-generated
+      Sequence example:
+      CREATE SEQUENCE order_id_seq START WITH 1 INCREMENT BY 1;
+      INSERT INTO orders (id, name) VALUES (NEXT VALUE FOR order_id_seq, 'Test Order');
+@dialect2sql@
+
+@dialect2sql@
+4.3.2 Semantic Difference Between Empty String ('') and NULL
+  --SQL Server: '' is a distinct valid string value (not NULL).
+@dialect2sql@
+
+@dialect2sql@
+5.8 Syntax Rules for GROUP BY Queries under sql_mode=only_full_group_by
+-- SQL Server:
+   Method:
+      Default enforcement of GROUP BY rules is consistent with only_full_group_by. SELECT columns must be in the GROUP BY clause or within aggregate functions; Violation throws an error ("Column ... is invalid in the select list because it is not contained in either an aggregate function or the GROUP BY clause");
+      No separate mode switch, strictly follows the SQL standard.
+   eg:
+      Error example: SELECT product_name, category_id, SUM(quantity) FROM sales GROUP BY category_id; (product_name is not a GROUP BY / aggregated column, error)
+      Correct example: SELECT category_id, MAX(product_name), SUM(quantity) FROM sales GROUP BY category_id;
+
+@dialect2sql@
+
+@dialect2sql@
+5.9 Mandatory Rule: Derived Table (Table-level Subquery) Must Have an Alias
+-- SQL Server:
+   Method:
+      Mandatory Requirement: Derived tables must specify an alias, otherwise throws an error ("Incorrect syntax near ')'.''"); SQL Server mandates aliases for subqueries in the FROM clause, the temporary result set cannot be identified without an alias;
+      Alias supports AS or abbreviation, semantic aliases are recommended in complex queries.
+   eg:
+      Error example: SELECT order_id FROM (SELECT order_id FROM sales WHERE year = 2023); (Error)
+      Correct example: SELECT t.order_id FROM (SELECT order_id FROM sales WHERE year = 2023) AS t_sales;
+@dialect2sql@
+
+
+@dialect2sql@
+5.10 Basic Syntax Rules for UNION Statements
+-- SQL Server:
+   Method:
+      Core Rules:
+      Subquery column counts must be consistent, data types need to be compatible (e.g., VARCHAR and NVARCHAR can be merged);
+      UNION removes duplicates, UNION ALL does not remove duplicates;
+      UNION in derived tables requires an alias, otherwise error.
+   eg:
+      UNION combined with sorting (overall sorting requires ORDER BY at the end):
+      SELECT product_id, price FROM products WHERE category = 'electronics' UNION SELECT product_id, price FROM products WHERE price > 1000 ORDER BY price DESC;
+      UNION nested in subquery:
+      SELECT region, COUNT(user_id) FROM (SELECT region, user_id FROM users_north UNION SELECT region, user_id FROM users_south) AS all_regions GROUP BY region;
+@dialect2sql@
+
+@dialect2sql@
+5.11 Cross-Database Function Compatibility Differences
+-- SQL Server:
+   Method:
+      Compatibility Rule: Versions 2012 and above support IIF() (compatible with SQLite), but do not support JULIANDAY(). Non-compatible function calls prompt "'JULIANDAY' is not a recognized built-in function name";
+      Common Incompatible Functions and Alternatives:
+      JULIANDAY(date) → Use DATEDIFF(day, date, GETDATE()) to calculate date difference, or directly sort by date;
+      STRFTIME(format, date) → Use FORMAT(date, format);
+   eg:
+      Supports IIF (compatible with SQLite):
+      SELECT IIF(reputation > 1000, 1, 0) FROM users; (Adapted for problem scenario 977)
+      Replacing JULIANDAY:
+      SELECT DATEDIFF(day, dob, GETDATE()) AS age_days FROM customers;
+      Cross-Database Function Compatibility Suggestions
+      Prefer using SQL standard functions: e.g., CASE WHEN (replaces IIF()), DATEDIFF() (replaces JULIANDAY()), TO_CHAR()/DATE_FORMAT() (choose date formatting function based on database);
+      Error Localization: Errors like 1305/"function does not exist" directly point to cross-database function incompatibility, need to consult target database's function documentation for replacement;
+      Business SQL Specification: Clarify the target database before writing SQL, avoid using proprietary functions (e.g., SQLite's JULIANDAY()), use comments to note alternatives when necessary.
+@dialect2sql@
+
+@dialect2sql@
+5.12 Format Consistency and Boundary Handling for Date Field Filtering
+-- SQL Server:
+   Method:
+      Format Specification: DATE type supports YYYY-MM-DD. TEXT/VARCHAR types need conversion using CAST(text_date AS DATE) or CONVERT(DATE, text_date, format_code) (e.g., CONVERT(DATE, '1993/7/5', 111), where 111 corresponds to YYYY/MM/DD format);
+      Type and Filter Syntax: DATE types can be compared directly. TEXT types need conversion before filtering;
+      Boundary Handling: Use BETWEEN or >=/<= for range queries. DATE type does not include time components, making boundaries simpler;
+      Sorting Compatibility: Sort directly by the date field. TEXT dates need conversion before sorting.
+   eg:
+      TEXT date conversion filtering:
+      SELECT * FROM financial WHERE CONVERT(DATE, loan_date_text, 111) = '1993-07-05';
+      Range boundary query:
+      SELECT * FROM sales WHERE sale_date BETWEEN '1993-07-01' AND '1993-07-31';
+      Direct sorting:
+      SELECT * FROM customers ORDER BY register_date DESC;
+      Core Specification Summary
+      Format Consistency: Prefer using the YYYY-MM-DD standard format for storing/filtering dates. Non-standard formats need unification via conversion functions;
+      Type Matching: DATE types can be compared directly. TEXT types need conversion before filtering (to avoid string order errors);
+      Boundary Handling: Clearly define start and end dates for range queries. Pay attention to time boundaries for date types that include time components;
+      Cross-Database Sorting: Sort directly by the date field (replacing SQLite-specific JULIANDAY function) to improve compatibility.
+
+@dialect2sql@

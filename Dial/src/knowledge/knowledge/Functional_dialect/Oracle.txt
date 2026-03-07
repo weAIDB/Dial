@@ -1,0 +1,1266 @@
+@dialect2sql@
+1.4 Date and Time Functions: Frequent Operations with Significant Differences
+
+1.4.1 Getting Current Time:
+   1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+      Questions like "current time", "what time is it now", "today's date", "current timestamp" typically use this syntax.  
+   2. Relevant Function Description:  
+      This syntax is used to get the database server's current date, time, or timestamp. It is commonly used for recording operation times, calculating time intervals, filtering time ranges, etc.
+
+
+ 	-- Oracle
+
+    	-SELECT SYSDATE FROM DUAL; -- Operating system time
+
+    	SELECT SYSTIMESTAMP FROM DUAL; -- Precise timestamp (microsecond level)
+      - Supports CURRENT_DATE, returns the current date in the session timezone (includes time part, requires TRUNC to truncate time); Difference from SYSDATE: SYSDATE returns database timezone date and time, CURRENT_DATE returns session timezone date and time.
+      eg:
+      Get current date (truncate time): SELECT TRUNC(CURRENT_DATE) FROM dual; (Result e.g., 2025-11-19)
+      Extract current year: SELECT EXTRACT(YEAR FROM CURRENT_DATE) FROM dual; (Result: 2025)
+      Compare with SYSDATE: SELECT CURRENT_DATE, SYSDATE FROM dual;
+
+
+@dialect2sql@
+
+@dialect2sql@
+1.4.2 Extracting Date Components:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Situations requiring extraction of date components include: asking about "specific year/month/quarter", "day of the week", "day of the year", "hour/minute number", and other specific time unit questions.
+
+2. Relevant Function Description:
+   This syntax function includes: obtaining specified parts (like year, month, day, hour, minute, second) from a date or time value, supports extraction of components like week, quarter, and can be combined with conditional filtering or aggregation to achieve grouping statistics by time dimensions.
+
+
+
+ 	-- Oracle
+
+ 	1) SELECT EXTRACT(YEAR FROM order\_date), TO\_CHAR(order\_date, 'MM') FROM orders;
+
+ 	Note: TO\_CHAR in Oracle returns text, cannot be used in subtraction; use EXTRACT for numerical year.
+      - Correct year difference: EXTRACT(YEAR FROM CAST("t2"."examination date" AS TIMESTAMP)) - EXTRACT(YEAR FROM CAST("t1"."birthday" AS TIMESTAMP)) < 18
+
+ 	- Incorrect writing: TO\_CHAR(...) - TO\_CHAR(...) (Text subtraction, error "operator does not exist: text - text")
+
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.4.3 Date Calculation:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+   - Calculating the number of days to/from a specific date (e.g., "How many days until National Day from today?")  
+   - Calculating past or future dates (e.g., "What is the date 3 months from now?")  
+   - Calculating durations like age, length of service (e.g., "Someone's age")  
+   - Determining the period a date belongs to (e.g., "What day of the week is a specific date?")  
+
+2. Relevant Function Description:  
+   - Supports date addition and subtraction operations (e.g., adding/subtracting days/months/years)  
+   - Calculates the number of days/months/years between two dates  
+   - Extracts date components (e.g., year, month, weekday value)  
+   - Implements date truncation (e.g., truncating to the start of the month or year)  
+   - Timezone conversion and cross-timezone calculations
+
+
+
+ 	-- Oracle
+
+ 	SELECT order\_date + 7 FROM orders; -- Directly adding/subtracting numbers represents days
+
+ 	SELECT ADD\_MONTHS(order\_date, 3); -- Add 3 months
+
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.4.4 Date Truncation Functions:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+   - Calculating age (e.g., "Someone's age")  
+   - Statistical analysis of monthly/quarterly/annual data (e.g., "This month's sales", "This quarter's order volume")  
+   - Weekly grouping analysis (e.g., "Weekly active user count")  
+   - Comparing period-over-period data (e.g., "Profit for the same period last year")  
+
+2. Relevant Function Description:  
+   - Truncates date-time values to a specified precision (e.g., start of year, month, day, hour, etc.)  
+   - Used for date grouping statistics or time interval comparisons  
+   - Assists in calculating date differences (e.g., calculating day difference ignoring the time part)  
+   - Generates standardized time coordinates for correlated queries
+
+
+ 
+ 	--Oracle: Use TRUNC(date_column, 'precision'), "precision" supports YYYY (year), MM (month), DD (day), etc. (Omitting precision defaults to truncating to "day").
+
+ 	eg:
+
+ 	  	    Truncate to "year": TRUNC(lastaccessdate, 'YYYY') (Result: "First day of the current year").
+
+ 	        Truncate to "month": TRUNC(lastaccessdate, 'MM') (Result: "First day of the current month").
+
+                Truncate to "day" (remove time): TRUNC(lastaccessdate).
+@dialect2sql@
+
+
+@dialect2sql@
+1.4.5 Age Calculation:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+   - Calculating age (e.g., "Someone's age")  
+   - Calculating birthday (e.g., "What is someone's birthday and how many days until it from today?")
+   - Calculating exact age in years (e.g., "What is someone's exact age in years this year?")
+   - Determining legal age (e.g., "Has someone reached the legal adult age / legal marriage age?")
+   - Age group statistics (e.g., "Purchase preferences of users aged 30-40")
+   - Retirement age calculation (e.g., "How many years until someone reaches the legal retirement age?")
+   - Birthday cycle calculation (e.g., "Which week of the month is someone's birthday, how many days until the next birthday?")
+
+2. Relevant Function Description:  
+   - Truncates date-time values to a specified precision (e.g., start of year, month, day, hour, etc.)
+   - Used for date grouping statistics or time interval comparisons
+   - Assists in calculating date differences (e.g., calculating day difference ignoring the time part)
+   - Generates standardized time coordinates for correlated queries
+   - Truncates birth date to year dimension, calculates difference from current year for exact age in years
+   - Truncates date to month-day dimension, compares birthday with current date to determine if birthday has passed
+   - Calculates age difference at year granularity, assists in legal age threshold determination
+   - Standardizes birth date (truncate to year/month) for age group analysis
+
+
+-- Oracle:
+   Method: Use MONTHS_BETWEEN to calculate month difference, divide by 12 and truncate (TRUNC removes decimal part)
+   eg:
+      Calculate current age: TRUNC(MONTHS_BETWEEN(SYSDATE, birthdate)/12)
+      Calculate age up to 2025-11-19: TRUNC(MONTHS_BETWEEN(TO_DATE('2025-11-19', 'YYYY-MM-DD'), TO_DATE('1992-11-20', 'YYYY-MM-DD'))/12)
+
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.5 Pagination Queries
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Viewing data lists for a specified page (e.g., "Show the user list for page 3")
+   - Retrieving the top N records (e.g., "Query the top 10 products with the highest sales")
+   - Fetching data after skipping some records (e.g., "Display 10 records starting from the 21st record")
+   - Loading large amounts of data in batches (e.g., "Load the next batch of 20 order records")
+
+2. Relevant Function Description
+   - Supports specifying the limit on the number of records returned
+   - Supports skipping a specified number of records (offset setting)
+   - Supports pagination queries combined with sorting conditions
+   - Supports efficient pagination implementation via window functions
+
+
+* Oracle
+     -- ROW_NUMBER: Using ROWNUM pseudo-column before 12c
+     SELECT * FROM (
+          SELECT t.*, ROWNUM rn FROM (
+               SELECT * FROM products ORDER BY price DESC
+          ) t WHERE ROWNUM <= 30
+     ) WHERE rn > 20;
+     -- Window function ROW_NUMBER() + FETCH FIRST: Modern standard
+     SELECT * FROM products
+     ORDER BY price DESC
+     OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY; -- Standard, clear, and high potential for performance optimization
+@dialect2sql@
+
+
+@dialect2sql@
+1.6 Join Syntax
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Querying associated information involving multiple entities (e.g., "List all employees and their department names" where "and their" implies association)
+   - Summarizing aggregated data across joined tables (e.g., "Count the number of employees per department" where "per department" implies grouping)
+   - Filtering records that require data from other tables (e.g., "Find employees not assigned to any department" where "not assigned to any department" implies a check for non-existence in another table)
+   - Comparing relationships between multiple entities (e.g., "Query common customers of the Sales and Marketing departments" where "common customers" implies an intersection)
+
+2. Relevant Function Description
+   - Supports multi-table join queries (including INNER JOIN, LEFT/RIGHT/FULL OUTER JOIN)
+   - Implements record filtering and matching based on join conditions
+   - Provides cross-table data aggregation and grouped statistical capabilities
+   - Supports existence checks for relationships (e.g., checking if a record in one table has a corresponding entry in another table)
+
+1.6.1 Two-Table Joins
+* INNER JOIN: Recommended standard form
+     SELECT e.name, d.department_name
+     FROM employees e
+     INNER JOIN departments d ON e.dept_id = d.id; -- Clearly expresses the join condition
+
+* Old-style comma list + WHERE: Legacy style (not recommended, poor readability, error-prone)
+     SELECT e.name, d.department_name
+     FROM employees e, departments d
+     WHERE e.dept_id = d.id; -- Implicit inner join, easy to forget conditions leading to Cartesian products
+
+* (+): Oracle-specific outer join marker (legacy syntax)
+     -- Oracle (Not recommended, should use standard OUTER JOIN instead)
+     SELECT e.name, d.department_name
+     FROM employees e, departments d
+     WHERE e.dept_id = d.id(+); -- Indicates a RIGHT OUTER JOIN (pay special attention to symbol placement)
+
+Important: All modern versions recommend using explicit LEFT/RIGHT/FULL OUTER JOIN syntax.
+@dialect2sql@
+
+
+@dialect2sql@
+1.6.2 Multi-Table Joins (Three Tables or More)
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   Multi-entity association queries (e.g., "Query competition scores, athlete information, and associated profile data", "Get four-table association results for loans, accounts, authorization records, and customer information", "Match test records, patient information, and test item data across three tables")
+   Multi-table joins with filter conditions (e.g., "Filter athletes with competition scores greater than 80 and their profile information", "Query test records after 2023 and their corresponding patients and test items", "Get competition results for athletes born before 1985")
+   Association queries with multi-column composite conditions (e.g., "Associate orders with store information based on store ID and region dual conditions", "Associate order and product data via foreign key + status condition")
+   LEFT JOIN requirements preserving primary table data (e.g., "Query all customers and their order and product information, display NULL if no orders exist")
+   Custom requirements for specific join order (e.g., "Force join order by specified table sequence to optimize query efficiency")
+
+2. Relevant Function Description
+   Supports chained multi-table associations (three tables or more), adapting to multi-level entity relationships in business (e.g., competition→athlete→profile, loan→account→customer)
+   Flexible control over join order (MySQL/SQLite execute in written order; PostgreSQL/Oracle/SQL Server auto-adjust via optimizer; supports LEADING hint or OPTION (FORCE ORDER) to force order)
+   Diverse ON condition support (foreign key association, multi-column composite association, nested conditions / subquery association, ensuring accuracy of association logic)
+   Adaptation of different join types (INNER JOIN for matching data filtering, LEFT JOIN for preserving full primary table data, avoiding Cartesian products)
+   Performance optimization mechanisms (relying on indexes for join columns, prioritizing HASH JOIN / MERGE JOIN for large tables, NESTED LOOP for small tables, filtering data early to reduce intermediate result sets)
+   Cross-data type association adaptation (requires matching data types for join columns, avoiding implicit conversion, unifying text field formats before association)
+   Support for complex business scenario associations (deep associations of four tables or more, covering entity association needs in finance, healthcare, sports events, and other fields)
+
+
+-- Oracle:
+   Method:
+   Join Order: CBO optimizer automatically selects the optimal join order (based on table size, indexes, statistics), can force order via LEADING hint;
+   ON Condition Logic: Supports foreign key association, multi-column association, and subquery association (ON a.id = (SELECT b.id FROM b WHERE ...)), pay attention to data precision for non-foreign key associations (e.g., numeric type length matching);
+   Performance Optimization: Use HASH JOIN or MERGE JOIN for large tables, join columns need indexes, avoid RIGHT JOIN (prefer rewriting with equivalent LEFT JOIN).
+   eg:
+   Four-table association (loan - account - authorization - customer):
+   SELECT l.loan_amt, a.balance, au.auth_date, c.cust_name FROM loans l JOIN accounts a ON l.acc_id = a.acc_id JOIN authorizations au ON a.acc_id = au.acc_id JOIN customers c ON au.cust_id = c.cust_id WHERE l.loan_date >= TO_DATE('2023-01-01', 'YYYY-MM-DD');
+   Forcing join order (LEADING hint):
+   SELECT /*+ LEADING(l a) */ l.loan_id, a.acc_no FROM loans l JOIN accounts a ON l.acc_id = a.acc_id JOIN customers c ON a.cust_id = c.cust_id;
+
+@dialect2sql@
+
+@dialect2sql@
+1.7 Grouping Queries
+
+1.7.1 GROUP BY
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Counting quantities per category (e.g., "What is the sales quantity per product category?")
+   - Calculating averages per department (e.g., "What is the average salary per department?")
+   - Summarizing data per time period (e.g., "Monthly sales statistics")
+   - Analyzing maximum values per region (e.g., "What is the maximum temperature per province?")
+
+2. Relevant Function Description
+   - Supports grouping data statistics by specified columns
+   - Works with aggregate functions to calculate summary values per group (e.g., COUNT, SUM, AVG)
+   - Implements multi-column composite grouping (e.g., grouping simultaneously by department and position)
+   - Provides result filtering capability after grouping (using the HAVING clause)
+
+     (1) Oracle: Oracle requires GROUP BY to include all non-aggregated columns (unless using aggregate functions), eg: GROUP BY "t2"."name", "t2"."nationality"
+@dialect2sql@
+
+
+@dialect2sql@
+1.8 NULL Usage
+
+1.8.1 NULL Sorting
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Querying the highest score and placing NULLs last (e.g., "Find the highest score, place NULL scores last")
+   - Getting the latest records and placing missing dates first (e.g., "Show the latest orders, prioritize orders without dates")
+   - Ranking sales figures and handling NULL sales (e.g., "Rank sales, place NULLs at the bottom")
+   - Filtering for the lowest price and placing unpriced items last (e.g., "Lowest priced product, place unpriced items last")
+
+2. Relevant Function Description
+   - Supports explicit control over NULL position during sorting (NULLS FIRST/NULLS LAST)
+   - Manually implements NULL sorting via conditional expressions (CASE WHEN handling)
+   - Simulates NULL sorting using value replacement (e.g., ISNULL replacement)
+   - Combines type conversion and NULL handling for sorting (using CAST with NULLIF)
+
+     (1) Oracle: Supports NULLS FIRST/NULLS LAST, can be used directly in ORDER BY, eg: ORDER BY score DESC NULLS LAST FETCH FIRST 1 ROWS ONLY (explicitly places NULL values last)
+@dialect2sql@
+
+@dialect2sql@
+1.8.3 NULL Value Checking:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Filter records with valid information (e.g., "List all users who have filled in their email" where "have filled in" implies non-null)
+   - Exclude entries with missing data (e.g., "Query customers whose phone number is not empty" where "not empty" implies IS NOT NULL)
+   - Count the number of valid data entries (e.g., "Count the number of users who have completed real-name authentication" where "have completed" implies the field is not NULL)
+   - Verify the completeness of required fields (e.g., "Check if all orders have a shipping address" where "have" implies the field is not NULL)
+
+2. Relevant Function Description:
+   - Supports IS NOT NULL syntax to check for non-null values in a field
+   - Supports IS NULL syntax to check for null value status in a field
+   - Provides the `columnname notnull` shorthand syntax (supported by some databases)
+   - Implements record filtering and statistics based on null value conditions
+
+- General Cases
+
+  (1)Oracle: Must use IS NOT NULL
+
+
+- Aggregate Function (MAX()/AVG() etc.) Handling of NULL Values
+-- Oracle:
+   Method:
+   MAX()/MIN()/AVG()/SUM() ignore NULL values by default; COUNT(column) ignores NULLs, COUNT(*) counts all rows;
+   Explicitly excluding NULLs can reduce the amount of data scanned during aggregation when the column has a NOT NULL constraint or an index, leading to better performance;
+   In conditional aggregation, `AVG(DECODE(condition, column, NULL))` is equivalent to a CASE expression, NULLs do not participate in the calculation.
+   eg:
+   SUM() ignores NULL: `SELECT SUM(bonus) FROM employees;` (employees with NULL bonus do not contribute to the sum)
+   Explicitly filters NULL: `SELECT AVG(hgb) FROM patient WHERE hgb IS NOT NULL;` (avoids returning NULL when all values are NULL)
+   Conditional aggregation (DECODE): `SELECT AVG(DECODE(department, 'IT', salary, NULL)) FROM staff;` (only calculates the average salary for the 'IT' department)
+@dialect2sql@
+
+
+@dialect2sql@
+1.9 Functions for Calculating Age Difference:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Calculate a person's age (e.g., "What is someone's age?")
+   - Determine if an age condition is met (e.g., "Is he/she 18 years or older?")
+   - Calculate service years (e.g., "How long is the employee's length of service?")
+   - Compare age differences (e.g., "What is the age difference between two people?")
+
+2. Relevant Function Description:
+   - Calculates the year difference between two dates
+   - Handles age correction for birthdays not yet passed in the current year
+   - Supports precise age calculation down to year, month, and day
+   - Provides multiple date difference calculation methods (year difference, month difference, etc.)
+
+
+(1)Oracle: Use MONTHS_BETWEEN to calculate the month difference between "current date - birthday", then divide by 12 and truncate to get age. e.g.: `TRUNC(MONTHS_BETWEEN(SYSDATE, birthday) / 12)`
+
+@dialect2sql@
+
+@dialect2sql@
+1.10 Splitting Strings:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Extract a substring at a specific position (e.g., "Get the username part from the email address" where "username part" implies a specific segment)
+   - Analyze structured text data (e.g., "Extract the third column data from CSV format" where "extract the third column" implies splitting)
+   - Process path or hierarchical information (e.g., "Get the filename from the file path" where "filename" implies the last segment)
+   - Parse composite identifiers (e.g., "Extract the specification code from the product code" where "specification code" implies a specific segment)
+
+2. Relevant Function Description:
+   - Splits a string by a specified delimiter and returns the substring at the specified position
+   - Supports counting and extracting segments from the beginning or end of the string
+   - Provides regular expression pattern matching for extracting complex format string segments
+   - Implements substring extraction based on delimiter position
+
+
+(1)Oracle:
+-- Method 1:
+Syntax: `REGEXP_SUBSTR(source_char, pattern [, position [, occurrence [, match_parameter]]])`,
+Parameters: source_char: source string (e.g., 'a:b:c'). pattern: regex pattern (example '[^:]+' means "consecutive characters not :", i.e., substrings outside the delimiter). position: start matching from which character of the source string (default 1, i.e., start). occurrence: extract the occurrence-th matching substring (default 1, i.e., first). match_parameter: regex matching parameters (optional, e.g., 'i' for case-insensitive).
+eg: `REGEXP_SUBSTR('a:b:c', '[^:]+', 1, 2)` → returns 'b' (matches "substrings not containing :", takes the 2nd match).
+-- Method 2:
+INSTR syntax: `INSTR(source_char, search_char [, start_position [, occurrence]])` (finds delimiter position).
+SUBSTR syntax: `SUBSTR(source_char, start_position [, length])` (extracts substring).
+Logic: Use INSTR to find the position of the n-th delimiter, then use SUBSTR to extract the substring up to that position.
+eg (get 1st part):
+`SUBSTR('a:b:c', 1, INSTR('a:b:c', ':', 1, 1) - 1)` → returns 'a' (extract from start to before the 1st :).
+
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.11 Usage of Virtual Tables:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query system information or constant values (e.g., "What is the current system time?" where "current system time" implies a function call)
+   - Execute simple calculation expressions (e.g., "Calculate what is 1 plus 1" where "calculate...equals" implies an expression)
+   - Get database function results (e.g., "What is the database version number?" where "version number" implies a system function)
+   - Test database connection status (e.g., "Is the database connection normal?" where "connection normal" might involve a simple query)
+
+2. Relevant Function Description:
+   - Supports table-less queries returning constant values and expression results
+   - Provides system function call interface (e.g., time functions, version functions)
+   - Implements virtual table mechanism to satisfy SELECT syntax completeness requirements
+   - Allows direct execution of functions and expressions without relying on actual data tables
+
+
+(1)Oracle: dual is a built-in pseudo table, FROM dual must be used in table-less queries (to satisfy SELECT syntax requiring FROM); but adding FROM dual in JOIN queries is prohibited, otherwise it triggers a syntax error, e.g.: 1) `SELECT 1 FROM dual;` -- Returns constant 1 2) `SELECT t1.id, t2.name FROM table1 t1 JOIN table2 t2 ON t1.id = t2.id FROM dual;` -- Redundant FROM dual, triggers syntax error.
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.12 BETWEEN Conditional Operator
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Numeric range filtering (e.g., "Students aged between 18 and 22", "Products priced between 100 and 200 yuan")
+   - Date/Time range queries (e.g., "Orders from 1990 to 1993", "Customers registered in 2020", "Log records within this week")
+   - String lexicographical range matching (e.g., "Users whose username starts with A to C", "Students whose last name is between Li and Zhang")
+   - Reverse range filtering (e.g., "Products not priced between 100 and 200 yuan", "Students not aged between 18 and 22")
+   - Business indicator range queries (e.g., "Employees with salary between 5000 and 8000 yuan", "Products with stock not between 10 and 50")
+   - Time granularity range statistics (e.g., "Sales from Q1 to Q2 2023", "Access records from 9 AM to 6 PM daily")
+   - Reverse filtering with quantity limit (e.g., "Top 10 sales records where amount is not between 1000 and 5000")
+
+2. Relevant Function Description:
+   - Implements closed interval range filtering, directly matching the natural language requirement of "between X and Y"
+   - Supports range comparison for multiple data types like numeric, date, string, adapting to different business field types
+   - Implements reverse range query "not between X and Y" via NOT BETWEEN, meeting exclusion filtering needs
+   - Combines with date formatting/type conversion functions (e.g., TO_DATE, strftime) to adapt to different database date range query logic
+   - Supports string lexicographical range matching, meeting interval filtering scenarios for text fields
+   - Can combine with TOP/LIMIT clauses to implement range filtering with quantity limits
+   - Adapts to different database implicit/explicit type conversion rules, ensuring accuracy in date, string, and numeric range comparisons
+   - Meets interval statistics and filtering needs for business indicators like salary, stock, sales, supporting business analysis scenarios
+
+-- Oracle:
+   Method:
+   BETWEEN is a closed interval (includes both bounds);
+   Implicit conversion between date type and string: If the string conforms to Oracle's default date format (e.g., 'YYYY-MM-DD' or 'DD-MON-YYYY'), it is automatically converted to DATE type;
+   NOT BETWEEN supports reverse range filtering, logic is `NOT (value BETWEEN lower_bound AND upper_bound)`.
+   eg:
+      Date implicit conversion filtering: `SELECT * FROM orders WHERE order_date BETWEEN '1990-01-01' AND '1993-12-31';`
+      Numeric range query: `SELECT * FROM employees WHERE salary BETWEEN 5000 AND 8000;` (includes salary 5000 and 8000)
+      NOT BETWEEN usage: `SELECT * FROM products WHERE stock NOT BETWEEN 10 AND 50;` (stock <10 OR> 50)
+@dialect2sql@
+
+@dialect2sql@
+II. Data Types: Underlying Differences in Basic Storage Definitions
+
+2.1 Numeric Types: Precision, Range, and Storage Optimization
+
+2.1.1 Integer Types:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query integer data within a specific range (e.g., "Query users aged between 18 and 25")
+   - Count or sum integer types (e.g., "Calculate the number of orders with total amount exceeding 1000")
+   - Compare integer size relationships (e.g., "Find products with stock quantity less than 50")
+   - Perform integer operations and conversions (e.g., "Convert user points to levels")
+
+2. Relevant Function Description:
+   - Supports querying and filtering integer ranges (e.g., BETWEEN, comparison operators)
+   - Provides integer aggregate functions (e.g., COUNT, SUM, AVG for statistical calculations)
+   - Implements integer comparison and sorting operations (e.g., greater than, less than, equal to)
+   - Supports integer type conversion and arithmetic operations (e.g., addition, subtraction, multiplication, division, type conversion functions)
+
+
+(1)Oracle: No Tiny Integer, Standard Small Integer NUMBER(5), Standard Integer NUMBER(10), Big Integer NUMBER(19)
+
+@dialect2sql@
+
+
+@dialect2sql@
+2.1.2 Exact Decimal Types:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Precise calculation of monetary amounts (e.g., "What is the price of this product after discount?" where "price" implies precision)
+   - Statistical precision of financial data (e.g., "This month's sales rounded to two decimal places" where "rounded to two decimal places" implies fixed scale)
+   - Processing scientific calculation data (e.g., "Experimental data needs to be precise to four decimal places" where "precise to four decimal places" implies high precision)
+   - Calculating percentages or ratios (e.g., "Calculate profit margin precise to three decimal places" where "precise to three decimal places" implies fixed scale)
+
+2. Relevant Function Description:
+   - Supports specifying precision and scale (e.g., DECIMAL(10,2) means total 10 digits, 2 decimal places)
+   - Ensures precision in numerical calculations, avoiding floating-point precision errors
+   - Provides high-precision numerical storage, suitable for financial, scientific computing, etc.
+   - Supports special handling for currency types, such as rounding and formatted output
+
+
+  -- Oracle
+
+  NUMBER(10, 2)   -- Total 10 digits, 2 decimal places (numeric type)
+
+
+@dialect2sql@
+
+@dialect2sql@
+2.2 String Types: Fixed-length, Variable-length, and Encoding Handling
+
+2.2.1 CHAR vs VARCHAR Behavior Comparison:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query fixed-length encoded information (e.g., "Query employee IDs, required to display as 5 digits" where "display as 5 digits" implies fixed length)
+   - Process data sensitive to trailing spaces (e.g., "Find all department codes ending with 'ABC '" where "ending with 'ABC '" implies trailing spaces matter)
+   - Storage space optimization scenarios (e.g., "Store user remarks, requiring space saving" where "space saving" implies variable length)
+   - Exact matching of character data (e.g., "Exactly find the customer named 'Smith '" where "exactly find" implies exact string match including potential spaces)
+
+2. Relevant Function Description:
+   - Fixed-length storage guarantee (ensures all values have the same byte length)
+   - Trailing space handling control (supports preserving or automatically removing trailing spaces)
+   - Variable-length storage optimization (dynamically allocates storage space based on actual data length)
+   - Character comparison semantics definition (defines rules for comparing strings with and without spaces)
+
+-- Oracle:
+   Method:Mandatory Constraint: CHAR(N) defaults to byte count as length unit (change to character count via NLS_LENGTH_SEMANTICS=CHAR), fixed-length storage; pads with trailing spaces if input length < N, strictly retains trailing spaces in retrieval/comparison, max N=2000; VARCHAR2(N) (recommended over VARCHAR) defaults to byte count as length unit (changeable to character count), variable-length storage, retains trailing spaces, max N=4000 bytes (extended to 32767 bytes in 12c+);Error Scenario: Inserting data exceeding VARCHAR2(N) byte limit; ignoring trailing spaces in CHAR comparison (expecting match without spaces); using VARCHAR instead of VARCHAR2 (VARCHAR is alias with no independent implementation);Solution: Set NLS_LENGTH_SEMANTICS=CHAR for character count unit; ensure inserted data length ≤ VARCHAR2(N) limit; strictly match trailing spaces for CHAR comparison; use VARCHAR2 instead of VARCHAR.eg:Error example (VARCHAR2 exceeds byte limit, triggers "value too large" error):CREATE TABLE err_dept (dept_code VARCHAR2(4000)); INSERT INTO err_dept VALUES (RPAD('A', 4001, 'A'));Error example (CHAR comparison ignores trailing spaces, no matching result):ALTER SESSION SET NLS_LENGTH_SEMANTICS=CHAR; CREATE TABLE emp (emp_id CHAR(5)); INSERT INTO emp VALUES ('123 '); SELECT * FROM emp WHERE emp_id = '123';Correct example (CHAR with character count unit):ALTER SESSION SET NLS_LENGTH_SEMANTICS=CHAR; CREATE TABLE emp (emp_id CHAR(5)); INSERT INTO emp VALUES ('123'); SELECT * FROM emp WHERE emp_id = '123 ';Correct example (VARCHAR2 retains trailing spaces):CREATE TABLE dept (dept_code VARCHAR2(20)); INSERT INTO dept VALUES ('ABC '); SELECT * FROM dept WHERE dept_code = 'ABC ';
+@dialect2sql@
+
+
+@dialect2sql@
+2.2.2 Large Object (LOB) Types:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Store very long article content (e.g., "Save the full text of this novel over 100,000 words")
+   - Record detailed product description information (e.g., "Upload the complete technical specification document for this product")
+   - Store user-generated long content (e.g., "Save the long comment content submitted by the user")
+   - Handle file content storage (e.g., "Store the entire log file content into the database")
+
+2. Relevant Function Description:
+   - Supports storing very large capacity text data (from MB to TB level)
+   - Provides specialized read/write operation methods (e.g., stream reading, segmented writing)
+   - Implements text content integrity and consistency guarantees
+   - Supports large text storage with different character set encodings
+
+
+    (1)Oracle: Small text extension VARCHAR2(4000), CLOB; Large text storage CLOB(TB level)
+
+@dialect2sql@
+
+
+@dialect2sql@
+2.2.3 Fixed-Length String:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query fixed-length codes or identifiers (e.g., "Query employee ID, must be 6 digits" where "must be 6 digits" implies fixed length)
+   - Process fixed-format data validation (e.g., "Is the ID card number in the correct format?" where "correct format" implies specific length and pattern)
+   - Match strings of specific length (e.g., "Find all 3-letter country codes" where "3-letter" implies fixed length)
+   - Generate fixed-length output results (e.g., "Generate a fixed 8-digit order number" where "fixed 8-digit" implies fixed length)
+
+2. Relevant Function Description:
+   - Defines fixed-length string storage structure
+   - Automatically pads with spaces to the specified length
+   - Validates if input data length meets requirements
+   - Ensures consistent length during data storage and comparison
+
+
+(1)Oracle: CHAR(n), n is 1~2000 bytes
+
+@dialect2sql@
+
+@dialect2sql@
+2.2.4 Variable-Length String:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query user-input variable length information (e.g., "Find all users whose username contains 'Zhang'" where "username contains" implies variable content)
+   - Process variable-length text fields like addresses, remarks (e.g., "Count records where the address field length exceeds 50 characters" where "field length exceeds" implies variable length)
+   - Store long text data like product descriptions, comments (e.g., "Query products whose description contains 'discount'" where "description contains" implies searching within variable content)
+   - Process strings of uncertain length like names, titles (e.g., "Find documents whose title ends with 'Report'" where "title ends with" implies variable length matching)
+
+2. Relevant Function Description:
+   - Supports storing variable-length character data, allocating storage based on actual space used
+   - Provides string matching and search functions (e.g., LIKE operation, regular expression matching)
+   - Implements string length calculation and substring operations
+   - Supports basic text processing functions like string concatenation, replacement
+
+
+(1)Oracle: VARCHAR2(n), n is 1~4000 bytes (or 32767 bytes, depending on version/configuration)
+
+@dialect2sql@
+
+
+@dialect2sql@
+2.3 Date and Time Types: Differences in Time Representation Precision
+
+2.3.1 Basic Date and Time Type Comparison:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying data within a specific time range (e.g., "today" in "query all orders for today")
+   - Comparing data at different time points (e.g., "this month" and "last month" in "compare this month's sales with last month's")
+   - Aggregating statistics by time dimension (e.g., "per hour" in "count visits per hour")
+   - Handling timezone-related queries (e.g., "convert to" in "convert Beijing time to New York time")
+
+2. Relevant Function Description:
+   - Supports storage and formatted output of date and time types
+   - Provides date and time extraction and conversion functions (e.g., extract hour, convert to different timezone)
+   - Implements comparison and filtering for date and time ranges
+   - Supports time interval calculation and date-time arithmetic operations
+
+
+  (1)Oracle: Date only DATE (older versions can handle time), Time only TIMESTAMP or DATE extension, Date+Time TIMESTAMP[(p)], Timezone support TIMESTAMP WITH TIME ZONE
+
+
+@dialect2sql@
+
+@dialect2sql@
+2.3.2 Important Parameters for Time Precision:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Recording timestamps with millisecond precision (e.g., "record the exact time of the operation, precise to milliseconds")
+   - Controlling timestamp precision (e.g., "store the current time, including microsecond precision")
+   - Precise measurement of time intervals (e.g., "calculate the time difference between two events, precise to nanoseconds")
+   - Formatted output of time data (e.g., "display time, keeping three decimal places")
+
+2. Relevant Function Description:
+   - Supports definition of fractional seconds precision (e.g., storage of milliseconds, microseconds)
+   - Controls storage precision and display format of time types
+   - Implements high-precision time calculation and comparison
+   - Manages the balance between storage space and precision for time data
+
+
+-- Oracle:
+   Method:
+      Mandatory Constraint: Oracle 11g and earlier do not support fractional seconds precision parameter; 12c+ supports TIMESTAMP(p), p range 0-9 (0 = second-level, 3 = millisecond-level, 9 = nanosecond-level); applies to TIMESTAMP/TIMESTAMP WITH TIME ZONE, default p=6; DATE type has no fractional seconds (only second-level, does not support p); p >9 triggers syntax error;
+      Error Scenario: Using TIMESTAMP(p) in Oracle 11g; setting p >9 (e.g., TIMESTAMP(10)); adding p to DATE type (e.g., DATE(3)); inserting data with precision exceeding defined p;
+      Solution: Use TIMESTAMP(p) only in Oracle 12c+, restrict p to 0-9; manually splice fractional seconds for Oracle 11g; only apply p to TIMESTAMP types (not DATE); match input data precision to defined p.
+   eg:
+      Error example (p exceeds limit, triggers "precision out of range" error in 12c+):
+      CREATE TABLE err_oracle (read_time TIMESTAMP(10));
+      Error example (TIMESTAMP(p) in 11g, triggers "invalid datatype modifier" error):
+      CREATE TABLE err_11g (create_time TIMESTAMP(3));
+      Correct example (12c+ TIMESTAMP(3) stores millisecond precision):
+      CREATE TABLE order_log (create_time TIMESTAMP(3));
+      INSERT INTO order_log VALUES (SYSTIMESTAMP);
+      Correct example (TIMESTAMP(9) stores nanosecond precision):
+      CREATE TABLE sensor_log (read_time TIMESTAMP(9));
+      INSERT INTO sensor_log VALUES (TO_TIMESTAMP('2025-12-07 10:00:00.123456789', 'YYYY-MM-DD HH24:MI:SS.FF9'));
+
+@dialect2sql@
+
+
+@dialect2sql@
+2.5 Type Conversion
+
+2.5.1 LIKE Operator:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying data for a specific year (e.g., "find all orders from 1991")
+   - Searching for information for a specific month (e.g., "find sales records for October")
+   - Matching patterns with date prefixes (e.g., "query all dates starting with 1991-10")
+   - Filtering records by date pattern (e.g., "filter employees whose birthday is in October")
+
+2. Relevant Function Description:
+   - Supports string pattern matching on date fields
+   - Implements fuzzy queries by time dimensions like year/month
+   - Provides conversion functions from date type to string type
+   - Allows partial date matching using wildcards
+
+
+ 	(1)Oracle: Oracle does not allow DATE type to be used directly with LIKE, requires converting the date to VARCHAR or using date range; Correct LIKE: CAST("t2"."date" AS VARCHAR) LIKE '1991-10-%' (or "t2"."date" >= '1991-10-01' AND "t2"."date" < '1991-11-01')
+
+
+@dialect2sql@
+
+
+@dialect2sql@
+2.5.2 Comparison Rules for Date/Time and Strings:
+
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying data records for a specific date (e.g., "October 1, 2023" in "query sales data for October 1, 2023")
+   - Filtering records within a time range (e.g., "last 7 days" in "find orders from the last 7 days")
+   - Aggregating statistics by time period (e.g., "each month of this quarter" in "aggregate sales for each month of this quarter")
+   - Comparing chronological relationships (e.g., "earlier than a certain date" in "find contracts earlier than a certain date")
+
+2. Relevant Function Description:
+   - Supports implicit or explicit conversion comparison between date/time types and strings
+   - Provides date format parsing functions to adapt to different string input formats
+   - Implements date range queries and interval filtering
+   - Supports partial date matching (e.g., comparing by year, month, day separately)
+
+
+      (1)Oracle: Requires using TO_DATE to convert the string to the corresponding date type, eg: WHERE "t1"."date" = TO_DATE('2012-08-24', 'YYYY-MM-DD') AND "t1"."time" = TO_CHAR(TO_DATE('2012-08-24 16:25:00', 'YYYY-MM-DD HH24:MI:SS'), 'HH24:MI:SS');
+
+@dialect2sql@
+
+@dialect2sql@
+2.5.3 General Type Conversion:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Numeric strings participating in calculations (e.g., "convert the string '100' to a number for calculation")
+   - Date format conversion for display (e.g., "display the current date as 'YYYY year MM month DD day' format")
+   - Handling type compatibility (e.g., "convert text field to number for sorting")
+   - Data formatting output (e.g., "convert amount number to a string with thousand separators")
+
+2. Relevant Function Description:
+   - Supports mutual conversion between strings and numeric types
+   - Provides formatted output functions for date-time types
+   - Implements explicit conversion operations between different data types
+   - Supports data conversion with custom format templates
+
+
+(1)Oracle: Supports CAST(expression AS target_type), eg: string to number → CAST('123' AS NUMBER); More commonly uses dedicated conversion functions, TO_NUMBER(string): string to number (eg: TO_NUMBER('123.45')), TO_CHAR(value, format): number/date to string (eg: TO_CHAR(123, '999'), TO_CHAR(SYSDATE, 'YYYY-MM-DD')), TO_DATE(string, format): string to date (eg: TO_DATE('2023-01-01', 'YYYY-MM-DD'))
+@dialect2sql@
+
+@dialect2sql@
+2.5.4 Explicit Field Type Conversion (Non-Basic Types):
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Conditional filtering after converting text to numeric (e.g., "records where the DOC field converted to integer equals 54 and the SOC field converted to integer equals 62", "filter data where the text field converted to numeric is greater than 100", "query the result of converting non-pure-numeric text to numeric")
+   Operations and filtering after converting text to date (e.g., "convert '2023-10-01' to date type", "convert text to date according to MM/DD/YYYY format", "filter records where the text date converted to standard date is within a specified range")
+   Handling conversion of malformed data (e.g., "get the result of converting text containing non-numeric characters to numeric", "handle the result of converting text that does not conform to standard format to date", "requirement to return a default value when invalid text is converted to numeric")
+   Type conversion with specified format (e.g., "convert text to numeric with decimals according to '999.99' format", "convert text to date according to YYYY/MM/DD format")
+
+2. Relevant Function Description:
+   Diverse conversion syntax support (PostgreSQL exclusive ::target_type syntax, CAST/CONVERT for MySQL/SQLite/SQL Server, TO_NUMBER/TO_DATE functions for Oracle, meeting the syntactic habits of different databases)
+   Differentiated format validation rules (PostgreSQL/Oracle/SQL Server have strict validation, non-standard formats directly report errors; MySQL in loose mode automatically truncates valid parts, strict mode reports errors; SQLite validation is very loose, invalid conversions return default values)
+   Error tolerance and default value mechanism (SQLite/MySQL in loose mode, text to numeric returns 0 if no valid digits, text to date returns NULL for non-standard formats, avoiding query interruption)
+   Multi-format adaptation capability (MySQL compatible with YYYY/MM/DD and other non-standard date formats, SQL Server supports multiple date formats like MM/DD/YYYY via format codes, Oracle requires explicit format string specification for matching conversion)
+   Coverage of non-basic type conversions (Supports conversion of text to integer/date/numeric and other non-basic types, meeting conversion needs for heterogeneous data types in business)
+   Syntax priority and conciseness (PostgreSQL's :: syntax has higher priority than function conversion, syntax is more concise; Oracle relies on dedicated conversion functions, allowing finer format control)
+
+-- Oracle:
+   Method:
+      Use TO_NUMBER(text, format_string) to achieve text to numeric, TO_DATE(text, format_string) to achieve text to date;
+      Strict format validation: Text must exactly match the specified format string (e.g., TO_NUMBER('54', '99')), reports error if contains non-numeric characters or format mismatch;
+      No :: syntax, must explicitly convert via functions.
+   eg:
+      Text to integer (scenario adaptation): SELECT * FROM table WHERE TO_NUMBER(T2.DOC) = 54 AND TO_NUMBER(T2.SOC) = 62;
+      Specified format conversion: SELECT TO_NUMBER('123.45', '999.99') FROM dual; (returns 123.45)
+      Format error example: SELECT TO_NUMBER('54a', '99') FROM dual; (Error: invalid number)
+
+@dialect2sql@
+
+@dialect2sql@
+III. Functional Features: Performance and Support for Complex Business
+
+**3.1 Window Functions:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Calculating rankings and ordering (e.g., "rank" in "rank employees by sales")
+   - Analyzing changes in adjacent data (e.g., "compared to last month" in "see how much sales grew each month compared to last month")
+   - Calculating cumulative values and moving averages (e.g., "cumulative sum" in "calculate the cumulative sum of salaries by department")
+   - Performing data bucket analysis (e.g., "divide into levels" in "divide student grades into 4 levels")
+
+2. Relevant Function Description:
+   - Supports sorting and numbering within data partitions (e.g., ranking functions like ROW_NUMBER, RANK)
+   - Provides access to preceding and following row data (e.g., offset functions like LAG, LEAD)
+   - Implements aggregate calculations within window frames (e.g., aggregate functions like SUM, AVG combined with window frame clauses)
+   - Supports data equi-frequency bucketing (e.g., bucketing function like NTILE)
+
+1) **Syntax Structure: function_name([expression]) OVER ([PARTITION BY partition_expression, ... ][ORDER BY sort_expression [ASC | DESC], ... ][frame_clause] -- e.g., ROWS/RANGE BETWEEN...)**
+2) **MySQL 8.0+, PostgreSQL, Oracle, SQL Server, SQLite all have these functions:
+Ranking: ROW_NUMBER(), RANK(), DENSE_RANK(); Offset: LAG(), LEAD(); First/Last Value: FIRST_VALUE(); Bucketing: NTILE()
+
+-- Oracle:
+   Method:
+      Mandatory Constraint: Window functions supported in Oracle 8i+ (full support in 9i+); OVER() clause is mandatory; PARTITION BY/ORDER BY/frame_clause fully supported (frame_clause supports ROWS/RANGE); NTILE(n) requires n ≥1 (n=0 triggers "ORA-00907: missing right parenthesis" or "ORA-01489: result of string concatenation is too long" depending on version); LAG/LEAD default offset is 1 (omitting second argument is allowed); FIRST_VALUE()/LAST_VALUE() default frame is RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW;
+      Error Scenario: Setting NTILE(0); using invalid frame_clause (e.g., ROWS BETWEEN 5 PRECEDING AND 10 PRECEDING); missing comma between PARTITION BY columns;
+      Solution: Set NTILE(n) with n ≥1; ensure frame_clause has valid range (PRECEDING ≤ CURRENT ROW ≤ FOLLOWING); add commas between multiple PARTITION BY columns.
+   eg:
+      Error example (NTILE(0) invalid, triggers "ORA-00907: missing right parenthesis" error):
+      SELECT region_id, sales, NTILE(0) OVER (ORDER BY sales DESC) AS sales_bucket FROM region_sales;
+      Error example (invalid frame_clause, triggers "ORA-00907: missing right parenthesis" error):
+      SELECT month, sales, SUM(sales) OVER (ORDER BY month ROWS BETWEEN 5 PRECEDING AND 10 PRECEDING) AS moving_sum FROM monthly_sales;
+      Correct example (RANK() for sales ranking with ties):
+      SELECT emp_id, sales, RANK() OVER (ORDER BY sales DESC) AS overall_rank FROM emp_sales;
+      Correct example (DENSE_RANK() for non-skipping ranking):
+      SELECT student_id, score, DENSE_RANK() OVER (PARTITION BY class ORDER BY score DESC) AS class_rank FROM student_scores;
+
+@dialect2sql@
+
+@dialect2sql@
+3.1.1 Aggregate: SUM(Conditional Expression):
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Counting the number of records satisfying specific conditions (e.g., "how many employees have a salary over 10,000")
+   - Calculating the proportion of data meeting conditions (e.g., "the proportion of orders with sales over 100,000 to total orders")
+   - Summarizing data entries with specific statuses (e.g., "how many orders are in completed status")
+   - Counting data volume within a specific time range (e.g., "how many new registered users this month")
+
+2. Relevant Function Description:
+   - Supports conditional counting statistics (by converting Boolean values to 1 and 0 for summation)
+   - Implements conditional ratio calculation (combining SUM and COUNT functions)
+   - Provides multi-condition grouped statistics capability (used with GROUP BY)
+   - Supports direct participation of Boolean expressions in aggregate operations (some database dialects)
+
+
+(1)Oracle: Oracle does not support SUM(conditional expression) shorthand, must explicitly define logic with CASE WHEN condition THEN 1 ELSE 0 END
+
+
+@dialect2sql@
+
+@dialect2sql@
+3.2 Common Table Expressions (CTE) and Recursive Queries:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying organizational hierarchy (e.g., "find all subordinates of a certain employee")
+   - Traversing category tree structures (e.g., "get all subcategories of a certain category")
+   - Analyzing path dependencies (e.g., "find the complete assembly path of a product")
+   - Handling graph data traversal (e.g., "find all indirect relationships of a person")
+
+2. Relevant Function Description:
+   - Supports recursive query definition, connecting initial query and recursive part via UNION ALL
+   - Implements infinite level traversal of tree-like structures, can set recursion depth control
+   - Provides path tracking capability, recording the complete path from root node to current node
+   - Supports cycle detection to prevent performance issues caused by infinite recursion
+
+* Basic CTE Syntax (Universal):
+
+  WITH cte_name (col1, col2) AS (
+
+      SELECT ...
+
+      FROM ...
+
+      WHERE ...
+
+  )
+
+  SELECT * FROM cte_name ...
+
+  
+
+* Recursive CTE Capability:
+
+  (1)All platforms support it, it is the ideal choice for handling tree structures (organizational charts, category directories), graph traversal.
+
+       Example: Find employee and all their subordinates (recursive infinite levels):
+
+   	WITH RECURSIVE EmployeeHierarchy AS (
+
+      		-- Anchor member(s)
+
+      		SELECT id, name, manager_id, 0 AS level
+
+      		FROM employees WHERE manager_id IS NULL
+
+      		UNION ALL
+
+      		-- Recursive member
+
+      		SELECT e.id, e.name, e.manager_id, eh.level + 1
+
+      		FROM employees e
+
+      		INNER JOIN EmployeeHierarchy eh ON e.manager_id = eh.id
+
+   	)
+
+   	SELECT * FROM EmployeeHierarchy ORDER BY level, name;
+
+  
+
+@dialect2sql@
+
+@dialect2sql@
+  3.3 JSON Support: Comparison of Semi-Structured Data Processing Capabilities
+
+  3.3.1 Basic JSON Operation Function Comparison:
+
+  3.3.1.1  Construct JSON Object:
+  1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying complete user information and packaging as JSON (e.g., "get all information of user Zhang San and form a JSON object")
+   - Building nested configuration data (e.g., "build system configuration items into JSON format and return")
+   - Combining multiple fields into structured data (e.g., "form product name, price, inventory into a JSON object")
+   - Generating response data needed by API interfaces (e.g., "return order details JSON, containing order number, amount, status")
+
+2. Relevant Function Description:
+   - Supports combining multiple key-value pairs into a JSON object (e.g., field names as keys, field values as values)
+   - Supports nested JSON structure construction (e.g., object containing arrays, arrays containing objects)
+   - Supports automatic data type conversion (e.g., numbers, strings, Boolean values automatically converted to corresponding JSON types)
+   - Supports NULL handling and special character escaping (e.g., NULL value handling, quote escaping, etc.)
+  
+  1)Oracle(12.1.0.2+): JSON_OBJECT, JSON_ARRAY 
+  -- Oracle:
+   Method:
+      Mandatory Constraint: JSON_OBJECT/JSON_ARRAY are only supported in Oracle 12.1.0.2+ (older versions trigger "ORA-00904: 'JSON_OBJECT': invalid identifier" error); JSON_OBJECT requires key-value pairs (supports simplified syntax (key1, val1) or explicit KEY/VALUE keywords); special characters are automatically escaped; NULL values can be omitted or retained as JSON null (via ON NULL clause: ON NULL ABSENT/ON NULL NULL); nested JSON is supported by nesting JSON_OBJECT/JSON_ARRAY();
+      Error Scenario: Using JSON_OBJECT in Oracle 11g; missing VALUE keyword in explicit syntax (e.g., JSON_OBJECT('name' 'Zhang San')); using incorrect ON NULL clause (e.g., ON NULL DEFAULT);
+      Solution: Upgrade to Oracle 12.1.0.2+; use simplified syntax (JSON_OBJECT(key1, val1, key2, val2)) or explicit KEY/VALUE syntax; use ON NULL clause to handle NULL values explicitly; nest functions to build complex JSON structures.
+   eg:
+      Error example (Oracle 11g unsupported, triggers "ORA-00904: 'JSON_OBJECT': invalid identifier" error):
+      SELECT JSON_OBJECT('order_id', 1001, 'amount', 99.9) AS order_info FROM dual;
+      Error example (incorrect ON NULL clause, triggers "ORA-40441: JSON object/array construction error" error):
+      SELECT JSON_OBJECT('name', NULL ON NULL DEFAULT 'Unknown') AS user_info FROM dual;
+      Correct example (basic JSON object construction with ON NULL):
+      SELECT JSON_OBJECT('name', 'Zhang San', 'age', NULL ON NULL NULL) AS user_info FROM dual; -- Result: {"name":"Zhang San","age":null}
+      Correct example (nested JSON with array):
+      SELECT JSON_OBJECT('order_id', 1001, 'items', JSON_ARRAY(JSON_OBJECT('prod_name', 'Phone', 'price', 9999))) AS order_info FROM dual;
+@dialect2sql@
+
+@dialect2sql@
+
+  3.3.1.2  Path Extraction:
+  1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Extracting user information from JSON documents (e.g., "mobile number in the user profile" in "get the mobile number in the user profile")
+   - Querying specific attributes of nested objects (e.g., "price of the product in the order" in "find the price of the product in the order")
+   - Getting specific fields of array elements (e.g., "first comment content in the comment list" in "view the first comment content in the comment list")
+   - Accessing data values in deep nesting (e.g., "department manager's email address in the company" in "get the department manager's email address in the company")
+
+2. Relevant Function Description:
+   - Supports extracting specific field values from JSON documents via path expressions
+   - Capable of handling queries for nested objects and multi-level paths
+   - Provides indexed access and field extraction capabilities for array elements
+   - Implements direct access and retrieval of data at any depth in JSON documents
+  
+  1)Oracle(12.1.0.2+): JSON_VALUE() 
+  -- Oracle:
+   Method:
+      Mandatory Constraint: JSON_VALUE(column, '$.path') is supported in Oracle 12.1.0.2+ (older versions trigger "ORA-00904: 'JSON_VALUE': invalid identifier" error); path expressions follow Oracle JSONPath rules; array access uses [index] (1-based, different from other databases); requires RETURNING clause to specify return type (default VARCHAR2); non-existent path throws ORA-40460 error (unless ON ERROR ON NULL is added to return NULL); deep nesting is supported;
+      Error Scenario: Using JSON_VALUE in Oracle 11g; using 0-based array index (Oracle uses 1-based); missing ON ERROR ON NULL for non-existent paths (triggers ORA-40460); specifying incorrect RETURNING type (e.g., RETURNING NUMBER for string value like mobile number);
+      Solution: Upgrade to Oracle 12.1.0.2+; use 1-based array indexes; add ON ERROR ON NULL to handle non-existent paths (avoid errors); specify correct RETURNING type (e.g., RETURNING VARCHAR2(50) for mobile number);
+   eg:
+      Error example (Oracle 11g unsupported, triggers "ORA-00904: 'JSON_VALUE': invalid identifier" error):
+      SELECT JSON_VALUE(user_info, '$.name') FROM users WHERE user_id=1;
+      Error example (0-based array index, triggers "ORA-40460: no item found for specified path" error):
+      SELECT JSON_VALUE(order_info, '$.items[0].price' ON ERROR ON NULL) FROM orders WHERE order_id=1001;
+      Correct example (basic extraction with error handling):
+      SELECT JSON_VALUE(user_info, '$.mobile' ON ERROR ON NULL) AS mobile_number FROM users WHERE user_id=1;
+      Correct example (1-based array + nested extraction):
+      SELECT JSON_VALUE(order_info, '$.items[1].prod_name' RETURNING VARCHAR2(100) ON ERROR ON NULL) AS first_product FROM orders WHERE order_id=1001;
+      Correct example (deep nesting with type specification):
+      SELECT JSON_VALUE(company_info, '$.dept.sales.manager.email' RETURNING VARCHAR2(100) ON ERROR ON NULL) AS manager_email FROM company WHERE id=1;
+@dialect2sql@
+
+@dialect2sql@
+  3.3.1.3  Existence Check:
+  1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Checking if a specific key exists in a JSON field (e.g., "whether the user information contains a mobile number field")
+   - Verifying if an array contains a specific element (e.g., "whether the order product list contains a laptop")
+   - Judging if a path exists in a nested structure (e.g., "whether there is address information in the user profile")
+   - Confirming the validity of a JSON document (e.g., "whether this JSON data format is correct")
+
+2. Relevant Function Description:
+   - Supports checking the existence of specified paths in JSON documents
+   - Capable of verifying if JSON arrays contain specific values
+   - Provides multi-level path query capability for nested structures
+   - Implements validity verification of JSON document format
+  
+   (1)Oracle(12.1.0.2+)：
+      Key/Path existence: JSON_EXISTS(json_doc, path)
+      Array element containment: JSON_CONTAINS(json_doc, value, path)
+      Example: SELECT * FROM user_profiles WHERE JSON_EXISTS(info, '$.address') (Check if info field has address path)
+@dialect2sql@
+
+
+@dialect2sql@
+3.3.1.4 Modifying Properties
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Modify specific property values in JSON objects (e.g., "change to" in "change the theme in user configuration to dark mode")
+       - Update element content in arrays (e.g., "change to" in "change the quantity of the second item in the shopping cart to 3")
+       - Add or replace fields in nested objects (e.g., "add" in "add zip code information to the user address")
+       - Adjust values of configuration parameters (e.g., "modify to" in "modify the timeout in system settings to 30 minutes")
+
+    2. Relevant Function Description:
+       - Supports modifying property values at specified paths in JSON documents
+       - Capable of adding new property fields to existing JSON objects
+       - Provides replacement or update of specific elements in nested structures
+       - Implements modification operations on elements at specified positions in JSON arrays
+
+     (1) Oracle (12.1.0.2+):
+          Core Functions: JSON_MERGEPATCH() (Modify / Add / Delete properties), JSON_UPDATE() (Update existing properties only)
+          Function Description: JSON_MERGEPATCH supports batch modification; pass a patch JSON to update corresponding properties; set property to null to delete it
+          Example 1 (Modify property): UPDATE user_profiles SET info = JSON_MERGEPATCH(info, '{"theme":"dark"}') WHERE user_id = 1
+          Example 2 (Delete property): UPDATE user_profiles SET info = JSON_MERGEPATCH(info, '{"oldField":null}') WHERE user_id = 1
+
+@dialect2sql@
+
+
+@dialect2sql@
+3.3.2 Deep Differences in Storage Methods
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Query specific property values in JSON fields (e.g., "find the theme setting in user configuration")
+       - Verify if data conforms to JSON format (e.g., "check if this field is valid JSON")
+       - Update partial content of a JSON document (e.g., "change the city in the user address to Beijing")
+       - Search for elements in JSON arrays (e.g., "find employees with Python skills")
+
+    2. Relevant Function Description:
+       - Supports JSON path expression queries (e.g., $.user.name)
+       - Provides JSON format validation functions (e.g., ISJSON())
+       - Implements partial updates of JSON fields (e.g., jsonb_set, JSON_MODIFY)
+       - Supports retrieval and manipulation of JSON array elements (e.g., array unnesting, element existence check)
+
+      (1) Oracle: Can choose to store as BLOB or use optimized binary format (BLOB + IS JSON check constraint). JSON Data Guide feature is powerful.
+@dialect2sql@
+
+
+@dialect2sql@
+    3.4 Stored Procedures and Custom Functions: Programming Interface Capabilities
+
+    3.4.1 Language Ecosystem Differences
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Execute data update operations (e.g., "increase" in "increase Zhang San's monthly salary by 1000 yuan")
+       - Handle conditional judgments in business logic (e.g., "if...then" in "if stock is insufficient, automatically replenish")
+       - Implement complex data processing workflows (e.g., "statistics...generate" in "statistically generate sales reports by month")
+       - Handle exceptions during program execution (e.g., "when...prompt" in "prompt an error message when inserting duplicate data")
+
+    2. Relevant Function Description:
+       - Supports creation and invocation of stored procedures and functions
+       - Provides conditional branching and loop control structures
+       - Implements explicit or implicit control of transactions
+       - Includes exception handling mechanisms (e.g., TRY-CATCH or EXCEPTION blocks)
+
+      (1) Oracle: PL/SQL is the core language (Turing complete), deeply integrated into the database kernel. Has a vast DBMS_* package system.
+        PROCEDURE update_salary (emp_id NUMBER, increase NUMBER) IS
+        BEGIN
+            UPDATE employees SET salary = salary + increase WHERE id = emp_id;
+            COMMIT; -- COMMIT in PL/SQL directly triggers transaction commit
+        END;
+
+@dialect2sql@
+
+@dialect2sql@
+    IV. Behavioral Characteristics: Fundamental Differences in Execution Mechanisms and Security Practices
+
+    4.1 Transaction Isolation and Locking Mechanisms
+
+    4.1.1 Default Isolation Level Comparison
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Query the default transaction isolation level of the database (e.g., "What is MySQL's default isolation level?")
+       - Compare isolation level differences between databases (e.g., "Which has a higher default isolation level, Oracle or PostgreSQL?")
+       - Analyze data consistency issues under specific isolation levels (e.g., "Will phantom reads occur under the default isolation level?")
+       - Choose a database suitable for the business scenario (e.g., "Which database's default isolation level can prevent dirty reads?")
+
+    2. Relevant Function Description:
+       - Supports querying the database's default transaction isolation level configuration
+       - Provides comparison of concurrency control mechanisms for different isolation levels
+       - Implements MVCC-based multi-version data access control
+       - Ensures the performance of transaction ACID properties under different isolation levels
+
+      (1) Oracle: Default is READ COMMITTED, provides non-blocking read capability. Its UNDO tablespace mechanism enables historical data access.
+
+@dialect2sql@
+
+@dialect2sql@
+    4.1.2 Lock Contention Handling Strategies
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Query current lock wait situations in the database (e.g., "view which sessions are blocked by locks")
+       - Handle deadlock or lock timeout issues (e.g., "how to resolve database deadlocks?")
+       - Optimize lock contention in high-concurrency scenarios (e.g., "how to reduce lock waits during update operations?")
+       - Set session lock wait behavior (e.g., "set query to return immediately without waiting for lock")
+
+    2. Relevant Function Description:
+       - Provides lock monitoring and diagnostic views (e.g., query lock wait chains, blocking sessions)
+       - Supports automatic deadlock detection and transaction rollback mechanisms
+       - Implements row-level locks and gap locks to prevent phantom reads
+       - Provides non-blocking lock acquisition options like NOWAIT, SKIP LOCKED
+
+      (1) Oracle: Focuses on "write does not block read" (Consistent Read is its core competency).
+@dialect2sql@
+
+
+@dialect2sql@
+    4.2 Role Management and Permission System
+
+    4.2.1 Authorization Model
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Create new permission roles (e.g., "create a read-only report role")
+       - Assign data access permissions to roles (e.g., "grant query permission on sales data to the report role")
+       - Assign roles to specific users (e.g., "assign the report role to user Mike")
+       - Manage user permission hierarchies (e.g., "which users have data query permissions?")
+
+    2. Relevant Function Description:
+       - Supports creating and managing database roles
+       - Implements table-level permission control (e.g., granting operations like SELECT, INSERT, UPDATE)
+       - Provides permission assignment mechanism from roles to users
+       - Establishes a multi-level permission management system
+
+      --  Oracle
+      CREATE ROLE report_reader;
+      GRANT SELECT ON sales_data TO report_reader;
+      GRANT report_reader TO user_mike;
+
+
+@dialect2sql@
+
+@dialect2sql@
+    4.2.2 Permission Inheritance Behavior Differences
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Query user permission scope (e.g., "which tables can user A access?" in "can access which tables")
+       - Verify operation permissions (e.g., "does this role have permission to delete data?" in "has delete permission")
+       - Manage permission inheritance relationships (e.g., "grant all permissions of role A to role B" in "grant all permissions")
+       - Analyze permission impact scope (e.g., "which users will be affected by modifying role permissions?" in "affect which users")
+
+    2. Relevant Function Description:
+       - Supports role hierarchy nesting and automatic permission inheritance
+       - Provides permission verification mechanism (check user's operation permissions on specific objects)
+       - Implements permission transfer and batch granting functions
+       - Supports permission impact scope analysis (tracking permission inheritance paths)
+
+     (1) Oracle: Supports powerful role hierarchies (Global Roles, Application Roles). Permissions can be granted down to the column level.
+ @dialect2sql@
+
+@dialect2sql@
+    4.3 Database Internal Mechanisms
+
+    4.3.1 Sequence (Sequence) or Auto-increment Mechanisms
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Get the next available unique identifier (e.g., "what is the next order number?")
+       - Automatically generate primary keys when creating new records (e.g., "automatically assign user ID when adding a new user")
+       - Consecutive numbering during batch data insertion (e.g., "import 100 product records and auto-number them")
+       - Reset the starting value of a sequence (e.g., "restart employee numbers from 1000")
+
+    2. Relevant Function Description:
+       - Supports automatically generating unique, incrementing numerical sequences
+       - Provides methods to get the next sequence value (e.g., NEXTVAL, AUTO_INCREMENT)
+       - Allows customizing sequence start value, step size, and cache size
+       - Supports resetting and cycling sequence values
+
+      -- Oracle: Primarily use SEQUENCE objects (independent sequence generators).
+          CREATE SEQUENCE order_id_seq;
+          INSERT INTO orders (id, ...) VALUES (order_id_seq.NEXTVAL, ...);
+
+
+@dialect2sql@
+
+@dialect2sql@
+    V. Supplementary Syntax
+    5.1 COUNT (DISTINCT column) Deduplication Aggregation Syntax:
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       Single-column unique value count (e.g., "Count distinct patient IDs", "Calculate the number of distinct customer IDs in orders", "Query the total number of distinct course IDs in the course selection system")
+       Multi-dimensional combination deduplication count (e.g., "Count the number of unique user + product purchase combinations", "Calculate the number of unique department + job combinations", "Query the number of unique doctor + patient consultation combinations")
+       Deduplication statistics under grouping dimensions (e.g., "Count monthly new distinct users by month", "Count distinct customers by region", "Count distinct students enrolled per semester by semester", "Count distinct users placing orders per year by year")
+       NULL value related counting (e.g., "Count the number of distinct non-NULL values in a column", "Query the result when NULL values participate in distinct count")
+       Unique entity statistics in business scenarios (e.g., "Count distinct patients treated by each department", "Calculate the number of distinct product SKUs in inventory")
+
+    2. Relevant Function Description:
+       Supports single-column COUNT(DISTINCT) for deduplication counting, accurately统计 the number of unique values in a single dimension
+       Multi-column combination deduplication count (natively supported by some databases, requires string concatenation / CONCAT in others), meeting multi-dimensional unique entity statistics needs
+       Combined with GROUP BY, performs deduplication counting on the target column after grouping by specified dimensions, supporting time-period / regional distinct analysis
+       Automatically ignores NULL values (COUNT(DISTINCT NULL) returns 0), ensuring counting result accuracy
+       Adapts to syntax characteristics of different databases (e.g., concatenation implementation in SQLite/Oracle, native multi-column support in PostgreSQL/MySQL), compatible with multi-environment deduplication counting
+       Can combine with WHERE filter conditions, filter data first then perform deduplication counting, meeting refined statistical needs
+       Supports combination with time formatting functions (e.g., DATE_FORMAT, YEAR) to achieve distinct statistics in time dimensions
+
+    -- Oracle:
+        Methods:
+        Supports single-column COUNT(DISTINCT column); multi-column deduplication requires string concatenation (col1 || col2) or subqueries;
+        When combined with GROUP BY, performs deduplication counting on the target column per group dimension;
+        COUNT(DISTINCT NULL) returns 0, can combine with WHERE filter before deduplication counting.
+        Examples:
+        Single-column distinct count (Count distinct patient IDs): SELECT COUNT(DISTINCT patient_id) FROM medical_records;
+        Multi-column concatenation distinct count (Count unique doctor + patient combinations): SELECT COUNT(DISTINCT doctor_id || patient_id) FROM medical_records;
+        Combined with GROUP BY (Count distinct patients treated per department): SELECT department, COUNT(DISTINCT patient_id) FROM medical_records GROUP BY department;
+        NULL value handling: SELECT COUNT(DISTINCT NULL) FROM dual; (Returns 0)
+@dialect2sql@
+
+
+@dialect2sql@
+    5.2 SUBSTR String Substring Function:
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       Partial extraction from date strings (e.g., "Extract year from date string", "Extract month/date part from date", "Get the last two digits representing the day from a date string")
+       Segment extraction from fixed-format strings (e.g., "Extract the first four digits as identifier from a code", "Get the last two characters of a string")
+       Filtering based on extracted content (e.g., "Query records from the year 2012", "Filter data where the month is October")
+       Handling strings with abnormal length (e.g., "When substring length exceeds actual string length", "Omit length parameter to extract remaining all characters")
+       Substring combined with date conversion (e.g., "Extract current month from system date converted string")
+
+    2. Relevant Function Description:
+       Supports extracting substring from a specified start index (start index defaults to 1, some databases support negative index counting from the end)
+       Flexible handling of length parameter: returns remaining characters if exceeds string length; some databases support omitting length parameter to extract to the end
+       Adapts to TEXT/VARCHAR string types and date-converted strings, enabling extraction of time fragments like year/month/day
+       Negative index function allows directly extracting specified length content from the end of the string (e.g., last two characters)
+       Can combine with WHERE clause to filter data based on extraction result (e.g., filter records by extracted year)
+       Compatible with TO_CHAR and other date conversion functions, extracting specified time dimension from formatted date strings
+       Supports alias usage of SUBSTR/SUBSTRING, adapting to syntax habits of different databases
+       Automatically returns remaining characters when length exceeds boundary, avoiding abnormal substring results
+
+  -- Oracle:
+        Methods:
+        Supports SUBSTR(string, start_index, length), start index defaults to 1;
+        Supports negative index (counting from the end, e.g., SUBSTR('abc', -2) returns 'bc');
+        Returns remaining characters if length parameter exceeds remaining length; can combine with TO_CHAR converted date strings for partial extraction.
+        Examples:
+        Extract year: SELECT SUBSTR('2012-03-15', 1, 4) FROM dual; (Returns '2012')
+        Negative index extraction: SELECT SUBSTR('2023-12-31', -2); (Returns '31')
+        Extract month from date string: SELECT SUBSTR(TO_CHAR(SYSDATE, 'YYYY-MM-DD'), 6, 2) FROM dual; (Returns current month)
+
+@dialect2sql@
+
+@dialect2sql@
+5.3 Subquery (IN Subquery, Scalar Subquery) Syntax:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Set matching filtering with IN subqueries (e.g., "Filter patients with lab test HCT≥52 and count≥2", "Query Table1 records where ID is in Table2 with value≥100", "Get patient information belonging to a specific ID set")
+   Numerical calculation / single value extraction with scalar subqueries (e.g., "Calculate the average order amount", "Get the earliest year/year-month from records", "Calculate the total exam score for a student", "Query the average price for the electronics category")
+   Group extreme value filtering with correlated subqueries (e.g., "Filter the employee with the highest salary in each department", "Get the latest order for each user", "Find the student with the lowest score in each class", "Filter the most recently hired employee in each department")
+   Row-level filtering with correlated subqueries combined with extended syntax (e.g., "Get the top 3 orders for each customer", "Correlated query for the latest transaction record for each user")
+   Multi-level filtering with nested IN subqueries (e.g., "Filter target records through multi-level ID matching", "Record query for multi-level set membership")
+
+2. Relevant Function Description:
+   IN subqueries support multi-row result matching, fulfilling the filtering requirement of "belonging to a set" (some databases have limits on IN constant lists, but subquery results are not subject to this restriction)
+   Scalar subqueries return a single value, used for conditional comparison, field assignment, or aggregate calculation (different databases handle multi-row returns differently: PostgreSQL/Oracle/SQL Server report errors, MySQL/SQLite take the first row)
+   Correlated subqueries depend on outer table fields, enabling grouped filtering by outer dimensions (e.g., matching extreme values by department, class, etc.)
+   Combined with LATERAL (PostgreSQL)/APPLY (SQL Server) syntax, supports row-level calculation for correlated tables (e.g., getting the latest / top N records for each user)
+   Non-correlated subqueries execute independently, suitable for matching fixed sets; correlated subqueries execute row-by-row, adapting to dynamic correlation filtering
+   Performance optimization adaptation: For large result set IN subqueries, it's recommended to use JOIN/EXISTS instead to improve query efficiency
+   Supports nested IN subqueries, enabling multi-level set matching filtering
+   Combined with aggregate functions (MAX/MIN/AVG/SUM), implements statistical calculations by grouping dimensions through subqueries
+
+-- Oracle:
+   Method:
+      IN Subquery: Supports multi-row matching; IN list supports up to 1000 constant values (subquery results are not subject to this restriction);
+      Scalar Subquery: Reports error when multiple rows are returned (ORA-01427: single-row subquery returns more than one row);
+      Correlated subqueries can be combined with ROWNUM for row-level filtering; non-correlated subqueries execute first.
+   eg:
+      IN Subquery:
+      SELECT * FROM Patients WHERE ID IN (SELECT ID FROM Laboratory WHERE HCT>=52 GROUP BY ID HAVING COUNT(ID)>=2);
+      Scalar Subquery Getting Average:
+      SELECT (SELECT AVG(price) FROM Products WHERE category = 'Electronics') AS avg_price FROM dual;
+      Correlated Subquery (Filter most recently hired employee per department):
+      SELECT e.ename, e.hiredate FROM Emp e WHERE hiredate = (SELECT MAX(hiredate) FROM Emp WHERE deptno = e.deptno);
+@dialect2sql@
+
+
+@dialect2sql@
+5.4 TEXT Type Date Processing Rules:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Time dimension extraction from TEXT dates (e.g., "Extract birth year from player birthday (TEXT type)", "Get the month from the game attribute record date (TEXT type)")
+   Range filtering for TEXT dates (e.g., "Query players born after 1990", "Filter game attribute records from the year 2012")
+   Processing non-standard format TEXT dates (e.g., "Process TEXT date in YYYY/MM/DD format, extract year", "Convert slash-separated TEXT date to standard date")
+   Comparison of TEXT dates (e.g., "Find players born before 2000", "Filter attribute records with date later than 2012-01-01")
+   Compatible processing of TEXT dates in different formats (e.g., "Unified processing of TEXT dates in YYYY-MM-DD and YYYYMMDD formats")
+
+2. Relevant Function Description:
+   Supports implicit conversion for TEXT dates conforming to standard format (MySQL), allowing direct use of date functions (DATE_FORMAT/YEAR) to extract time dimensions
+   Explicit conversion adaptation for non-standard format TEXT dates (PostgreSQL/Oracle/SQL Server require specifying format, SQLite requires manual parsing)
+   Direct comparison of standard format TEXT dates (SQLite can compare directly because string order matches date order; other databases require conversion for logical date comparison)
+   Combined use of date functions (strftime/TO_CHAR/EXTRACT) with TEXT dates to extract dimensions like year/month/day
+   Compatible with various TEXT date storage formats (YYYY-MM-DD/YYYYMMDD/YYYY/MM/DD), adapted through format conversion functions for different scenarios
+   Avoid errors from string dictionary order comparison by using explicit conversion to ensure TEXT dates are filtered according to actual date logic
+   Error tolerance handling for illegal format TEXT dates (MySQL converts to NULL, Oracle/PostgreSQL report error for format mismatch)
+
+-- Oracle:
+   Method:
+      TEXT type (VARCHAR2) dates require explicit conversion via TO_DATE(text_date, 'format_string'), no implicit conversion;
+      Conversion requires strict format matching (e.g., YYYY-MM-DD/DD-MON-YYYY), format mismatch reports error;
+      Comparing TEXT dates requires conversion first, otherwise uses string dictionary order.
+   eg:
+      Explicit conversion extracting year (Player.birthday scenario): SELECT EXTRACT(YEAR FROM TO_DATE(birthday, 'YYYY-MM-DD')) FROM Player;
+      Compatible with different formats: SELECT TO_DATE('2023/10/01', 'YYYY/MM/DD') FROM dual;
+      Comparison after conversion: SELECT * FROM Player_Attributes WHERE TO_DATE(date, 'YYYY-MM-DD') BETWEEN '2012-01-01' AND '2012-12-31';
+@dialect2sql@
+
+@dialect2sql@
+5.5 SQLite Exclusive IIF Function and Equivalent Implementations in Other Databases:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Simple conditional judgment returning specified values (e.g., "Judge if birth year is earlier than 1985 and laps greater than 50, return 1 if satisfied otherwise 0", "Judge if date year is 2010, return 1 if yes otherwise 0", "Judge if creation date year is 2011 and reputation value greater than 1000, return 1 if satisfied otherwise 0")
+   Multi-condition nested grading / classification (e.g., "Grade based on score: A for 90 and above, B for 80-89, C for 60-79, F below 60", "Group by age: senior for 60 and above, adult for 18-59, minor below 18", "Categorize by order quantity: bulk for greater than 100, regular for 10-100, small for less than or equal to 10", "Grade by salary: high for greater than 10000, medium for 5000-10000, low below 5000")
+   NULL condition handling (e.g., "Return invalid when condition is NULL, return valid when not NULL")
+   Simple equality judgment (e.g., "Judge if date year is 2010, return corresponding identifier")
+   Complex combined condition judgment (e.g., "Filter and return identifier combining year and numerical conditions")
+
+2. Relevant Function Description:
+   Supports conditional branch return (IIF/IF/CASE/DECODE can implement "if... then... else..." logic, returning specified values based on condition truth)
+   Multi-condition nesting capability (Through nested IIF/IF/CASE expressions, implements multi-layer progressive condition judgment, meeting grading/classification needs)
+   NULL condition error tolerance handling (When condition is NULL, treated as false, uniformly returns else/val_false branch value, avoiding result anomalies caused by NULL)
+   Cross-database equivalent implementation adaptation (SQLite/SQL Server natively support IIF, MySQL supports IF function, PostgreSQL/Oracle rely on standard CASE expression, Oracle additionally provides DECODE for simple equality scenarios)
+   Compatible with standard CASE expression (All databases support CASE WHEN THEN ELSE END, as a universal replacement for IIF/IF, adapting to complex combined conditions)
+   Syntax simplification and performance balance (IIF/IF only simplify conditional judgment syntax, performance is close to CASE expression, complex conditions recommend using CASE for better readability)
+   Covers equality and range conditions (DECODE is suitable for simple equality judgment, CASE/IIF/IF support complex scenarios like ranges, multi-condition combinations)
+
+-- Oracle:
+   Method:
+      Does not support IIF function, relies on CASE expression or DECODE function (only for equality judgment);
+      DECODE is only suitable for simple equality scenarios; complex conditions (e.g., ranges, multi-condition combinations) must use CASE.
+   eg:
+     SELECT CASE WHEN TO_CHAR(TO_DATE(Date, 'YYYY-MM-DD'), 'YYYY') = '2010' THEN 1 ELSE 0 END FROM orders;
+      DECODE implementation for simple equality: SELECT DECODE(TO_CHAR(Date, 'YYYY'), '2010', 1, 0) FROM sales;
+      Multi-condition CASE: SELECT CASE WHEN salary > 10000 THEN 'high' WHEN salary > 5000 THEN 'medium' ELSE 'low' END FROM employees;
+@dialect2sql@
+
+
+@dialect2sql@
+5.6 Syntax Specification for Ratio and Growth Rate Calculation:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Ratio calculation scenarios (e.g., "Calculate the proportion of affirmative votes in voting", "Calculate the proportion of a certain type of data in the total", "Get the proportion of records meeting conditions")
+   Fixed period average calculation (e.g., "Calculate the monthly average of annual link counts", "Monthly average amount of annual sales", "Daily average value of quarterly indicators")
+   Growth rate calculation requirements (e.g., "Calculate the growth rate of loan amount", "Year-over-year growth rate of sales", "Growth percentage of current period vs. previous period indicators")
+   Percentage difference analysis (e.g., "Percentage difference between this year's and last year's sales", "Percentage change between current and previous period data", "Percentage gap between two sets of data")
+   Result presentation with precision/format requirements (e.g., "Loan growth rate rounded to two decimal places", "Formatted percentage ratio result", "Mean calculation with decimal places")
+
+2. Relevant Function Description:
+   Type conversion to prevent truncation (Via CAST(...) AS DECIMAL/REAL/FLOAT, ::FLOAT or *1.0 etc., convert integers to floating-point/high-precision numeric types, avoiding result truncation from integer division, ensuring calculation precision)
+   Division by zero error avoidance (Use NULLIF(denominator, 0) function to handle scenarios where denominator is 0, preventing division operation errors, ensuring robust calculation logic)
+   Fixed period calculation adaptation (Convert total to floating-point type then divide by fixed period number (e.g., 12 months), achieving accurate average/apportioned calculation)
+   Standardized growth rate calculation (Supports the universal growth rate formula (current_period_value - previous_period_value)/previous_period_value*100, implemented adapting to different database syntax characteristics)
+   Precision and formatting control (Use ROUND function to retain specified decimal places, TO_CHAR/FORMAT functions to format percentage results, improving data readability)
+   Aggregated data linkage calculation (Combined with COUNT/SUM etc. aggregate functions, implements ratio, average calculation based on aggregate results, supporting statistical analysis needs)
+   Cross-database syntax compatibility (Adapts to MySQL's DECIMAL, PostgreSQL's ::FLOAT, Oracle's NUMBER, SQL Server's FORMAT etc. characteristics, ensuring calculation logic universality)
+
+-- Oracle:
+   Method:
+      Ratio calculation: Integer division requires conversion using CAST(aggregate_value AS NUMBER) or aggregate_value/1.0 to avoid truncation;
+      Fixed number division: Supports SUM(value)/fixed_number.0 or SUM(value)/CAST(fixed_number AS NUMBER);
+      Growth rate calculation: (current_period_value - previous_period_value)/NULLIF(previous_period_value,0)*100, percentage conversion can be combined with TO_CHAR for formatting.
+   eg:
+      Vote ratio: SELECT CAST(COUNT(CASE WHEN vote=1 THEN 1 END) AS NUMBER)/COUNT(*) AS vote_ratio FROM votes;
+      Monthly average links: SELECT SUM(links)/12.0 AS monthly_avg_links FROM site_metrics;
+      Loan growth rate: SELECT TO_CHAR((current_loan-prev_loan)/NULLIF(prev_loan,0)*100, '999.99') AS loan_growth_rate FROM loan_stats;
+      Percentage difference: SELECT (this_year_sales-last_year_sales)/last_year_sales*100 AS sales_percent_diff FROM annual_sales;
+@dialect2sql@
+
+
+@dialect2sql@
+5.7 Multi-Condition Combination Filtering (OR + Date Range):
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Date filtering with multiple OR conditions (e.g., "Schools where the open date year is greater than 1991 or the close date year is less than 2000", "Orders where the order date is between 2000-2005 or the amount is greater than 10000", "Log records where the log date is earlier than 2000 or later than 2020 or the level is error")
+   Combined conditional queries with priority (e.g., "Schools where the open date is greater than 1991 or the close date is less than 2000 and the status is active", "Sales records where the sale date is between 2010-2015 or the total amount is greater than 5000", "Records where (date is earlier than 2000 or later than 2020) and the region is north")
+   Performance optimization needs for OR conditions (e.g., "Solving full table scan issues caused by multiple OR conditions", "Rewriting OR conditions with UNION/UNION ALL to improve query efficiency", "Optimizing index utilization for single-field multiple OR conditions")
+   Combined queries of text dates and OR+BETWEEN (e.g., "Filtering orders where the text format date is in the 2000-2005 range or the amount exceeds 1000", "Performing OR range filtering after unifying text date formats via strftime")
+   Queries avoiding AND/OR priority ambiguity (e.g., "Explicitly using parentheses to clarify conditional logic, preventing result errors due to priority")
+
+2. Relevant Function Description:
+   Conditional priority control (AND has higher priority than OR, supports explicit parentheses to adjust logical order, avoids ambiguity, ensures query logic aligns with business requirements)
+   OR condition optimization mechanism (MySQL supports index merge, PostgreSQL supports BitmapOr bitmap OR, Oracle supports OR-expansion, databases with weaker optimization like SQLite can rewrite OR conditions via UNION/UNION ALL to solve full table scan issues)
+   Syntax adaptation for OR and BETWEEN (Supports mixing date range BETWEEN with other conditions using OR; text dates require format unification through formatting/conversion to avoid string lexicographical comparison errors)
+   Type consistency guarantee (When combining date fields with OR conditions, ensure field types match; text dates require explicit conversion/formatting to avoid index failure caused by implicit conversion)
+   Cross-database feature compatibility (Adapts to different databases' OR optimization strategies, such as MySQL's index_merge, PostgreSQL's Bitmap Merge, SQL Server's index merge, ensuring effective execution of OR conditions across multiple environments)
+   Complex logic splitting capability (Splits multiple OR conditions via UNION/UNION ALL, converting full table scans to index scans, improving large table query performance)
+   Date format fault tolerance (When combining text dates with OR conditions, supports format conversion/standardization to ensure accuracy of date range filtering)
+
+-- Oracle:
+   Method:
+      Conditional Priority: AND has higher priority than OR; complex conditions must explicitly add parentheses (e.g., (TO_CHAR(OpenDate, 'YYYY') > '1991' OR TO_CHAR(ClosedDate, 'YYYY') < '2000') AND type = 'public');
+      OR Condition Optimization: The optimizer evaluates the cost of OR conditions; if fields have indexes, it may use OR-expansion or Bitmap Merge; for large tables, using UNION instead of OR is recommended;
+      OR+BETWEEN Syntax: Date types support mixing BETWEEN with OR; text dates require TO_DATE conversion first to avoid format mismatch.
+   eg:
+
+@dialect2sql@

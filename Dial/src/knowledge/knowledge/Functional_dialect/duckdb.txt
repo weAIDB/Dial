@@ -1,0 +1,717 @@
+@dialect2sql@
+1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+      Questions like "current time", "what time is it now", "today's date", "current timestamp" typically use this syntax.  
+2. Relevant Function Description:  
+      This syntax is used to get the database server's current date, time, or timestamp. It is commonly used for recording operation times, calculating time intervals, filtering time ranges, etc.
+
+Implementation:  
+DuckDB provides `today()` and `current_date` (without parentheses) to get the current date in the local time zone, equivalent to MySQL’s `CURDATE()` or `CURRENT_DATE`. Both return a DATE value (e.g., '2025-11-19').  
+
+Date arithmetic is supported via `+` and `-` operators with integers (days) or INTERVAL expressions:
+- `SELECT today() + 7;` → adds 7 days
+- `SELECT today() + INTERVAL 7 DAY;` → same result
+
+Extracting parts uses `date_part('year', today())` or `extract('year' from today())`, analogous to MySQL’s `YEAR(CURRENT_DATE)`.
+
+Examples:
+- Get current date: `SELECT today();` or `SELECT current_date;`
+- Extract current year: `SELECT date_part('year', today());`
+- Add 7 days: `SELECT today() + INTERVAL 7 DAY;`
+@dialect2sql@
+
+@dialect2sql@
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Situations requiring extraction of date components include: asking about "specific year/month/quarter", "day of the week", "day of the year", "hour/minute number", and other specific time unit questions.
+
+2. Relevant Function Description:
+   This syntax function includes: obtaining specified parts (like year, month, day, hour, minute, second) from a date or time value, supports extraction of components like week, quarter, and can be combined with conditional filtering or aggregation to achieve grouping statistics by time dimensions.
+
+Implementation:
+DuckDB provides dedicated scalar functions to extract date/time components directly (e.g., year(), month(), day(), hour(), minute(), second(), quarter(), week(), dayofweek(), dayofyear()). These functions operate on DATE, TIMESTAMP, and related types. Alternatively, the generic date_part(part, timestamp) function can be used with string specifiers (e.g., date_part('year', order_date)). Both approaches support all common components listed in the MySQL template.
+
+Examples:
+SELECT year(order_date), month(order_date), day(order_date);
+SELECT * FROM table WHERE year(birthday) = 1980;
+@dialect2sql@
+
+@dialect2sql@
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Situations requiring extraction of date components include: asking about "specific year/month/quarter", "day of the week", "day of the year", "hour/minute number", and other specific time unit questions.
+
+2. Relevant Function Description:
+   This syntax function includes: obtaining specified parts (like year, month, day, hour, minute, second) from a date or time value, supports extraction of components like week, quarter, and can be combined with conditional filtering or aggregation to achieve grouping statistics by time dimensions.
+
+Implementation:
+DuckDB provides multiple ways to extract date components. The primary methods are:
+
+- EXTRACT(part FROM date): Standard SQL syntax.
+  Example: EXTRACT('year' FROM DATE '1992-09-20') → 1992
+
+- DATE_PART(part, date): Equivalent to EXTRACT.
+  Example: DATE_PART('month', DATE '1992-09-20') → 9
+
+- Dedicated functions for common parts:
+  DAY(date), MONTH(date), YEAR(date), etc.
+  Example: YEAR(DATE '1992-09-20') → 1992
+
+- Functions for weekday/month names:
+  DAYNAME(date) → 'Sunday'
+  MONTHNAME(date) → 'September'
+
+These functions support the same core use cases as MySQL’s YEAR(), MONTH(), DAY(), and DATE_FORMAT() for component extraction, including use in filtering and aggregation.
+@dialect2sql@
+
+@dialect2sql@
+1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+   - Calculating the number of days to/from a specific date (e.g., "How many days until National Day from today?")  
+   - Calculating past or future dates (e.g., "What is the date 3 months from now?")  
+   - Calculating durations like age, length of service (e.g., "Someone's age")  
+   - Determining the period a date belongs to (e.g., "What day of the week is a specific date?")  
+
+2. Relevant Function Description:  
+   - Supports date addition and subtraction operations (e.g., adding/subtracting days/months/years)  
+   - Calculates the number of days/months/years between two dates  
+   - Extracts date components (e.g., year, month, weekday value)  
+   - Implements date truncation (e.g., truncating to the start of the month or year)  
+   - Timezone conversion and cross-timezone calculations
+
+Implementation:  
+DuckDB supports equivalent date calculation functionality through operators and built-in functions. Date arithmetic can be performed using + and - with integers (for days) or INTERVAL values:
+
+- Add 7 days: DATE '2024-01-01' + 7 → 2024-01-08  
+- Add interval: DATE '2024-01-01' + INTERVAL 7 DAY → 2024-01-08 00:00:00  
+- Subtract dates: DATE '2024-01-10' - DATE '2024-01-01' → 9  
+- Subtract interval: DATE '2024-01-10' - INTERVAL 7 DAY → 2024-01-03 00:00:00  
+
+Key functions include:
+- date_add(date, interval): adds an interval (e.g., date_add(DATE '1992-09-15', INTERVAL 2 MONTH) → 1992-11-15 00:00:00)  
+- date_diff(part, start, end): computes difference in specified units (e.g., date_diff('month', DATE '1992-09-15', DATE '1992-11-14') → 2)  
+- extract(part FROM date) or date_part(part, date): extracts components (e.g., extract('year' FROM DATE '1992-09-20') → 1992)  
+- date_trunc(part, date): truncates to precision (e.g., date_trunc('month', DATE '1992-03-07') → 1992-03-01)  
+- dayname(date): returns weekday name (e.g., dayname(DATE '1992-09-20') → 'Sunday')  
+- today(): returns current date (alias: current_date)  
+
+These cover all core capabilities described in the MySQL template, including date math, duration calculation, component extraction, and truncation. Timezone handling is implicit via DuckDB’s timestamp types, though explicit timezone conversion functions are not detailed here but exist in broader timestamp functionality.
+@dialect2sql@
+
+@dialect2sql@
+1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+   - Calculating age (e.g., "Someone's age")  
+   - Statistical analysis of monthly/quarterly/annual data (e.g., "This month's sales", "This quarter's order volume")  
+   - Weekly grouping analysis (e.g., "Weekly active user count")  
+   - Comparing period-over-period data (e.g., "Profit for the same period last year")  
+
+2. Relevant Function Description:  
+   - Truncates date-time values to a specified precision (e.g., start of year, month, day, hour, etc.)  
+   - Used for date grouping statistics or time interval comparisons  
+   - Assists in calculating date differences (e.g., calculating day difference ignoring the time part)  
+   - Generates standardized time coordinates for correlated queries
+
+Implementation:  
+DuckDB provides direct date truncation via the `date_trunc(part, date)` function, which aligns with MySQL’s intent but uses a more explicit and standard approach. It supports truncation to units like 'year', 'month', 'day', 'week', etc.
+
+Examples:
+- Truncate to year: `date_trunc('year', lastaccessdate)` → `1992-01-01`
+- Truncate to month: `date_trunc('month', lastaccessdate)` → `1992-03-01`
+- Truncate to week: `date_trunc('week', lastaccessdate)` → start of the week (Monday-based)
+
+DuckDB also offers `time_bucket()` for custom-width bucketing (e.g., 2-week intervals), but `date_trunc` is the direct equivalent for standard calendar-based truncation. Unlike MySQL’s reliance on `DATE_FORMAT` for indirect truncation, DuckDB’s `date_trunc` returns a proper DATE/DATETIME value, not a string.
+@dialect2sql@
+
+@dialect2sql@
+1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+   - Calculating age (e.g., "Someone's age")  
+   - Calculating birthday (e.g., "What is someone's birthday and how many days until it from today?")
+   - Calculating exact age in years (e.g., "What is someone's exact age in years this year?")
+   - Determining legal age (e.g., "Has someone reached the legal adult age / legal marriage age?")
+   - Age group statistics (e.g., "Purchase preferences of users aged 30-40")
+   - Retirement age calculation (e.g., "How many years until someone reaches the legal retirement age?")
+   - Birthday cycle calculation (e.g., "Which week of the month is someone's birthday, how many days until the next birthday?")
+
+2. Relevant Function Description:  
+   - Truncates date-time values to a specified precision (e.g., start of year, month, day, hour, etc.)
+   - Used for date grouping statistics or time interval comparisons
+   - Assists in calculating date differences (e.g., calculating day difference ignoring the time part)
+   - Generates standardized time coordinates for correlated queries
+   - Truncates birth date to year dimension, calculates difference from current year for exact age in years
+   - Truncates date to month-day dimension, compares birthday with current date to determine if birthday has passed
+   - Calculates age difference at year granularity, assists in legal age threshold determination
+   - Standardizes birth date (truncate to year/month) for age group analysis
+
+Implementation: DuckDB provides date_diff(part, startdate, enddate) to compute the number of unit boundaries (e.g., years) between two dates, which matches MySQL’s TIMESTAMPDIFF behavior for age calculation. For example:
+- Current age: date_diff('year', birthdate, today())
+- Age as of a specific date: date_diff('year', DATE '1990-05-20', DATE '2025-12-31')
+DuckDB also supports date_trunc for precision-based truncation (e.g., date_trunc('year', birthdate)) and today() (alias current_date) for current date, enabling all required age-related logic.
+@dialect2sql@
+
+@dialect2sql@
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Viewing data lists for a specified page (e.g., "Show the user list for page 3")
+   - Retrieving the top N records (e.g., "Query the top 10 products with the highest sales")
+   - Fetching data after skipping some records (e.g., "Display 10 records starting from the 21st record")
+   - Loading large amounts of data in batches (e.g., "Load the next batch of 20 order records")
+
+2. Relevant Function Description
+   - Supports specifying the limit on the number of records returned
+   - Supports skipping a specified number of records (offset setting)
+   - Supports pagination queries combined with sorting conditions
+   - Supports efficient pagination implementation via window functions
+
+Implementation: DuckDB supports LIMIT and OFFSET clauses for pagination, applied after ORDER BY to ensure deterministic results. It allows limiting by absolute row count or percentage. Examples:
+SELECT * FROM addresses LIMIT 5;
+SELECT * FROM addresses LIMIT 5 OFFSET 5;
+SELECT city, count(*) AS population FROM addresses GROUP BY city ORDER BY population DESC LIMIT 5;
+SELECT * FROM addresses LIMIT 10%;
+@dialect2sql@
+
+@dialect2sql@
+MATCH
+
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Viewing data lists for a specified page (e.g., "Show the user list for page 3")
+   - Retrieving the top N records (e.g., "Query the top 10 products with the highest sales")
+   - Fetching data after skipping some records (e.g., "Display 10 records starting from the 21st record")
+   - Loading large amounts of data in batches (e.g., "Load the next batch of 20 order records")
+
+2. Relevant Function Description
+   - Supports specifying the limit on the number of records returned
+   - Supports skipping a specified number of records (offset setting)
+   - Supports pagination queries combined with sorting conditions
+   - Supports efficient pagination implementation via window functions
+
+Implementation: DuckDB supports pagination using LIMIT and OFFSET clauses, which appear at the end of the SELECT statement. It also allows combining these with ORDER BY for sorted pagination. The syntax follows standard SQL conventions.
+
+-- DuckDB Pagination Examples
+SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 items per page)
+SELECT * FROM products ORDER BY price DESC LIMIT 10; -- Top 10 records
+
+DuckDB does not support the MySQL-specific LIMIT offset, row_count shorthand (e.g., LIMIT 20,10), but it fully supports the standard-compliant LIMIT ... OFFSET ... form. Window functions (e.g., ROW_NUMBER()) can also be used with QUALIFY or subqueries for advanced pagination, aligning with the functional capabilities described in the MySQL template.
+@dialect2sql@
+
+@dialect2sql@
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Counting quantities per category (e.g., "What is the sales quantity per product category?")
+   - Calculating averages per department (e.g., "What is the average salary per department?")
+   - Summarizing data per time period (e.g., "Monthly sales statistics")
+   - Analyzing maximum values per region (e.g., "What is the maximum temperature per province?")
+
+2. Relevant Function Description
+   - Supports grouping data statistics by specified columns
+   - Works with aggregate functions to calculate summary values per group (e.g., COUNT, SUM, AVG)
+   - Implements multi-column composite grouping (e.g., grouping simultaneously by department and position)
+   - Provides result filtering capability after grouping (using the HAVING clause)
+
+Implementation: DuckDB supports standard GROUP BY syntax for grouping by one or more columns and using aggregate functions like count(), sum(), avg(). It also provides GROUP BY ALL, which automatically groups by all non-aggregate columns in the SELECT clause, reducing redundancy and preventing granularity mismatches. Examples:
+SELECT city, count(*) FROM addresses GROUP BY city;
+SELECT city, street_name, avg(income) FROM addresses GROUP BY city, street_name;
+SELECT city, street_name FROM addresses GROUP BY ALL;
+SELECT city, street_name, avg(income) FROM addresses GROUP BY ALL;
+@dialect2sql@
+
+@dialect2sql@
+MATCH
+
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Querying the highest score and placing NULLs last (e.g., "Find the highest score, place NULL scores last")
+   - Getting the latest records and placing missing dates first (e.g., "Show the latest orders, prioritize orders without dates")
+   - Ranking sales figures and handling NULL sales (e.g., "Rank sales, place NULLs at the bottom")
+   - Filtering for the lowest price and placing unpriced items last (e.g., "Lowest priced product, place unpriced items last")
+
+2. Relevant Function Description
+   - Supports explicit control over NULL position during sorting (NULLS FIRST/NULLS LAST)
+   - Manually implements NULL sorting via conditional expressions (CASE WHEN handling)
+   - Simulates NULL sorting using value replacement (e.g., ISNULL replacement)
+   - Combines type conversion and NULL handling for sorting (using CAST with NULLIF)
+
+Implementation: DuckDB natively supports NULLS FIRST and NULLS LAST in ORDER BY clauses. The default is NULLS LAST for ASC and can be overridden per expression. Example: ORDER BY city DESC NULLS LAST. Global defaults can also be set via SET default_null_order = 'NULLS_FIRST';.
+@dialect2sql@
+
+@dialect2sql@
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Filter records with valid information (e.g., "List all users who have filled in their email" where "have filled in" implies non-null)
+   - Exclude entries with missing data (e.g., "Query customers whose phone number is not empty" where "not empty" implies IS NOT NULL)
+   - Count the number of valid data entries (e.g., "Count the number of users who have completed real-name authentication" where "have completed" implies the field is not NULL)
+   - Verify the completeness of required fields (e.g., "Check if all orders have a shipping address" where "have" implies the field is not NULL)
+
+2. Relevant Function Description:
+   - Supports IS NOT NULL syntax to check for non-null values in a field
+   - Supports IS NULL syntax to check for null value status in a field
+   - Provides the `columnname notnull` shorthand syntax (supported by some databases)
+   - Implements record filtering and statistics based on null value conditions
+
+Implementation:
+DuckDB supports IS NULL and IS NOT NULL for explicit NULL checking. Comparisons with NULL (e.g., =, <>) return NULL, not true/false. For equality treating NULLs as equal, use IS NOT DISTINCT FROM. Aggregate functions like MIN(), MAX(), AVG(), SUM() ignore NULLs by default; COUNT(column) excludes NULLs while COUNT(*) includes all rows. Functions generally return NULL when given NULL inputs, except coalesce() and ifnull(), which provide fallback values. Example: SELECT i FROM integers WHERE i IS NOT NULL; SELECT AVG(score) FROM exams; -- ignores NULL scores.
+@dialect2sql@
+
+@dialect2sql@
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Calculate a person's age (e.g., "What is someone's age?")
+   - Determine if an age condition is met (e.g., "Is he/she 18 years or older?")
+   - Calculate service years (e.g., "How long is the employee's length of service?")
+   - Compare age differences (e.g., "What is the age difference between two people?")
+
+2. Relevant Function Description:
+   - Calculates the year difference between two dates
+   - Handles age correction for birthdays not yet passed in the current year
+   - Supports precise age calculation down to year, month, and day
+   - Provides multiple date difference calculation methods (year difference, month difference, etc.)
+
+Implementation: DuckDB provides the `age()` function for precise age calculation. `age(timestamp)` computes the interval from the given timestamp to the current date/time, while `age(timestamp, timestamp)` computes the interval between two timestamps. The result is an INTERVAL type showing years, months, and days (e.g., `age(TIMESTAMP '2001-04-10', TIMESTAMP '1992-09-20')` returns `8 years 6 months 20 days`). For year-only differences without birthday correction, use `date_diff('year', start, end)`, but note this counts calendar year boundaries and may not reflect true age. The `age()` function correctly handles whether the birthday has occurred yet in the current year, matching MySQL’s `TIMESTAMPDIFF(YEAR, ...)` behavior.
+@dialect2sql@
+
+@dialect2sql@
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Calculate a person's age (e.g., "What is someone's age?")
+   - Determine if an age condition is met (e.g., "Is he/she 18 years or older?")
+   - Calculate service years (e.g., "How long is the employee's length of service?")
+   - Compare age differences (e.g., "What is the age difference between two people?")
+
+2. Relevant Function Description:
+   - Calculates the year difference between two dates
+   - Handles age correction for birthdays not yet passed in the current year
+   - Supports precise age calculation down to year, month, and day
+   - Provides multiple date difference calculation methods (year difference, month difference, etc.)
+
+Implementation: DuckDB provides precise age difference calculation using date_diff() and date_sub(). For accurate age (accounting for whether the birthday has occurred this year), use date_diff('year', birthday, today()) which counts full year boundaries. Example: date_diff('year', DATE '1990-06-15', today()) returns the number of full years elapsed. For month- or day-level precision, use date_diff('month', ...) or date_diff('day', ...). The function date_sub() can also be used but truncates to whole multiples of the specified part and may not handle partial periods like date_diff(). DuckDB’s today() is equivalent to CURRENT_DATE.
+@dialect2sql@
+
+@dialect2sql@
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Extract a substring at a specific position (e.g., "Get the username part from the email address" where "username part" implies a specific segment)
+   - Analyze structured text data (e.g., "Extract the third column data from CSV format" where "extract the third column" implies splitting)
+   - Process path or hierarchical information (e.g., "Get the filename from the file path" where "filename" implies the last segment)
+   - Parse composite identifiers (e.g., "Extract the specification code from the product code" where "specification code" implies a specific segment)
+
+2. Relevant Function Description:
+   - Splits a string by a specified delimiter and returns the substring at the specified position
+   - Supports counting and extracting segments from the beginning or end of the string
+   - Provides regular expression pattern matching for extracting complex format string segments
+   - Implements substring extraction based on delimiter position
+
+Implementation: DuckDB provides split_part(string, separator, index) which splits a string by a delimiter and returns the 1-based indexed part. For negative indexing (counting from the end), combine with array operations: use string_split() to get an array, then access with negative index via list slicing or array_extract. Regular expression splitting is supported via string_split_regex() and regexp_extract(). Examples:
+- split_part('a:b:c', ':', 2) → 'b'
+- split_part('a:b:c', ':', -1) is not directly supported; instead: string_split('a:b:c', ':')[-1] → 'c'
+- regexp_extract('user@example.com', '([^@]+)', 1) → 'user'
+@dialect2sql@
+
+@dialect2sql@
+MATCH
+
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query integer data within a specific range (e.g., "Query users aged between 18 and 25")
+   - Count or sum integer types (e.g., "Calculate the number of orders with total amount exceeding 1000")
+   - Compare integer size relationships (e.g., "Find products with stock quantity less than 50")
+   - Perform integer operations and conversions (e.g., "Convert user points to levels")
+
+2. Relevant Function Description:
+   - Supports querying and filtering integer ranges (e.g., BETWEEN, comparison operators)
+   - Provides integer aggregate functions (e.g., COUNT, SUM, AVG for statistical calculations)
+   - Implements integer comparison and sorting operations (e.g., greater than, less than, equal to)
+   - Supports integer type conversion and arithmetic operations (e.g., addition, subtraction, multiplication, division, type conversion functions)
+
+Implementation:  
+DuckDB supports standard fixed-width signed integer types TINYINT (INT1), SMALLINT (INT2), INTEGER (INT4/INT), BIGINT (INT8), and HUGEINT (INT128), with ranges from -2^7 to 2^7−1 up to -2^127 to 2^127−1, using 1 to 16 bytes respectively. It also provides unsigned counterparts: UTINYINT, USMALLINT, UINTEGER, UBIGINT, UHUGEINT. All support standard comparison, arithmetic, and aggregate operations (e.g., WHERE age BETWEEN 18 AND 25, SELECT SUM(order_amount)). Type aliases follow PostgreSQL conventions (e.g., INT = INTEGER = INT4). Values outside the allowed range raise errors. The INTEGER type is recommended for general use due to optimal balance of range and performance.
+@dialect2sql@
+
+@dialect2sql@
+MATCH
+
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query integer data within a specific range (e.g., "Query users aged between 18 and 25")
+   - Count or sum integer types (e.g., "Calculate the number of orders with total amount exceeding 1000")
+   - Compare integer size relationships (e.g., "Find products with stock quantity less than 50")
+   - Perform integer operations and conversions (e.g., "Convert user points to levels")
+
+2. Relevant Function Description:
+   - Supports querying and filtering integer ranges (e.g., BETWEEN, comparison operators)
+   - Provides integer aggregate functions (e.g., COUNT, SUM, AVG for statistical calculations)
+   - Implements integer comparison and sorting operations (e.g., greater than, less than, equal to)
+   - Supports integer type conversion and arithmetic operations (e.g., addition, subtraction, multiplication, division, type conversion functions)
+
+Implementation:  
+DuckDB supports standard signed integer types with explicit storage sizes: TINYINT (1-byte, alias INT1), SMALLINT (2-byte, alias INT2), INTEGER (4-byte, aliases INT, INT4, SIGNED), and BIGINT (8-byte, aliases INT8, LONG). It also provides unsigned variants (UTINYINT, USMALLINT, UINTEGER, UBIGINT) and extended precision types (HUGEINT for 16-byte signed, UHUGEINT for unsigned). These types support standard comparison operators, BETWEEN, arithmetic operations, and aggregate functions like COUNT, SUM, and AVG. Implicit and explicit type casting is supported across numeric types. Example: SELECT age FROM users WHERE age BETWEEN 18 AND 25; SELECT SUM(order_amount) FROM orders WHERE order_amount > 1000;
+@dialect2sql@
+
+@dialect2sql@
+2.2.4 Variable-Length String:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query user-input variable length information (e.g., "Find all users whose username contains 'Zhang'" where "username contains" implies variable content)
+   - Process variable-length text fields like addresses, remarks (e.g., "Count records where the address field length exceeds 50 characters" where "field length exceeds" implies variable length)
+   - Store long text data like product descriptions, comments (e.g., "Query products whose description contains 'discount'" where "description contains" implies searching within variable content)
+   - Process strings of uncertain length like names, titles (e.g., "Find documents whose title ends with 'Report'" where "title ends with" implies variable length matching)
+
+2. Relevant Function Description:
+   - Supports storing variable-length character data, allocating storage based on actual space used
+   - Provides string matching and search functions (e.g., LIKE operation, regular expression matching)
+   - Implements string length calculation and substring operations
+   - Supports basic text processing functions like string concatenation, replacement
+
+DuckDB uses VARCHAR (aliased as STRING, TEXT, CHAR) as its variable-length string type. The optional length specifier (e.g., VARCHAR(n)) is ignored—it has no effect on storage, performance, or enforcement. To enforce a maximum character length, use a CHECK constraint: CREATE TABLE t (col VARCHAR CHECK (length(col) <= n)). Strings are stored as UTF-8 and support Unicode. DuckDB provides full text processing capabilities including LIKE, regex, length(), substring(), concatenation (||), and other string functions. Compression can be applied via USING COMPRESSION (e.g., zstd).
+@dialect2sql@
+
+@dialect2sql@
+MATCH
+
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query user-input variable length information (e.g., "Find all users whose username contains 'Zhang'" where "username contains" implies variable content)
+   - Process variable-length text fields like addresses, remarks (e.g., "Count records where the address field length exceeds 50 characters" where "field length exceeds" implies variable length)
+   - Store long text data like product descriptions, comments (e.g., "Query products whose description contains 'discount'" where "description contains" implies searching within variable content)
+   - Process strings of uncertain length like names, titles (e.g., "Find documents whose title ends with 'Report'" where "title ends with" implies variable length matching)
+
+2. Relevant Function Description:
+   - Supports storing variable-length character data, allocating storage based on actual space used
+   - Provides string matching and search functions (e.g., LIKE operation, regular expression matching)
+   - Implements string length calculation and substring operations
+   - Supports basic text processing functions like string concatenation, replacement
+
+Implementation: DuckDB uses the STRING type for variable-length character data with no predefined length limit. It provides extensive text functions including:
+- Pattern matching: `string LIKE pattern`, `regexp_matches(string, regex)`
+- Length: `length(string)` (characters), `strlen(string)` (bytes)
+- Substring: `substring(string, start[, length])`, `string[begin:end]`
+- Search: `contains(string, search)`, `instr(string, search)`, `position(search IN string)`
+- Concatenation: `string1 || string2`, `concat(str1, str2, ...)`
+- Replacement: `replace(string, from, to)`, `regexp_replace(string, regex, replacement)`
+- Prefix/suffix checks: `starts_with(string, prefix)`, `ends_with(string, suffix)` (also `prefix()`/`suffix()`)
+Examples:
+```sql
+SELECT * FROM users WHERE username LIKE '%Zhang%';
+SELECT * FROM products WHERE contains(description, 'discount');
+SELECT length(address) FROM records WHERE length(address) > 50;
+SELECT * FROM docs WHERE ends_with(title, 'Report');
+```
+@dialect2sql@
+
+@dialect2sql@
+MATCH
+
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying data within a specific time range (e.g., "today" in "query all orders for today")
+   - Comparing data at different time points (e.g., "this month" and "last month" in "compare this month's sales with last month's")
+   - Aggregating statistics by time dimension (e.g., "per hour" in "count visits per hour")
+   - Handling timezone-related queries (e.g., "convert to" in "convert Beijing time to New York time")
+
+2. Relevant Function Description:
+   - Supports storage and formatted output of date and time types
+   - Provides date and time extraction and conversion functions (e.g., extract hour, convert to different timezone)
+   - Implements comparison and filtering for date and time ranges
+   - Supports time interval calculation and date-time arithmetic operations
+
+Implementation:  
+DuckDB supports DATE type with extensive date manipulation capabilities via operators and functions. It allows date arithmetic using + and - with integers or INTERVALs (e.g., DATE '1992-03-22' + 5, DATE '1992-03-27' - INTERVAL 5 DAY). Key functions include:
+- Extraction: extract('year' FROM DATE '1992-09-20'), date_part('year', DATE '1992-09-20')
+- Date math: date_add(DATE '1992-09-15', INTERVAL 2 MONTH), date_diff('month', DATE '1992-09-15', DATE '1992-11-14')
+- Truncation: date_trunc('month', DATE '1992-03-07') → '1992-03-01'
+- Current date: today() or current_date
+- Formatting: strftime(DATE '1992-01-01', '%a, %-d %B %Y')
+- Comparison: greatest(), least()
+- Specialized: last_day(), dayname(), monthname(), make_date(), julian(), isfinite(), isinf()
+- Time bucketing: time_bucket(INTERVAL '2 weeks', DATE '1992-04-20', DATE '1992-04-01')
+
+Note: DuckDB’s DATE type does not natively store time or timezone; however, it interoperates with TIMESTAMP and TIMESTAMPTZ through type promotion, and timezone-aware operations are possible via those types.
+@dialect2sql@
+
+@dialect2sql@
+MATCH
+
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Recording timestamps with millisecond precision (e.g., "record the exact time of the operation, precise to milliseconds")
+   - Controlling timestamp precision (e.g., "store the current time, including microsecond precision")
+   - Precise measurement of time intervals (e.g., "calculate the time difference between two events, precise to nanoseconds")
+   - Formatted output of time data (e.g., "display time, keeping three decimal places")
+
+2. Relevant Function Description:
+   - Supports definition of fractional seconds precision (e.g., storage of milliseconds, microseconds)
+   - Controls storage precision and display format of time types
+   - Implements high-precision time calculation and comparison
+   - Manages the balance between storage space and precision for time data
+
+Implementation: DuckDB implements time precision through distinct timestamp types with fixed precision levels: TIMESTAMP_S (seconds), TIMESTAMP_MS (milliseconds), TIMESTAMP (microseconds, alias DATETIME), and TIMESTAMP_NS (nanoseconds). Precision is defined at the type level, not via a parameter like MySQL’s fsp. Input values with higher precision than the type are truncated silently. For example, TIMESTAMP '1992-09-20 11:30:00.123456789' yields 1992-09-20 11:30:00.123456 (microsecond precision), while TIMESTAMP_MS yields 1992-09-20 11:30:00.123. There is no syntax error for excessive input precision—it is simply ignored beyond the type’s capacity. DATE type does not support fractional seconds, consistent with MySQL. Time zone–aware timestamps (TIMESTAMPTZ) use microsecond precision only; nanosecond precision is not available for time zone–aware data.
+@dialect2sql@
+
+@dialect2sql@
+2.5.3 General Type Conversion:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Numeric strings participating in calculations (e.g., "convert the string '100' to a number for calculation")
+   - Date format conversion for display (e.g., "display the current date as 'YYYY year MM month DD day' format")
+   - Handling type compatibility (e.g., "convert text field to number for sorting")
+   - Data formatting output (e.g., "convert amount number to a string with thousand separators")
+
+2. Relevant Function Description:
+   - Supports mutual conversion between strings and numeric types
+   - Provides formatted output functions for date-time types
+   - Implements explicit conversion operations between different data types
+   - Supports data conversion with custom format templates
+
+Implementation: DuckDB supports explicit type conversion using both standard SQL CAST(expr AS type) and PostgreSQL-style shorthand expr::type. It allows conversions between compatible types (e.g., VARCHAR to INTEGER, INTEGER to DOUBLE) and throws errors on invalid casts (e.g., 'hello' to INTEGER). For safe conversion, TRY_CAST returns NULL instead of erroring. DuckDB also provides cast_to_type(expr, template) to cast to the type of another expression, useful in macros for generic type handling.
+
+Examples:
+SELECT CAST(i AS VARCHAR) FROM generate_series(1, 3) tbl(i);
+SELECT i::DOUBLE FROM generate_series(1, 3) tbl(i);
+SELECT TRY_CAST('hello' AS INTEGER); -- returns NULL
+SELECT cast_to_type('42', NULL::INTEGER); -- returns 42 as INTEGER
+@dialect2sql@
+
+@dialect2sql@
+MATCH
+
+III. Functional Features: Performance and Support for Complex Business
+
+**3.1 Window Functions:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Calculating rankings and ordering (e.g., "rank" in "rank employees by sales")
+   - Analyzing changes in adjacent data (e.g., "compared to last month" in "see how much sales grew each month compared to last month")
+   - Calculating cumulative values and moving averages (e.g., "cumulative sum" in "calculate the cumulative sum of salaries by department")
+   - Performing data bucket analysis (e.g., "divide into levels" in "divide student grades into 4 levels")
+
+2. Relevant Function Description:
+   - Supports sorting and numbering within data partitions (e.g., ranking functions like ROW_NUMBER, RANK)
+   - Provides access to preceding and following row data (e.g., offset functions like LAG, LEAD)
+   - Implements aggregate calculations within window frames (e.g., aggregate functions like SUM, AVG combined with window frame clauses)
+   - Supports data equi-frequency bucketing (e.g., bucketing function like NTILE)
+
+DuckDB implements full SQL:2003-compliant window functions with identical core functionality to MySQL 8.0+. It supports all standard ranking (ROW_NUMBER, RANK, DENSE_RANK), offset (LAG, LEAD), value (FIRST_VALUE, LAST_VALUE, NTH_VALUE), and bucketing (NTILE) functions, as well as aggregate window functions (SUM, AVG, COUNT, etc.) with optional FILTER and DISTINCT clauses. The OVER() clause is mandatory and supports PARTITION BY, ORDER BY, and full frame specifications including ROWS, RANGE, and GROUPS framing with INTERVAL-based range offsets and EXCLUDE clauses. DuckDB also allows named windows via the WINDOW clause for reuse across multiple functions.
+
+Examples:
+-- Ranking by department
+SELECT emp_id, dept_id, sales, ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY sales DESC) AS sales_rank FROM emp_sales;
+
+-- Compare with previous month
+SELECT month, sales, LAG(sales, 1, 0) OVER (ORDER BY month) AS last_month_sales FROM monthly_sales;
+
+-- Cumulative sum by region
+SELECT amount / SUM(amount) OVER (PARTITION BY region) FROM sales;
+
+-- 7-day moving average using RANGE
+SELECT "Date", AVG("MWh") OVER (PARTITION BY "Plant" ORDER BY "Date" RANGE BETWEEN INTERVAL 3 DAYS PRECEDING AND INTERVAL 3 DAYS FOLLOWING) FROM "Generation History";
+
+-- NTILE for quartiles
+SELECT grade, NTILE(4) OVER (ORDER BY grade) AS quartile FROM students;
+@dialect2sql@
+
+@dialect2sql@
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Counting the number of records satisfying specific conditions (e.g., "how many employees have a salary over 10,000")
+   - Calculating the proportion of data meeting conditions (e.g., "the proportion of orders with sales over 100,000 to total orders")
+   - Summarizing data entries with specific statuses (e.g., "how many orders are in completed status")
+   - Counting data volume within a specific time range (e.g., "how many new registered users this month")
+
+2. Relevant Function Description:
+   - Supports conditional counting statistics (by converting Boolean values to 1 and 0 for summation)
+   - Implements conditional ratio calculation (combining SUM and COUNT functions)
+   - Provides multi-condition grouped statistics capability (used with GROUP BY)
+   - Supports direct participation of Boolean expressions in aggregate operations (some database dialects)
+
+Implementation: DuckDB does not support MySQL-style SUM(conditional_expression) where a boolean expression is directly summed by treating TRUE as 1 and FALSE as 0. Instead, DuckDB provides the dedicated countif(condition) function for conditional counting. For conditional summation based on a condition, users must use CASE expressions or the FILTER clause with SUM(). Example using countif: SELECT countif(salary > 10000) FROM employees; Example using FILTER: SELECT sum(amount) FILTER (WHERE region = 'north') FROM sales; While SUM() in DuckDB can operate on boolean inputs (treating TRUE as 1 and FALSE as 0), this behavior is not explicitly documented as a primary method for conditional aggregation and is less idiomatic than countif or FILTER. Therefore, the functional logic is achievable but not via the same shorthand syntax.
+@dialect2sql@
+
+@dialect2sql@
+3.2 Common Table Expressions (CTE) and Recursive Queries:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying organizational hierarchy (e.g., "find all subordinates of a certain employee")
+   - Traversing category tree structures (e.g., "get all subcategories of a certain category")
+   - Analyzing path dependencies (e.g., "find the complete assembly path of a product")
+   - Handling graph data traversal (e.g., "find all indirect relationships of a person")
+
+2. Relevant Function Description:
+   - Supports recursive query definition, connecting initial query and recursive part via UNION ALL
+   - Implements infinite level traversal of tree-like structures, can set recursion depth control
+   - Provides path tracking capability, recording the complete path from root node to current node
+   - Supports cycle detection to prevent performance issues caused by infinite recursion
+
+Implementation: DuckDB supports both non-recursive and recursive CTEs using WITH and WITH RECURSIVE. Recursive CTEs use UNION ALL to combine anchor and recursive members, support path tracking via list/array operations (e.g., list_prepend, array_append), and include explicit cycle detection using list_contains or list_position. Recursion depth is controlled via WHERE clauses (e.g., fib.RecursionDepth + 1 < 10). DuckDB also offers advanced features like USING KEY for stateful recursion and union table updates, though mutually recursive CTEs are not supported.
+
+Examples:
+
+-- Tree traversal with path tracking
+WITH RECURSIVE tag_hierarchy(id, source, path) AS (
+    SELECT id, name, [name] AS path
+    FROM tag
+    WHERE subclassof IS NULL
+    UNION ALL
+    SELECT tag.id, tag.name, list_prepend(tag.name, tag_hierarchy.path)
+    FROM tag, tag_hierarchy
+    WHERE tag.subclassof = tag_hierarchy.id
+)
+SELECT path FROM tag_hierarchy WHERE source = 'Oasis';
+
+-- Graph traversal with cycle detection
+WITH RECURSIVE paths(startNode, endNode, path) AS (
+    SELECT node1id, node2id, [node1id, node2id]
+    FROM edge
+    WHERE startNode = 1
+    UNION ALL
+    SELECT paths.startNode, node2id, array_append(path, node2id)
+    FROM paths
+    JOIN edge ON paths.endNode = node1id
+    WHERE list_position(paths.path, node2id) IS NULL
+)
+SELECT * FROM paths ORDER BY length(path);
+@dialect2sql@
+
+@dialect2sql@
+MATCH
+
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Get the next available unique identifier (e.g., "what is the next order number?")
+   - Automatically generate primary keys when creating new records (e.g., "automatically assign user ID when adding a new user")
+   - Consecutive numbering during batch data insertion (e.g., "import 100 product records and auto-number them")
+   - Reset the starting value of a sequence (e.g., "restart employee numbers from 1000")
+
+2. Relevant Function Description:
+   - Supports automatically generating unique, incrementing numerical sequences
+   - Provides methods to get the next sequence value (e.g., NEXTVAL, AUTO_INCREMENT)
+   - Allows customizing sequence start value, step size, and cache size
+   - Supports resetting and cycling sequence values
+
+Implementation: DuckDB implements sequence generation via CREATE SEQUENCE with explicit control over start, increment, min/max values, and cycling behavior. Sequences are standalone objects used with nextval('seq_name') and can be referenced as DEFAULT values in table columns.
+
+Examples:
+-- Basic ascending sequence
+CREATE SEQUENCE serial;
+SELECT nextval('serial');
+
+-- Custom start and increment
+CREATE SEQUENCE serial START 101;
+CREATE SEQUENCE odd_numbers START WITH 1 INCREMENT BY 2;
+
+-- Descending sequence with max
+CREATE SEQUENCE countdown START WITH 99 INCREMENT BY -1 MAXVALUE 99;
+
+-- Enable cycling
+CREATE SEQUENCE cyclic_seq START WITH 1 MAXVALUE 10 CYCLE;
+
+-- Use in table as auto-incrementing primary key
+CREATE SEQUENCE id_seq START 1;
+CREATE TABLE tbl (id INTEGER PRIMARY KEY DEFAULT nextval('id_seq'), s VARCHAR);
+INSERT INTO tbl (s) VALUES ('hello'), ('world');
+
+-- Add sequence-based column to existing table
+ALTER TABLE tbl ADD COLUMN id INTEGER DEFAULT nextval('id_seq');
+
+-- Drop sequence (use CASCADE if dependent objects exist)
+DROP SEQUENCE IF EXISTS id_seq CASCADE;
+@dialect2sql@
+
+@dialect2sql@
+V. Supplementary Syntax  
+    5.1 COUNT (DISTINCT column) Deduplication Aggregation Syntax:  
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+       Single-column unique value count (e.g., "Count distinct patient IDs", "Calculate the number of distinct customer IDs in orders", "Query the total number of distinct course IDs in the course selection system")  
+       Multi-dimensional combination deduplication count (e.g., "Count the number of unique user + product purchase combinations", "Calculate the number of unique department + job combinations", "Query the number of unique doctor + patient consultation combinations")  
+       Deduplication statistics under grouping dimensions (e.g., "Count monthly new distinct users by month", "Count distinct customers by region", "Count distinct students enrolled per semester by semester", "Count distinct users placing orders per year by year")  
+       NULL value related counting (e.g., "Count the number of distinct non-NULL values in a column", "Query the result when NULL values participate in distinct count")  
+       Unique entity statistics in business scenarios (e.g., "Count distinct patients treated by each department", "Calculate the number of distinct product SKUs in inventory")  
+
+    2. Relevant Function Description:  
+       Supports single-column COUNT(DISTINCT) for deduplication counting, accurately统计 the number of unique values in a single dimension  
+       Multi-column combination deduplication count (natively supported by some databases, requires string concatenation / CONCAT in others), meeting multi-dimensional unique entity statistics needs  
+       Combined with GROUP BY, performs deduplication counting on the target column after grouping by specified dimensions, supporting time-period / regional distinct analysis  
+       Automatically ignores NULL values (COUNT(DISTINCT NULL) returns 0), ensuring counting result accuracy  
+       Adapts to syntax characteristics of different databases (e.g., concatenation implementation in SQLite/Oracle, native multi-column support in PostgreSQL/MySQL), compatible with multi-environment deduplication counting  
+       Can combine with WHERE filter conditions, filter data first then perform deduplication counting, meeting refined statistical needs  
+       Supports combination with time formatting functions (e.g., DATE_FORMAT, YEAR) to achieve distinct statistics in time dimensions  
+
+    -- DuckDB Implementation:  
+    DuckDB supports single-column COUNT(DISTINCT column) and automatically ignores NULL values (COUNT(DISTINCT NULL) returns 0). It also supports multi-column COUNT(DISTINCT col1, col2, ...) natively. When used with GROUP BY, it computes distinct counts per group. Examples:  
+    Single-column distinct count: SELECT count(DISTINCT region) FROM sales;  
+    Multi-column distinct count: SELECT count(DISTINCT user_id, product_id) FROM orders;  
+    With GROUP BY: SELECT strftime('%Y-%m', create_time) AS month, count(DISTINCT user_id) FROM users GROUP BY month;  
+    NULL handling: SELECT count(DISTINCT NULL) FROM tbl; -- Returns 0
+@dialect2sql@
+
+@dialect2sql@
+5.2 SUBSTR String Substring Function:
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       Partial extraction from date strings (e.g., "Extract year from date string", "Extract month/date part from date", "Get the last two digits representing the day from a date string")
+       Segment extraction from fixed-format strings (e.g., "Extract the first four digits as identifier from a code", "Get the last two characters of a string")
+       Filtering based on extracted content (e.g., "Query records from the year 2012", "Filter data where the month is October")
+       Handling strings with abnormal length (e.g., "When substring length exceeds actual string length", "Omit length parameter to extract remaining all characters")
+       Substring combined with date conversion (e.g., "Extract current month from system date converted string")
+
+    2. Relevant Function Description:
+       Supports extracting substring from a specified start index (start index defaults to 1, some databases support negative index counting from the end)
+       Flexible handling of length parameter: returns remaining characters if exceeds string length; some databases support omitting length parameter to extract to the end
+       Adapts to TEXT/VARCHAR string types and date-converted strings, enabling extraction of time fragments like year/month/day
+       Negative index function allows directly extracting specified length content from the end of the string (e.g., last two characters)
+       Can combine with WHERE clause to filter data based on extraction result (e.g., filter records by extracted year)
+       Compatible with TO_CHAR and other date conversion functions, extracting specified time dimension from formatted date strings
+       Supports alias usage of SUBSTR/SUBSTRING, adapting to syntax habits of different databases
+       Automatically returns remaining characters when length exceeds boundary, avoiding abnormal substring results
+
+    Implementation:
+    DuckDB supports both SUBSTR and SUBSTRING as aliases with identical behavior.
+    Syntax: SUBSTRING(string, start [, length]) or SUBSTR(string, start [, length])
+    - Start index is 1-based.
+    - If length is omitted, returns all characters from start to end.
+    - If length exceeds available characters, returns only up to the end of the string.
+    - Does not support negative start indices in SUBSTRING/SUBSTR (but slicing via string[begin:end] does).
+    
+    Examples:
+    Extract year: SELECT SUBSTR('2012-05-20', 1, 4); -- Returns '2012'
+    Length exceeds string: SELECT SUBSTR('2023', 1, 10); -- Returns '2023'
+    Extract month: SELECT SUBSTR('2023-10-01', 6, 2); -- Returns '10'
+
+    Alternative slicing syntax (Python-like) also available:
+    '2012-05-20'[1:5] → '2012'
+    '2023-10-01'[6:8] → '10'
+    '2023'[:10] → '2023'
+@dialect2sql@
+
+@dialect2sql@
+5.3 Subquery (IN Subquery, Scalar Subquery) Syntax:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Set matching filtering with IN subqueries (e.g., "Filter patients with lab test HCT≥52 and count≥2", "Query Table1 records where ID is in Table2 with value≥100", "Get patient information belonging to a specific ID set")
+   Numerical calculation / single value extraction with scalar subqueries (e.g., "Calculate the average order amount", "Get the earliest year/year-month from records", "Calculate the total exam score for a student", "Query the average price for the electronics category")
+   Group extreme value filtering with correlated subqueries (e.g., "Filter the employee with the highest salary in each department", "Get the latest order for each user", "Find the student with the lowest score in each class", "Filter the most recently hired employee in each department")
+   Row-level filtering with correlated subqueries combined with extended syntax (e.g., "Get the top 3 orders for each customer", "Correlated query for the latest transaction record for each user")
+   Multi-level filtering with nested IN subqueries (e.g., "Filter target records through multi-level ID matching", "Record query for multi-level set membership")
+
+2. Relevant Function Description:
+   IN subqueries support multi-row result matching, fulfilling the filtering requirement of "belonging to a set" (some databases have limits on IN constant lists, but subquery results are not subject to this restriction)
+   Scalar subqueries return a single value, used for conditional comparison, field assignment, or aggregate calculation (different databases handle multi-row returns differently: PostgreSQL/Oracle/SQL Server report errors, MySQL/SQLite take the first row)
+   Correlated subqueries depend on outer table fields, enabling grouped filtering by outer dimensions (e.g., matching extreme values by department, class, etc.)
+   Combined with LATERAL (PostgreSQL)/APPLY (SQL Server) syntax, supports row-level calculation for correlated tables (e.g., getting the latest / top N records for each user)
+   Non-correlated subqueries execute independently, suitable for matching fixed sets; correlated subqueries execute row-by-row, adapting to dynamic correlation filtering
+   Performance optimization adaptation: For large result set IN subqueries, it's recommended to use JOIN/EXISTS instead to improve query efficiency
+   Supports nested IN subqueries, enabling multi-level set matching filtering
+   Combined with aggregate functions (MAX/MIN/AVG/SUM), implements statistical calculations by grouping dimensions through subqueries
+
+Implementation:
+DuckDB supports scalar subqueries that must return a single value; by default, returning multiple rows raises an error (configurable via scalar_subquery_error_on_multiple_rows=false to pick a random row). IN subqueries check containment against multi-row results and follow standard three-valued logic with NULLs. Correlated subqueries reference outer query columns and execute per row, enabling group-wise filtering (e.g., per-course minimum grade). EXISTS/NOT EXISTS support both correlated and uncorrelated forms, with automatic antijoin detection for NOT EXISTS. Quantified comparisons (ALL/ANY/SOME) allow scalar expressions to be compared against multi-row subqueries. ARRAY subqueries collect multiple rows into a list. Examples:
+
+Non-correlated IN:
+SELECT 'Math' IN (SELECT course FROM grades) AS math_grades_present;
+
+Scalar subquery:
+SELECT course FROM grades WHERE grade = (SELECT min(grade) FROM grades);
+
+Correlated subquery (per-group min):
+SELECT * FROM grades g1 WHERE grade = (SELECT min(grade) FROM grades g2 WHERE g2.course = g1.course);
+@dialect2sql@
+
+@dialect2sql@
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Simple conditional judgment returning specified values (e.g., "Judge if birth year is earlier than 1985 and laps greater than 50, return 1 if satisfied otherwise 0", "Judge if date year is 2010, return 1 if yes otherwise 0", "Judge if creation date year is 2011 and reputation value greater than 1000, return 1 if satisfied otherwise 0")
+   Multi-condition nested grading / classification (e.g., "Grade based on score: A for 90 and above, B for 80-89, C for 60-79, F below 60", "Group by age: senior for 60 and above, adult for 18-59, minor below 18", "Categorize by order quantity: bulk for greater than 100, regular for 10-100, small for less than or equal to 10", "Grade by salary: high for greater than 10000, medium for 5000-10000, low below 5000")
+   NULL condition handling (e.g., "Return invalid when condition is NULL, return valid when not NULL")
+   Simple equality judgment (e.g., "Judge if date year is 2010, return corresponding identifier")
+   Complex combined condition judgment (e.g., "Filter and return identifier combining year and numerical conditions")
+
+2. Relevant Function Description:
+   Supports conditional branch return (IIF/IF/CASE/DECODE can implement "if... then... else..." logic, returning specified values based on condition truth)
+   Multi-condition nesting capability (Through nested IIF/IF/CASE expressions, implements multi-layer progressive condition judgment, meeting grading/classification needs)
+   NULL condition error tolerance handling (When condition is NULL, treated as false, uniformly returns else/val_false branch value, avoiding result anomalies caused by NULL)
+   Cross-database equivalent implementation adaptation (SQLite/SQL Server natively support IIF, MySQL supports IF function, PostgreSQL/Oracle rely on standard CASE expression, Oracle additionally provides DECODE for simple equality scenarios)
+   Compatible with standard CASE expression (All databases support CASE WHEN THEN ELSE END, as a universal replacement for IIF/IF, adapting to complex combined conditions)
+   Syntax simplification and performance balance (IIF/IF only simplify conditional judgment syntax, performance is close to CASE expression, complex conditions recommend using CASE for better readability)
+   Covers equality and range conditions (DECODE is suitable for simple equality judgment, CASE/IIF/IF support complex scenarios like ranges, multi-condition combinations)
+
+Implementation:
+DuckDB supports both the standard SQL CASE expression and the IF(condition, true_value, false_value) function, which is functionally equivalent to a single-condition CASE. The IF function treats NULL conditions as false and returns the false_value. CASE expressions support multiple WHEN clauses for multi-condition logic and an optional ELSE clause; if omitted and no condition matches, NULL is returned. DuckDB also allows a simplified CASE syntax with a base expression (e.g., CASE expr WHEN val THEN ...), acting like a switch statement.
+
+Examples:
+Basic conditional: SELECT IF(i > 2, 1, 0) AS test FROM integers;
+Multi-condition: SELECT CASE WHEN score >= 90 THEN 'A' WHEN score >= 80 THEN 'B' WHEN score >= 60 THEN 'C' ELSE 'F' END AS grade FROM exams;
+NULL handling: SELECT IF(NULL, 'valid', 'invalid'); -- returns 'invalid'
+Switch-style: SELECT CASE i WHEN 1 THEN 10 WHEN 2 THEN 20 ELSE 0 END FROM integers;
+@dialect2sql@

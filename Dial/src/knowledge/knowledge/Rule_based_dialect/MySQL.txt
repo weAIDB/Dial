@@ -1,0 +1,2675 @@
+@dialect2sql@
+1.1 Alias Definition and Reference
+-- MySQL:Method: Standard usage: Define alias using AS keyword (recommended explicit writing); Use backticks to wrap aliases containing spaces/special characters; Single quotes define aliases parsed as strings, leading to unexpected results; Error scenario: Using single quotes to define alias (e.g., SELECT salary 'Annual Salary'), returns string instead of alias; Correct method: Use AS keyword or omit AS, use backticks for special aliases. eg: Error example (single quotes parsed as string): SELECT salary 'Annual Salary' FROM employees; Correct example (AS keyword): SELECT first_name AS fn, last_name AS ln FROM employees; Special alias example (backticks): SELECT salary AS `Annual Salary` FROM employees;
+@dialect2sql@
+
+@dialect2sql@
+1.2.1 String Literal
+-- MySQL:
+   Method:
+      Standard usage: String literals wrapped in single quotes '; Double quotes are compatible in default mode, but treated as identifiers in ANSI mode (not recommended);
+      Error scenario: Wrapping strings with double quotes (triggers syntax error in strict mode);
+  eg:
+      Error example (double quote issue):
+      WHERE name = "John Doe";
+      Correct example (single quotes):
+      WHERE name = 'John Doe';
+
+@dialect2sql@
+
+@dialect2sql@
+1.2.2 Identifier Quoting (Object Names)
+-- MySQL:
+   Method:
+      Standard usage: Identifiers (keywords/special character names) wrapped in backticks ``; Can be omitted if no special characters;
+      Error scenario: Directly using keywords as object names (e.g., group) without backticks;
+  eg:
+      Error example (keyword not escaped):
+      SELECT name, group FROM users;
+      Correct example (backtick quoting):
+      SELECT `name`, `group` FROM `users`;
+@dialect2sql@
+
+@dialect2sql@
+1.2.3 Explicit Escaping of Keywords as Table/Column Names
+-- MySQL:
+   Method:
+      When keywords are used as identifiers (table/column names), they must be wrapped in backticks `` for escaping; Directly using keywords (e.g., Match/Order/User) triggers syntax errors (e.g., "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'Match'");
+      Match is a MySQL full-text search keyword (e.g., MATCH AGAINST syntax), must be escaped when used as table/column names; Other common keywords requiring escaping include Order (sorting), User (user table), Group (grouping), Date (date type), etc.
+  eg:
+      Escaping keyword table name (corresponding to issue 1025/1028 scenarios):
+      SELECT * FROM `Match` WHERE id = 1; (Match as table name, escaped with backticks)
+      Escaping keyword column names:
+      SELECT `Order`, `User` FROM orders_table; (Order/User as column names)
+      Error example (not escaped):
+      SELECT * FROM Match; (Error: syntax error, because Match is a keyword)
+@dialect2sql@
+p
+@dialect2sql@
+1.3.1 String Case Sensitivity
+-- MySQL:
+   Method:
+      Default rule: String case-insensitive (controlled by Collation); If using binary collation, then sensitive;
+      Example: 'apple' = 'APPLE' returns true;
+  eg:
+      Default scenario:
+      SELECT * FROM fruits WHERE name = 'APPLE'; -- Matches name='apple'
+      Sensitive scenario (binary):
+      SELECT * FROM fruits WHERE name BINARY = 'APPLE'; -- Only matches name='APPLE'
+@dialect2sql@
+
+@dialect2sql@
+1.6.3 NULL Handling Details in LEFT JOIN
+-- MySQL:
+   Method:
+      NULL retention rule: LEFT JOIN forcibly retains all records from the left table, associated fields return NULL when no match in right table; Need to fill NULLs via COALESCE(right_table_field, default_value) (e.g., convert NULL to 0 or "No Data");
+      Difference from INNER JOIN: INNER JOIN only returns matching records from both tables, LEFT JOIN includes unmatched records from left table (right table fields are NULL);
+      Performance optimization: Right table join column needs index (to avoid full table scan), left table conditions placed in WHERE clause (filter data early), right table filter conditions must be placed in ON clause (otherwise implicitly converted to INNER JOIN).
+  eg:
+      Basic LEFT JOIN retaining left table (corresponding to issue 27 scenario):
+      SELECT s.school_id, s.name, ss.AvgScrWrite FROM schools s LEFT JOIN satscores ss ON s.school_id = ss.school_id;
+      COALESCE filling NULL values:
+      SELECT s.name, COALESCE(ss.AvgScrWrite, 0) AS avg_write_score FROM schools s LEFT JOIN satscores ss ON s.school_id = ss.school_id;
+      Right table condition in ON (avoid conversion to INNER JOIN):
+      SELECT s.name, ss.AvgScrWrite FROM schools s LEFT JOIN satscores ss ON s.school_id = ss.school_id AND ss.year = 2023;
+
+@dialect2sql@
+
+@dialect2sql@
+1.8.2 Division NULL Protection
+(1)MySQL:MySQL supports NULLIF, also can use IFNULL(numerator/denominator, 0), eg: CAST(t1.numge1500 AS FLOAT) / NULLIF(...)
+@dialect2sql@
+
+@dialect2sql@
+2.4 Boolean Type: Representation of Abstract Logic
+2.4.1 BOOLEAN Type Support
+--MySQL: Natively supports BOOL/BOOLEAN (actually alias for TINYINT(1): 0=FALSE, other values=TRUE).
+@dialect2sql@
+
+@dialect2sql@
+2.4.2 BIT Type Handling Differences
+--MySQL: BIT(1) actually stores single bit (but behavior is often confusing). Use b'1' or function conversion.
+@dialect2sql@
+
+@dialect2sql@
+4.3.1 Sequence or Auto-increment Mechanism
+-- MySQL:
+   Method:
+      Core rule: Use AUTO_INCREMENT column property (bound to table column, commonly used for primary key), automatically generates incremental ID upon insertion; Only supports table-level binding, no independent sequence object;
+  eg:
+      Create table example:
+      CREATE TABLE orders (id INT AUTO_INCREMENT PRIMARY KEY, name TEXT);
+      Insert example (id auto-generated):
+      INSERT INTO orders (name) VALUES ('Test Order');
+@dialect2sql@
+
+@dialect2sql@
+4.3.2 Semantic Difference Between Empty String ('') and NULL
+ --MySQL: '' is a distinct valid string value (not NULL).
+@dialect2sql@
+
+@dialect2sql@
+5.8 Syntax Rules for GROUP BY Queries under sql_mode=only_full_group_by
+
+-- MySQL:
+   Method:
+      Core Constraint: The only_full_group_by mode enforces that GROUP BY queries must follow the rule: "Columns in the SELECT list must be either grouping columns in the GROUP BY clause, or wrapped by aggregate functions (MAX/MIN/SUM/ANY_VALUE, etc.)". If there is no GROUP BY clause (aggregate query without GROUP BY), the SELECT list cannot contain non-aggregated columns;
+      Error Scenario: Violating the constraint throws error 1140 ("Mixing of GROUP columns with no GROUP columns is illegal if there is no GROUP BY clause") or error 1055 ("Expression #N of SELECT list is not in GROUP BY clause and contains nonaggregated column ... which is not functionally dependent on columns in GROUP BY clause");
+      Solutions: ① Add the non-aggregated column to the GROUP BY clause; ② Wrap the non-aggregated column with an aggregate function (e.g., ANY_VALUE(non_aggregated_column)); ③ Temporarily disable only_full_group_by (SET sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY','')), not recommended for production).
+   eg:
+      Example violating the rule (corresponding to problem scenario 1404):
+      SELECT id, COUNT(*) FROM users; (No GROUP BY but SELECT contains non-aggregated column id, triggers error 1140)
+      Solution 1: Add GROUP BY column
+      SELECT id, COUNT(*) FROM users GROUP BY id;
+      Solution 2: Wrap non-aggregated column with ANY_VALUE
+      SELECT ANY_VALUE(id), COUNT(*) FROM users;
+      Correct example of GROUP BY query:
+      SELECT department, MAX(salary), ANY_VALUE(location) FROM employees GROUP BY department; (location is not a GROUP BY column, wrapped with ANY_VALUE)
+@dialect2sql@
+
+
+@dialect2sql@
+5.9 Mandatory Rule: Derived Table (Table-level Subquery) Must Have an Alias
+
+-- MySQL:
+   Method:
+      Mandatory Constraint: Derived tables (table-level subqueries) in the FROM clause must specify an alias using AS (the AS keyword can be omitted but explicit writing is recommended). Otherwise, it triggers error 1248 ("Every derived table must have its own alias"); Even if the derived table is only a temporary result set, an alias is required for identification;
+      Error Scenario: Using a subquery directly after FROM without an alias (e.g., SELECT * FROM (SELECT id FROM users)), causing syntax parsing failure;
+      Solution: Add an alias for the derived table (AS t/t). The alias can be custom (e.g., t1/temp).
+   eg:
+      Error example (triggers error 1248, corresponding to problem scenarios 1058/1107):
+      SELECT COUNT(*) FROM (SELECT user_id FROM orders WHERE amount > 1000);
+      Correct example (add alias):
+      SELECT COUNT(*) FROM (SELECT user_id FROM orders WHERE amount > 1000) AS t;
+      Abbreviated form omitting AS (still legal):
+      SELECT t.user_id FROM (SELECT id AS user_id FROM users) t;
+@dialect2sql@
+
+
+@dialect2sql@
+5.10 Basic Syntax Rules for UNION Statements
+
+-- MySQL:
+   Method:
+      Core Rules:
+      The number of columns in all subqueries combined by UNION must be exactly the same (different column count triggers error 1222: "The used SELECT statements have a different number of columns");
+      Corresponding columns should have compatible data types (MySQL supports implicit conversion, e.g., INT and VARCHAR numeric strings can be merged);
+      UNION automatically removes duplicates (merges duplicate rows), UNION ALL retains all rows (no deduplication overhead, better performance);
+      When using UNION within a derived table, an alias must be specified for the entire union (following the derived table alias rule).
+   eg:
+      Basic UNION (merging average finishing for tallest/shortest players, corresponding to problem scenario 1058):
+      SELECT 'Tallest Player' AS type, AVG(finishing) AS avg_fin FROM players WHERE height = (SELECT MAX(height) FROM players) UNION SELECT 'Shortest Player' AS type, AVG(finishing) AS avg_fin FROM players WHERE height = (SELECT MIN(height) FROM players);
+      UNION ALL retaining duplicate rows:
+      SELECT id FROM team_a UNION ALL SELECT id FROM team_b; (Retains duplicate ids from both tables)
+      UNION nested in derived table (requires alias):
+      SELECT COUNT(*) FROM (SELECT user_id FROM orders_2023 UNION SELECT user_id FROM orders_2024) AS all_users;
+@dialect2sql@
+
+@dialect2sql@
+5.11 Cross-Database Function Compatibility Differences
+
+-- MySQL:
+   Method:
+      Compatibility Rule: Only supports its own functions and SQL standard functions. Does not support SQLite-specific functions (e.g., IIF()/JULIANDAY()), PostgreSQL-specific functions (e.g., TO_TIMESTAMP() with certain parameters). Using non-compatible functions triggers error 1305 ("FUNCTION database_name.function_name does not exist");
+      Common Incompatible Functions and Alternatives:
+      IIF(condition, val1, val2) → Use IF(condition, val1, val2) or CASE WHEN condition THEN val1 ELSE val2 END;
+      JULIANDAY(date) → Use DATEDIFF(date1, date2) to calculate date difference, or directly sort by date field (ORDER BY dob DESC) as replacement;
+      STRFTIME(format, date) → Use DATE_FORMAT(date, format);
+      Error Troubleshooting: Error 1305 directly points to "function does not exist", need to replace with MySQL equivalent function;
+   eg:
+      Replacing SQLite's IIF (corresponding to problem scenarios 880/954):
+      SQLite写法: IIF(score > 60, 'pass', 'fail')
+      MySQL写法: IF(score > 60, 'pass', 'fail') or CASE WHEN score > 60 THEN 'pass' ELSE 'fail' END
+      Replacing JULIANDAY (corresponding to problem scenarios 967/971):
+      SQLite写法: ORDER BY JULIANDAY(dob) DESC
+      MySQL写法: ORDER BY dob DESC (directly sort by date) or DATEDIFF(CURDATE(), dob) to calculate day difference
+      Error example (triggers 1305):
+      SELECT IIF(dob < '1990-01-01', 1, 0) FROM users; (Error: FUNCTION test.IIF does not exist)
+@dialect2sql@
+
+@dialect2sql@
+5.12 Format Consistency and Boundary Handling for Date Field Filtering
+
+-- MySQL:
+   Method:
+      Format Specification: DATE/DATETIME types only support YYYY-MM-DD (or YYYY-MM-DD HH:MM:SS) as legal filter formats, do not directly support YYYY/MM/DD (need to use STR_TO_DATE to convert to standard format); For TEXT type stored dates, if the format is YYYY-MM-DD, direct comparison is possible; non-standard formats need to be unified first;
+      Type and Filter Syntax: DATE types use equality/range comparisons (=/BETWEEN). TEXT types with non-standard formats need to use LIKE (e.g., date_text LIKE '1993-07%') or convert before comparison;
+      Boundary Handling: Date range queries need to pay attention to closed interval boundaries (e.g., querying data for July 1993 requires date BETWEEN '1993-07-01' AND '1993-07-31'); For TEXT type dates stored as 1993/7/5, conversion is needed: STR_TO_DATE(date_text, '%Y/%m/%d') = '1993-07-05';
+      Sorting Compatibility: Sort directly by the date field (ORDER BY date DESC), no need for extra functions (like JULIANDAY).
+   eg:
+      DATE type standard format filtering (corresponding to loan.date scenario):
+      SELECT * FROM financial WHERE loan.date = '1993-07-05';
+      TEXT type non-standard format conversion:
+      SELECT * FROM logs WHERE STR_TO_DATE(date_text, '%Y/%m/%d') = '1993-07-05';
+      Date range boundary handling:
+      SELECT * FROM orders WHERE create_date BETWEEN '1993-07-01' AND '1993-07-31';
+      Direct sorting:
+      SELECT * FROM users ORDER BY dob DESC;
+@dialect2sql@
+
+@dialect2sql@
+<Column Reference & Join Conditions>
+
+<Sub-category>:
+   1. Common Scenarios:
+      Referencing non-existent or incorrectly named columns in JOIN ON clauses, especially when assuming foreign key column names without verifying table schema.
+   2. Function Description:
+      Ensures that all columns referenced in JOIN conditions exist in the respective tables and are correctly matched by name and data type.
+
+    -- MySQL
+       - Correct: SELECT d.title AS document_title, dt.type_name AS document_type, c.category_name AS category, GROUP_CONCAT(a.author_name ORDER BY a.author_name SEPARATOR ', ') AS contributing_authors  
+FROM documents d  
+JOIN document_types dt ON d.doc_id = dt.type_name  
+JOIN document_authors da ON d.doc_id = da.doc_id  
+JOIN authors a ON da.author_id = a.author_id  
+JOIN categories c ON d.doc_id = c.category_name  
+JOIN (      
+    SELECT doc_id, COUNT(*) AS access_count      
+    FROM access_logs      
+    GROUP BY doc_id      
+    ORDER BY access_count DESC      
+    LIMIT 5  
+) top_docs ON d.doc_id = top_docs.doc_id  
+WHERE dt.is_active = 1 AND c.is_active = 1  
+GROUP BY d.doc_id, d.title, dt.type_name, c.category_name  
+ORDER BY top_docs.access_count DESC;
+       - Incorrect: SELECT d.title AS document_title, dt.type_name AS document_type, c.category_name AS category, GROUP_CONCAT(a.author_name ORDER BY a.author_name SEPARATOR ', ') AS contributing_authors  FROM documents d  JOIN document_types dt ON d.doc_type_id = dt.type_id  JOIN document_authors da ON d.doc_id = da.doc_id  JOIN authors a ON da.author_id = a.author_id  JOIN categories c ON d.doc_id = c.category_id  JOIN (      SELECT doc_id, COUNT(*) AS access_count      FROM access_logs      GROUP BY doc_id      ORDER BY access_count DESC      LIMIT 5  ) top_docs ON d.doc_id = top_docs.doc_id  WHERE dt.is_active = 1 AND c.is_active = 1  GROUP BY d.doc_id, d.title, dt.type_name, c.category_name  ORDER BY top_docs.access_count DESC;
+       - Reason: The column 'd.doc_type_id' does not exist in the 'documents' table; similarly, 'c.category_id' is incorrectly used as if it were a foreign key from 'documents', but the join condition mismatches actual schema relationships. The corrected version uses existing columns, though it likely contains logical errors (e.g., joining on doc_id = type_name), indicating the "fix" provided in the case is syntactically valid but semantically flawed—however, per the error context, the syntax rule focuses on referencing only existing columns.
+@dialect2sql@
+
+@dialect2sql@
+<SQL Syntax - Reserved Keywords and Identifiers>
+
+<Sub-category>:
+   1. Common Scenarios:
+      Using reserved words or special characters as table or column aliases without proper quoting in MySQL.
+   2. Function Description:
+      In MySQL, certain identifiers (like table or column names) that match reserved keywords or contain special characters must be enclosed in backticks (`) to avoid syntax errors.
+
+    -- MySQL
+       - Correct: SELECT u.user_name, SUM(o.total_cost) AS total_order_cost 
+FROM users u 
+JOIN orders o ON u.user_id = o.user_id 
+JOIN `order_frequency` `of` ON u.user_id = `of`.user_id 
+WHERE `of`.order_count > 3 AND `of`.reordered = 1 
+GROUP BY u.user_id, u.user_name 
+HAVING SUM(o.total_cost) > 50 
+ORDER BY total_order_cost DESC;
+       - Incorrect: SELECT u.user_name, SUM(o.total_cost) AS total_order_cost FROM users u JOIN orders o ON u.user_id = o.user_id JOIN `order_frequency` of ON u.user_id = of.user_id WHERE of.order_count > 3 AND of.reordered = 1 GROUP BY u.user_id, u.user_name HAVING SUM(o.total_cost) > 50 ORDER BY total_order_cost DESC;
+       - Reason: The alias 'of' is a reserved keyword in MySQL (used in constructs like 'INTERVAL ... OF'), so it must be quoted with backticks when used as an identifier to prevent parsing errors.
+@dialect2sql@
+
+@dialect2sql@
+<Window Function Support in MySQL>
+
+<Sub-category>:
+   1. Common Scenarios:
+      Using window functions like ROW_NUMBER() in older versions of MySQL (prior to 8.0) where they are not supported, leading to syntax errors.
+   2. Function Description:
+      Window functions such as ROW_NUMBER(), RANK(), and others require MySQL 8.0 or later. In earlier versions, equivalent logic must be implemented using correlated subqueries or other workarounds.
+
+    -- MySQL
+       - Correct: SELECT
+    u.user_name,
+    CASE
+        WHEN g.user_id IS NOT NULL THEN 'Active Goal'
+        ELSE 'No Active Goal'
+    END AS goal_status,
+    CASE
+        WHEN g.user_id IS NOT NULL THEN g.target_duration - g.current_duration
+        ELSE NULL
+    END AS remaining_duration,
+    g.last_updated,
+    CASE
+        WHEN cp.user_id IS NOT NULL THEN 'In Challenge'
+        ELSE 'Not In Challenge'
+    END AS challenge_status,
+    cp.rank,
+    cp.activity_points
+FROM users u
+LEFT JOIN (
+    SELECT g1.user_id, g1.target_duration, g1.current_duration, g1.last_updated
+    FROM goals g1
+    WHERE g1.last_updated = (
+        SELECT MAX(g2.last_updated)
+        FROM goals g2
+        WHERE g2.user_id = g1.user_id
+    )
+) g ON u.user_id = g.user_id
+LEFT JOIN (
+    SELECT cp1.user_id, cp1.rank, cp1.activity_points
+    FROM challenge_participants cp1
+    WHERE cp1.rank = (
+        SELECT MIN(cp2.rank)
+        FROM challenge_participants cp2
+        WHERE cp2.user_id = cp1.user_id
+    )
+) cp ON u.user_id = cp.user_id;
+       - Incorrect: SELECT      u.user_name,     CASE          WHEN g.user_id IS NOT NULL THEN 'Active Goal'         ELSE 'No Active Goal'     END AS goal_status,     CASE          WHEN g.user_id IS NOT NULL THEN g.target_duration - g.current_duration         ELSE NULL     END AS remaining_duration,     g.last_updated,     CASE          WHEN cp.user_id IS NOT NULL THEN 'In Challenge'         ELSE 'Not In Challenge'     END AS challenge_status,     cp.rank,     cp.activity_points FROM users u LEFT JOIN (     SELECT          user_id,         target_duration,         current_duration,         last_updated,         ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY last_updated DESC) AS rn     FROM goals ) g ON u.user_id = g.user_id AND g.rn = 1 LEFT JOIN (     SELECT          user_id,         rank,         activity_points,         ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY rank ASC) AS rn     FROM challenge_participants ) cp ON u.user_id = cp.user_id AND cp.rn = 1;
+       - Reason: The incorrect query uses the ROW_NUMBER() window function, which is not supported in MySQL versions prior to 8.0. The error occurs because the MySQL server version being used does not recognize the OVER clause syntax, resulting in a syntax error near the window function definition.
+@dialect2sql@
+
+@dialect2sql@
+<SQL Syntax - Reserved Keywords>
+
+<Sub-category>:
+   1. Common Scenarios:
+      Using a MySQL reserved keyword as a column name without proper escaping causes syntax errors.
+   2. Function Description:
+      In MySQL, certain words like `rank` are reserved keywords. When used as identifiers (e.g., column names), they must be enclosed in backticks to avoid parsing errors.
+
+    -- MySQL
+       - Correct: SELECT concept_id, english, language, number_incorrect, `rank` FROM concepts WHERE language IS NOT NULL ORDER BY `rank`;
+       - Incorrect: SELECT concept_id, english, language, number_incorrect, rank FROM concepts WHERE language IS NOT NULL ORDER BY rank;
+       - Reason: The word 'rank' is a reserved keyword in MySQL (introduced as a window function in MySQL 8.0), so it must be escaped with backticks when used as a column identifier to prevent syntax errors.
+@dialect2sql@
+
+@dialect2sql@
+<Aggregate Functions & Grouping>
+
+<Sub-category>:
+   1. Common Scenarios:
+      Attempting to apply an aggregate function (e.g., MAX) directly over other aggregate functions (e.g., SUM, COUNT) in the same query level while also using GROUP BY.
+   2. Function Description:
+      In MySQL, aggregate functions cannot be nested in the same SELECT clause when a GROUP BY is present—inner aggregates define group-level values, and outer aggregates require a separate query layer (e.g., a subquery or derived table) to operate on those results.
+
+    -- MySQL
+       - Correct: SELECT MAX(combined_average) AS highest_combined_average
+FROM (
+    SELECT 
+        tc.team_id,
+        (SUM(pmr.batting_score) / COUNT(pmr.batting_score)) + 
+        (SUM(pmr.bowling_runs) / NULLIF(SUM(pmr.bowling_wickets), 0)) AS combined_average
+    FROM player_match_records pmr
+    JOIN team_compositions tc
+        ON pmr.match_id = tc.match_id AND pmr.player_id = tc.player_id
+    WHERE pmr.match_id = 1
+    GROUP BY tc.team_id
+) AS team_averages;
+       - Incorrect: SELECT MAX(     (SUM(pmr.batting_score) / COUNT(pmr.batting_score)) +      (SUM(pmr.bowling_runs) / NULLIF(SUM(pmr.bowling_wickets), 0)) ) AS highest_combined_average FROM player_match_records pmr JOIN team_compositions tc      ON pmr.match_id = tc.match_id AND pmr.player_id = tc.player_id WHERE pmr.match_id = 1 GROUP BY tc.team_id;
+       - Reason: MySQL does not allow nesting of aggregate functions (like wrapping MAX around expressions containing SUM/COUNT) in the same query block that uses GROUP BY; such operations require a subquery to first compute group-level aggregates, then apply another aggregation on those results.
+@dialect2sql@
+
+@dialect2sql@
+<SQL Syntax - Reserved Keywords and Identifiers>
+
+<Sub-category>:
+   1. Common Scenarios:
+      Using table or column aliases that conflict with MySQL reserved keywords or built-in functions without proper escaping.
+   2. Function Description:
+      In MySQL, certain identifiers (like "of") may be interpreted as reserved words depending on the server version or SQL mode. To avoid syntax errors, such identifiers must be escaped using backticks (`).
+
+    -- MySQL
+       - Correct: SELECT u.user_name, COUNT(o.order_id) AS total_orders, AVG(`of`.days_since_prior_order) AS avg_days_between_orders FROM users u JOIN orders o ON u.user_id = o.user_id JOIN order_frequency `of` ON u.user_id = `of`.user_id GROUP BY u.user_id, u.user_name HAVING COUNT(o.order_id) > 1 ORDER BY total_orders DESC, avg_days_between_orders ASC;
+       - Incorrect: SELECT u.user_name, COUNT(o.order_id) AS total_orders, AVG(of.days_since_prior_order) AS avg_days_between_orders FROM users u JOIN orders o ON u.user_id = o.user_id JOIN order_frequency of ON u.user_id = of.user_id GROUP BY u.user_id, u.user_name HAVING COUNT(o.order_id) > 1 ORDER BY total_orders DESC, avg_days_between_orders ASC;
+       - Reason: The alias "of" is a reserved keyword in MySQL (used in constructs like "INTERVAL ... OF"), so it must be enclosed in backticks to be treated as an identifier.
+@dialect2sql@
+
+@dialect2sql@
+<Window Functions>
+
+<Usage in Filtering Clauses>:
+   1. Common Scenarios:
+      Attempting to filter results of a window function (e.g., ROW_NUMBER(), RANK()) directly in a HAVING or WHERE clause at the same query level where the window function is defined.
+   2. Function Description:
+      Window functions in MySQL are computed after the GROUP BY and HAVING clauses are processed, so they cannot be referenced in HAVING or WHERE within the same SELECT scope.
+
+    -- MySQL
+       - Correct: SELECT 
+    region,
+    model_name,
+    total_units_sold,
+    total_revenue,
+    sales_rank,
+    dealer_name,
+    total_configuration_price
+FROM (
+    SELECT 
+        sd.region,
+        cm.model_name,
+        SUM(sd.quantity) AS total_units_sold,
+        SUM(sd.total_revenue) AS total_revenue,
+        ROW_NUMBER() OVER (PARTITION BY sd.region ORDER BY SUM(sd.quantity) DESC) AS sales_rank,
+        d.dealer_name,
+        SUM(cc.price) AS total_configuration_price
+    FROM sales_data sd
+    JOIN car_models cm ON sd.model_id = cm.model_id
+    JOIN dealers d ON sd.dealer_id = d.dealer_id
+    JOIN car_configurations cc ON cm.model_id = cc.model_id
+    GROUP BY sd.region, cm.model_id, cm.model_name, d.dealer_id, d.dealer_name
+) AS ranked_sales
+WHERE sales_rank <= 5
+ORDER BY region, sales_rank;
+       - Incorrect: SELECT      sd.region,     cm.model_name,     SUM(sd.quantity) AS total_units_sold,     SUM(sd.total_revenue) AS total_revenue,     ROW_NUMBER() OVER (PARTITION BY sd.region ORDER BY SUM(sd.quantity) DESC) AS sales_rank,     d.dealer_name,     SUM(cc.price) AS total_configuration_price FROM sales_data sd JOIN car_models cm ON sd.model_id = cm.model_id JOIN dealers d ON sd.dealer_id = d.dealer_id JOIN car_configurations cc ON cm.model_id = cc.model_id GROUP BY sd.region, cm.model_id, cm.model_name, d.dealer_id, d.dealer_name HAVING ROW_NUMBER() OVER (PARTITION BY sd.region ORDER BY SUM(sd.quantity) DESC) <= 5 ORDER BY sd.region, sales_rank;
+       - Reason: Window functions like ROW_NUMBER() cannot be used in HAVING or WHERE clauses at the same query level because they are evaluated after these clauses; instead, wrap the query in a subquery or CTE and apply the filter in the outer query.
+@dialect2sql@
+
+@dialect2sql@
+<SQL Syntax & Reserved Keywords>
+
+<Reserved Words as Identifiers>:
+   1. Common Scenarios:
+      Using a MySQL reserved keyword (such as 'rank') as a column name without proper quoting causes syntax errors.
+   2. Function Description:
+      When a column name conflicts with a MySQL reserved word, it must be enclosed in backticks (`) to be interpreted correctly as an identifier.
+
+    -- MySQL
+       - Correct: SELECT year_id, AVG(`rank`) AS annual_average_score FROM ranks GROUP BY year_id ORDER BY year_id;
+       - Incorrect: SELECT year_id, AVG(rank) AS annual_average_score FROM ranks GROUP BY year_id ORDER BY year_id;
+       - Reason: 'rank' is a reserved keyword in MySQL (introduced as a window function in MySQL 8.0), so using it as a column name without backticks leads to a parsing error.
+@dialect2sql@
+
+@dialect2sql@
+<Column Selection and Visibility in ORDER BY Clause>
+
+<Sub-category>:
+   1. Common Scenarios:
+      When using a derived table (subquery in FROM clause), columns referenced in the outer query's ORDER BY must be explicitly selected in the subquery's SELECT list. Otherwise, MySQL throws an "Unknown column" error because those columns are not part of the derived table's schema.
+   2. Function Description:
+      In MySQL, the ORDER BY clause of an outer query cannot reference columns that are not included in the SELECT list of its immediate FROM subquery (derived table). All columns used for sorting in the outer scope must be projected (i.e., explicitly listed) by the inner query.
+
+    -- MySQL
+       - Correct: SELECT first_name, last_name, average_time, nationality
+FROM (
+    SELECT 
+        s.first_name, 
+        s.last_name, 
+        AVG(r.time) AS average_time, 
+        s.nationality,
+        ROW_NUMBER() OVER (
+            PARTITION BY s.nationality 
+            ORDER BY AVG(r.time) ASC, MAX(r.nisca_score) DESC
+        ) AS rank_within_nationality
+    FROM swimmers s
+    JOIN results r ON s.swimmer_id = r.swimmer_id
+    JOIN events e ON r.event_id = e.event_id
+    WHERE e.event_id LIKE 'Olympic%' 
+       OR e.event_id REGEXP '^[Oo]lympic'
+    GROUP BY s.swimmer_id, s.first_name, s.last_name, s.nationality
+) ranked_swimmers
+WHERE rank_within_nationality <= 5
+ORDER BY nationality, average_time, (
+    SELECT MAX(r2.nisca_score)
+    FROM results r2
+    JOIN swimmers s2 ON r2.swimmer_id = s2.swimmer_id
+    WHERE s2.first_name = ranked_swimmers.first_name
+      AND s2.last_name = ranked_swimmers.last_name
+      AND s2.nationality = ranked_swimmers.nationality
+) DESC;
+       - Incorrect: SELECT first_name, last_name, average_time FROM ( SELECT s.first_name, s.last_name, AVG(r.time) AS average_time, ROW_NUMBER() OVER ( PARTITION BY s.nationality ORDER BY AVG(r.time) ASC, MAX(r.nisca_score) DESC ) AS rank_within_nationality FROM swimmers s JOIN results r ON s.swimmer_id = r.swimmer_id JOIN events e ON r.event_id = e.event_id WHERE e.event_id LIKE 'Olympic%' OR e.event_id IN ( SELECT DISTINCT event_id FROM events WHERE event_id REGEXP '^[Oo]lympic' ) GROUP BY s.swimmer_id, s.first_name, s.last_name, s.nationality ) ranked_swimmers WHERE rank_within_nationality <= 5 ORDER BY nationality, average_time, nisca_score DESC;
+       - Reason: The outer query's ORDER BY clause references 'nationality' and 'nisca_score', but 'nationality' is not selected in the outer SELECT list of the derived table, and 'nisca_score' is not available at all in the derived table (only aggregated via MAX inside the window function). MySQL cannot resolve 'nationality' in the ORDER BY because it was not projected from the subquery, causing error 1054.
+@dialect2sql@
+
+@dialect2sql@
+<SQL Syntax Error Handling & Column Reference Validation>
+
+<Sub-category>:
+   1. Common Scenarios:
+      Referencing a column in a subquery that does not exist in the table being queried, especially when aggregating data across related tables.
+   2. Function Description:
+      Ensures that all columns referenced in SELECT, WHERE, GROUP BY, or HAVING clauses actually exist in the tables or derived tables they are claimed to belong to.
+
+    -- MySQL
+       - Correct: SELECT 
+    j.job_id,
+    j.title AS job_title,
+    c.company_name,
+    j.location,
+    et.type_name AS employment_type,
+    el.level_name AS experience_level,
+    j.years_exp,
+    j.skills,
+    j.salary_range,
+    j.benefits,
+    j.description AS job_description,
+    j.posted_date,
+    j.deadline,
+    r.name AS recruiter_name,
+    a.applicant_id,
+    a.name AS applicant_name,
+    a.email AS applicant_email,
+    a.application_date,
+    a.phone AS applicant_phone,
+    a.linkedin_profile,
+    a.portfolio_url,
+    ast.status_name AS application_status,
+    stats.total_applicants,
+    stats.avg_years_exp
+FROM jobs j
+INNER JOIN companies c ON j.company_id = c.company_id
+INNER JOIN employment_types et ON j.type = et.type_id
+INNER JOIN experience_levels el ON j.level = el.level_id
+INNER JOIN recruiters r ON j.recruiter_id = r.recruiter_id
+LEFT JOIN applicants a ON j.job_id = a.job_id
+LEFT JOIN application_status ast ON a.status_id = ast.status_id
+JOIN (
+    SELECT 
+        j2.job_id,
+        COUNT(a2.applicant_id) AS total_applicants,
+        AVG(j2.years_exp) AS avg_years_exp
+    FROM jobs j2
+    LEFT JOIN applicants a2 ON j2.job_id = a2.job_id
+    GROUP BY j2.job_id
+) stats ON j.job_id = stats.job_id
+ORDER BY j.job_id, a.applicant_id;
+       - Incorrect: SELECT 
+    j.job_id,
+    j.title AS job_title,
+    c.company_name,
+    j.location,
+    et.type_name AS employment_type,
+    el.level_name AS experience_level,
+    j.years_exp,
+    j.skills,
+    j.salary_range,
+    j.benefits,
+    j.description AS job_description,
+    j.posted_date,
+    j.deadline,
+    r.name AS recruiter_name,
+    a.applicant_id,
+    a.name AS applicant_name,
+    a.email AS applicant_email,
+    a.application_date,
+    a.phone AS applicant_phone,
+    a.linkedin_profile,
+    a.portfolio_url,
+    ast.status_name AS application_status,
+    stats.total_applicants,
+    stats.avg_years_exp
+FROM jobs j
+INNER JOIN companies c ON j.company_id = c.company_id
+INNER JOIN employment_types et ON j.type = et.type_id
+INNER JOIN experience_levels el ON j.level = el.level_id
+INNER JOIN recruiters r ON j.recruiter_id = r.recruiter_id
+LEFT JOIN applicants a ON j.job_id = a.job_id
+LEFT JOIN application_status ast ON a.status_id = ast.status_id
+JOIN (
+    SELECT 
+        ap.job_id,
+        COUNT(*) AS total_applicants,
+        AVG(ap.years_exp) AS avg_years_exp
+    FROM applicants ap
+    GROUP BY ap.job_id
+) stats ON j.job_id = stats.job_id
+ORDER BY j.job_id, a.applicant_id;
+       - Reason: The column 'years_exp' does not exist in the 'applicants' table; it belongs to the 'jobs' table. The incorrect query mistakenly tries to compute the average of 'ap.years_exp', which causes error 1054. The correct query properly references 'j2.years_exp' from the 'jobs' table within the subquery.
+@dialect2sql@
+
+@dialect2sql@
+<Recursive Query Limitation in MySQL>
+
+<Sub-category>:
+   1. Common Scenarios:
+      Attempting to traverse hierarchical or tree-structured data using recursive CTEs without ensuring termination conditions that prevent excessive recursion depth.
+   2. Function Description:
+      MySQL enforces a default maximum recursion depth of 1000 for recursive common table expressions (CTEs). If a recursive query exceeds this limit, it is aborted with error 3636. This safeguard prevents infinite loops but requires either adjusting the recursion logic or increasing the @@cte_max_recursion_depth system variable when deeper recursion is genuinely needed.
+
+    -- MySQL
+       - Correct: SELECT 
+    zone_id,
+    zone_name,
+    building_id,
+    0 AS level,
+    zone_name AS hierarchical_name
+FROM zones
+WHERE building_id IS NOT NULL
+ORDER BY level, hierarchical_name;
+       - Incorrect: WITH RECURSIVE ZoneHierarchy AS (
+    SELECT 
+        zone_id,
+        zone_name,
+        building_id,
+        0 AS level,
+        zone_name AS hierarchical_name
+    FROM zones
+    WHERE building_id IS NOT NULL
+
+    UNION ALL
+
+    SELECT 
+        z.zone_id,
+        z.zone_name,
+        z.building_id,
+        zh.level + 1,
+        CONCAT(zh.hierarchical_name, ' -> ', z.zone_name)
+    FROM zones z
+    INNER JOIN ZoneHierarchy zh ON z.building_id = zh.zone_id
+    WHERE zh.level < 1000
+)
+SELECT 
+    zone_id,
+    zone_name,
+    building_id,
+    level,
+    hierarchical_name
+FROM ZoneHierarchy
+ORDER BY level, hierarchical_name;
+       - Reason: The recursive CTE references parent-child relationships incorrectly (joining on z.building_id = zh.zone_id), which may create cycles or unintended deep recursion, triggering MySQL's recursion depth limit. Additionally, the WHERE clause zh.level < 1000 does not guarantee termination if the hierarchy itself is cyclic or malformed, leading to abortion after 1001 iterations.
+@dialect2sql@
+
+@dialect2sql@
+<SQL Syntax & Semantics - Join Conditions and Filtering Logic>
+
+<Sub-category>:
+   1. Common Scenarios:
+      When filtering based on absence of certain conditions (e.g., no leaf mildewing or chlorosis), using JOINs with equality/inequality filters can incorrectly assume a one-to-one relationship or require matching rows to exist, leading to missing valid records or referencing non-existent columns.
+   2. Function Description:
+      Use NOT EXISTS with correlated subqueries to correctly enforce the absence of undesirable conditions without requiring a direct join, especially when the related tables may not have matching rows or when the join condition itself is invalid due to schema mismatches.
+
+    -- MySQL
+       - Correct: SELECT 
+    ch.crop_name,
+    d.disease_name,
+    ds.severity_level
+FROM crop_histories ch
+JOIN diseases d ON FIND_IN_SET(d.disease_name, ch.previous_diseases) > 0
+JOIN disease_severity ds ON d.disease_name = (SELECT disease_name FROM diseases WHERE disease_id = ds.severity_id LIMIT 1)
+WHERE 
+    NOT EXISTS (
+        SELECT 1 FROM leaf_conditions lc 
+        WHERE lc.leaf_mild = 1 OR lc.chlorosis = 1
+    )
+    AND NOT EXISTS (
+        SELECT 1 FROM stem_conditions sc 
+        WHERE sc.stem != 1 OR sc.lodging = 1
+    )
+ORDER BY 
+    ch.crop_name,
+    ds.severity_level DESC
+LIMIT 3;
+       - Incorrect: SELECT 
+    ch.crop_name,
+    d.disease_name,
+    ds.severity_level
+FROM crop_histories ch
+JOIN leaf_conditions lc ON ch.crop_history_id = lc.crop_history_id
+JOIN stem_conditions sc ON ch.crop_history_id = sc.crop_history_id
+JOIN diseases d ON FIND_IN_SET(d.disease_name, ch.previous_diseases) > 0
+JOIN disease_severity ds ON d.disease_name = (SELECT disease_name FROM diseases WHERE disease_id = ds.severity_id LIMIT 1)
+WHERE 
+    lc.leaf_mild = 0 
+    AND lc.chlorosis = 0 
+    AND sc.stem = 1 
+    AND sc.lodging = 0
+ORDER BY 
+    ch.crop_name,
+    ds.severity_level DESC
+LIMIT 3;
+       - Reason: The incorrect query assumes that every crop history has corresponding entries in leaf_conditions and stem_conditions tables and tries to join on a column (sc.crop_history_id) that does not exist, causing error 1054. Additionally, using JOINs for exclusion logic fails when no matching rows exist, whereas NOT EXISTS correctly handles absence of bad conditions without requiring joins.
+@dialect2sql@
+
+@dialect2sql@
+<Column Reference and Join Condition Validity>
+
+<Sub-category>:
+   1. Common Scenarios:
+      Attempting to join tables using a column that does not exist in one of the referenced tables, often due to incorrect assumptions about table schema or column names.
+   2. Function Description:
+      In MySQL, every column referenced in a JOIN condition must exist in the corresponding table; referencing a non-existent column results in error 1054 (Unknown column).
+
+    -- MySQL
+       - Correct: SELECT 
+    gf.feature_name,
+    s.study_name,
+    dt.tree_name,
+    sf.value AS study_feature_value,
+    fv.value AS decision_tree_feature_value,
+    sv.p_val1,
+    sv.p_val0,
+    sv.test_type,
+    gf.chromosome,
+    gf.start_position,
+    gf.end_position,
+    dt.accuracy,
+    r.name AS researcher_name,
+    CONCAT(
+        'Feature: ', gf.feature_name, 
+        '; Study: ', s.study_name, 
+        '; Tree: ', dt.tree_name, 
+        '; Chromosome: ', gf.chromosome, 
+        ':', gf.start_position, '-', gf.end_position
+    ) AS combined_description
+FROM genomic_features gf
+JOIN study_features sf ON gf.feature_id = sf.feature_id
+JOIN studies s ON sf.study_id = s.study_id
+JOIN feature_values fv ON gf.feature_id = fv.feature_id
+JOIN decision_trees dt ON fv.tree_id = dt.tree_id
+JOIN researchers r ON s.researcher_id = r.researcher_id
+LEFT JOIN statistical_values sv ON sv.test_type IS NOT NULL
+ORDER BY dt.accuracy DESC;
+       - Incorrect: SELECT 
+    gf.feature_name,
+    s.study_name,
+    dt.tree_name,
+    sf.value AS study_feature_value,
+    fv.value AS decision_tree_feature_value,
+    sv.p_val1,
+    sv.p_val0,
+    sv.test_type,
+    gf.chromosome,
+    gf.start_position,
+    gf.end_position,
+    dt.accuracy,
+    r.name AS researcher_name,
+    CONCAT(
+        'Feature: ', gf.feature_name, 
+        '; Study: ', s.study_name, 
+        '; Tree: ', dt.tree_name, 
+        '; Chromosome: ', gf.chromosome, 
+        ':', gf.start_position, '-', gf.end_position
+    ) AS combined_description
+FROM genomic_features gf
+JOIN study_features sf ON gf.feature_id = sf.feature_id
+JOIN studies s ON sf.study_id = s.study_id
+JOIN feature_values fv ON gf.feature_id = fv.feature_id
+JOIN decision_trees dt ON fv.tree_id = dt.tree_id
+JOIN statistical_values sv ON gf.feature_name = sv.feature_name
+JOIN researchers r ON s.researcher_id = r.researcher_id
+ORDER BY dt.accuracy DESC;
+       - Reason: The column 'sv.feature_name' does not exist in the 'statistical_values' table, making the JOIN condition invalid and causing MySQL error 1054. The corrected query avoids referencing this non-existent column by using a condition that only checks for non-null test_type, assuming statistical values are optional and not directly linked via feature_name.
+@dialect2sql@
+
+@dialect2sql@
+<Column Reference and Join Key Validation>
+
+<Sub-category>:
+   1. Common Scenarios:
+      Referencing a non-existent column in a JOIN condition, especially when the foreign key name differs from the primary key or uses an unexpected alias (e.g., using v.item_id instead of v.motion_id).
+   2. Function Description:
+      Ensures that all columns referenced in JOIN clauses exist in the respective tables and match the actual schema; prevents execution errors due to invalid column names.
+
+    -- MySQL
+       - Correct: SELECT 
+    m.motion_id,
+    m.motion_text,
+    p.mep_name AS proposer,
+    m.proposed_date,
+    0 AS total_votes,
+    0.00 AS percentage_for,
+    0.00 AS percentage_against,
+    0.00 AS percentage_abstain
+FROM motions m
+JOIN proposers p ON m.proposer_id = p.proposer_id
+WHERE m.proposer_group = 'ALDE'
+ORDER BY m.proposed_date, m.motion_id;
+       - Incorrect: SELECT 
+    m.motion_id,
+    m.motion_text,
+    p.mep_name AS proposer,
+    m.proposed_date,
+    COUNT(v.vote_result) AS total_votes,
+    CAST(SUM(CASE WHEN v.vote_result = 'For' THEN 1 ELSE 0 END) AS DECIMAL(10,2)) * 100.0 / NULLIF(COUNT(v.vote_result), 0) AS percentage_for,
+    CAST(SUM(CASE WHEN v.vote_result = 'Against' THEN 1 ELSE 0 END) AS DECIMAL(10,2)) * 100.0 / NULLIF(COUNT(v.vote_result), 0) AS percentage_against,
+    CAST(SUM(CASE WHEN v.vote_result = 'Abstain' THEN 1 ELSE 0 END) AS DECIMAL(10,2)) * 100.0 / NULLIF(COUNT(v.vote_result), 0) AS percentage_abstain
+FROM motions m
+JOIN proposers p ON m.proposer_id = p.proposer_id
+LEFT JOIN votes v ON m.motion_id = v.item_id
+WHERE m.proposer_group = 'ALDE'
+GROUP BY m.motion_id, m.motion_text, p.mep_name, m.proposed_date
+ORDER BY m.proposed_date, m.motion_id;
+       - Reason: The column 'v.item_id' does not exist in the 'votes' table; the correct foreign key should reference 'motion_id' or another valid column that links to the 'motions' table. Using a non-existent column in the ON clause of a JOIN causes error 1054 in MySQL.
+@dialect2sql@
+
+@dialect2sql@
+<Column Name Typo>
+
+<Typo in Column Identifier>:
+   1. Common Scenarios:
+      Misspelling or typographical errors in column names, especially when referencing columns in WHERE, SELECT, or JOIN clauses.
+   2. Function Description:
+      MySQL requires exact column name matches as defined in the table schema; any misspelling results in an "Unknown column" error.
+
+    -- MySQL
+       - Correct: SELECT (SUM(CASE WHEN T2.Reputation > 1000 THEN 1 ELSE 0 END) * 100.0 / COUNT(T1.Id)) AS percentage
+FROM posts AS T1
+JOIN users AS T2 ON T1.OwnerUserId = T2.Id
+WHERE YEAR(T1.CreaionDate) = 2011;
+       - Incorrect: SELECT (SUM(CASE WHEN T2.Reputation > 1000 THEN 1 ELSE 0 END) * 100.0 / COUNT(T1.Id)) AS percentage
+FROM posts AS T1
+JOIN users AS T2 ON T1.OwnerUserId = T2.Id
+WHERE YEAR(T1.CreationDate) = 2011;
+       - Reason: The column name 'CreationDate' was misspelled as 'CreaionDate' in the correct version; however, the provided "Fix" actually contains the typo, while the original "Mistake" uses the correct spelling. This indicates a reversal in labeling—thus, the true correct query uses 'CreationDate', and the error arises from the typo 'CreaionDate'. Therefore, the correct syntax must use the accurately spelled column name as defined in the schema.
+@dialect2sql@
+
+@dialect2sql@
+<SQL Syntax Rule: GROUP BY Compliance in MySQL with ONLY_FULL_GROUP_BY Mode>
+
+<Sub-category>:
+   1. Common Scenarios:
+      When using GROUP BY in MySQL with the sql_mode set to include ONLY_FULL_GROUP_BY (which is default in MySQL 5.7+), every column in the SELECT list that is not an aggregate function must be included in the GROUP BY clause. This commonly occurs when joining aggregated subqueries and selecting non-aggregated fields from them.
+   2. Function Description:
+      The ONLY_FULL_GROUP_BY SQL mode enforces that any column referenced in the SELECT, HAVING, or ORDER BY clauses that is not encapsulated in an aggregate function (e.g., AVG, MAX, COUNT) must be functionally dependent on the GROUP BY columns. In practice, this means explicitly listing all non-aggregated selected columns in the GROUP BY clause to avoid ambiguity.
+
+    -- MySQL
+       - Correct: SELECT 
+    T1.name,
+    COALESCE(T3.total_views, 0) AS total_views,
+    AVG(T2.load_time) AS average_load_time,
+    AVG(T2.bounce_rate) AS average_bounce_rate,
+    AVG(T2.exit_rate) AS average_exit_rate,
+    T4.latest_update_date,
+    T5.media_urls AS media_url
+FROM pages AS T1
+INNER JOIN page_performance AS T2 
+    ON T1.page_id = T2.page_id
+LEFT JOIN (
+    SELECT page_id, COUNT(view_id) AS total_views
+    FROM page_views
+    GROUP BY page_id
+) AS T3 ON T1.page_id = T3.page_id
+LEFT JOIN (
+    SELECT page_id, MAX(update_date) AS latest_update_date
+    FROM page_logs
+    GROUP BY page_id
+) AS T4 ON T1.page_id = T4.page_id
+LEFT JOIN (
+    SELECT page_id, GROUP_CONCAT(media_url SEPARATOR ',') AS media_urls
+    FROM page_media
+    GROUP BY page_id
+) AS T5 ON T1.page_id = T5.page_id
+WHERE T2.load_time IS NOT NULL 
+    AND T2.bounce_rate IS NOT NULL 
+    AND T2.exit_rate IS NOT NULL
+GROUP BY T1.page_id, T1.name, T3.total_views, T4.latest_update_date, T5.media_urls
+ORDER BY average_load_time ASC, average_bounce_rate ASC, average_exit_rate ASC
+LIMIT 10;
+       - Incorrect: SELECT 
+    T1.name,
+    COALESCE(T3.total_views, 0) AS total_views,
+    AVG(T2.load_time) AS average_load_time,
+    AVG(T2.bounce_rate) AS average_bounce_rate,
+    AVG(T2.exit_rate) AS average_exit_rate,
+    T4.latest_update_date,
+    T5.media_urls AS media_url
+FROM pages AS T1
+INNER JOIN page_performance AS T2 
+    ON T1.page_id = T2.page_id
+LEFT JOIN (
+    SELECT page_id, COUNT(view_id) AS total_views
+    FROM page_views
+    GROUP BY page_id
+) AS T3 ON T1.page_id = T3.page_id
+LEFT JOIN (
+    SELECT page_id, MAX(update_date) AS latest_update_date
+    FROM page_logs
+    GROUP BY page_id
+) AS T4 ON T1.page_id = T4.page_id
+LEFT JOIN (
+    SELECT page_id, GROUP_CONCAT(media_url SEPARATOR ',') AS media_urls
+    FROM page_media
+    GROUP BY page_id
+) AS T5 ON T1.page_id = T5.page_id
+WHERE T2.load_time IS NOT NULL 
+    AND T2.bounce_rate IS NOT NULL 
+    AND T2.exit_rate IS NOT NULL
+GROUP BY T1.page_id, T1.name
+ORDER BY average_load_time ASC, average_bounce_rate ASC, average_exit_rate ASC
+LIMIT 10;
+       - Reason: Under ONLY_FULL_GROUP_BY mode, non-aggregated columns in the SELECT list (such as T3.total_views, T4.latest_update_date, and T5.media_urls) must be included in the GROUP BY clause because they are not functionally dependent on the grouped columns (T1.page_id, T1.name). Omitting them violates SQL standard compliance enforced by this mode, leading to error 1055.
+@dialect2sql@
+
+@dialect2sql@
+<SQL Syntax Rule: JOIN Clause Placement>
+
+<Sub-category>:
+   1. Common Scenarios:
+      Attempting to place a LEFT JOIN (or any JOIN) after a HAVING clause but before the ORDER BY clause, outside of proper SELECT statement structure.
+   2. Function Description:
+      In MySQL, all JOIN clauses must appear in the FROM clause, before GROUP BY, HAVING, and ORDER BY. Placing a JOIN after HAVING is syntactically invalid.
+
+    -- MySQL
+       - Correct: SELECT 
+    agg.name,
+    agg.average_cv_score,
+    agg.max_roc_auc,
+    h.name AS `hyperparameters.name`,
+    h.value AS `hyperparameters.value`
+FROM (
+    SELECT 
+        T1.model_id,
+        T1.name,
+        AVG(T2.cv_score) AS average_cv_score,
+        MAX(T2.holdout_roc_auc_score) AS max_roc_auc,
+        AVG(T3.split_ratio) AS average_split_ratio
+    FROM models AS T1
+    INNER JOIN model_performance AS T2 ON T1.model_id = T2.model_id
+    INNER JOIN model_dataset AS T3 ON T1.model_id = T3.model_id
+    GROUP BY T1.model_id, T1.name
+    HAVING 
+        AVG(T2.cv_score) > 0.8
+        AND AVG(T3.split_ratio) > 0.6
+) AS agg
+LEFT JOIN hyperparameters AS h ON agg.model_id = h.model_id
+ORDER BY agg.max_roc_auc DESC;
+       - Incorrect: SELECT 
+    T1.name,
+    AVG(T2.cv_score) AS average_cv_score,
+    MAX(T2.holdout_roc_auc_score) AS max_roc_auc,
+    T4.name AS `hyperparameters.name`,
+    T4.value AS `hyperparameters.value`
+FROM models AS T1
+JOIN model_performance AS T2 ON T1.model_id = T2.model_id
+JOIN model_dataset AS T3 ON T1.model_id = T3.model_id
+GROUP BY T1.model_id, T1.name
+HAVING 
+    COUNT(T2.performance_id) > 0 
+    AND AVG(T2.cv_score) IS NOT NULL
+    AND AVG(T2.cv_score) > 0.8
+    AND AVG(T3.split_ratio) > 0.6
+LEFT JOIN hyperparameters AS T4 ON T1.model_id = T4.model_id
+ORDER BY max_roc_auc DESC;
+       - Reason: The LEFT JOIN clause cannot appear after the HAVING clause; all JOINs must be specified within the FROM clause before GROUP BY and HAVING. The incorrect query violates MySQL’s required clause order: SELECT → FROM (with JOINs) → WHERE → GROUP BY → HAVING → ORDER BY.
+@dialect2sql@
+
+@dialect2sql@
+<SQL Syntax Rule: GROUP BY Compliance in MySQL with ONLY_FULL_GROUP_BY Mode>
+
+<Sub-category>:
+   1. Common Scenarios:
+      When using aggregate functions (e.g., COUNT, MIN, MAX, GROUP_CONCAT) alongside non-aggregated columns in a SELECT clause in MySQL with sql_mode=only_full_group_by enabled, every non-aggregated column or expression that depends on non-grouped columns must either be included in the GROUP BY clause or be functionally dependent on grouped columns.
+   2. Function Description:
+      MySQL enforces that any column referenced in the SELECT list that is not inside an aggregate function must appear in the GROUP BY clause unless it is functionally dependent on a grouped column (e.g., via a primary key). Expressions involving non-grouped columns (like CASE statements using T1.tp, T1.fp, T1.fn) are treated as non-aggregated and thus require their underlying columns to be in GROUP BY.
+
+    -- MySQL
+       - Correct: SELECT 
+    T2.study_name,
+    T1.study_id,
+    T1.test_id,
+    CASE 
+        WHEN (T1.tp + T1.fp) > 0 
+        THEN CAST(T1.tp AS DECIMAL(10,4)) / (T1.tp + T1.fp)
+        ELSE NULL
+    END AS `precision`,
+    CASE 
+        WHEN (T1.tp + T1.fn) > 0 
+        THEN CAST(T1.tp AS DECIMAL(10,4)) / (T1.tp + T1.fn)
+        ELSE NULL
+    END AS recall,
+    T1.positive_predictive_value,
+    T1.negative_predictive_value,
+    T1.auc_roc,
+    T1.confidence_interval,
+    CASE 
+        WHEN (
+            (CASE WHEN (T1.tp + T1.fp) > 0 THEN CAST(T1.tp AS DECIMAL(10,4)) / (T1.tp + T1.fp) ELSE NULL END) >= 0.8
+            AND
+            (CASE WHEN (T1.tp + T1.fn) > 0 THEN CAST(T1.tp AS DECIMAL(10,4)) / (T1.tp + T1.fn) ELSE NULL END) >= 0.8
+        ) THEN 'High'
+        WHEN (
+            (CASE WHEN (T1.tp + T1.fp) > 0 THEN CAST(T1.tp AS DECIMAL(10,4)) / (T1.tp + T1.fp) ELSE NULL END) >= 0.5
+            OR
+            (CASE WHEN (T1.tp + T1.fn) > 0 THEN CAST(T1.tp AS DECIMAL(10,4)) / (T1.tp + T1.fn) ELSE NULL END) >= 0.5
+        ) THEN 'Medium'
+        ELSE 'Low'
+    END AS accuracy_rating,
+    COUNT(T3.access_id) AS access_count,
+    MIN(T3.access_date) AS first_access_date,
+    MAX(T3.access_date) AS last_access_date,
+    GROUP_CONCAT(DISTINCT T4.department ORDER BY T4.department SEPARATOR ',') AS departments
+FROM performance_metrics AS T1
+JOIN studies AS T2 ON T1.study_id = T2.study_id
+JOIN access_logs AS T3 ON T1.study_id = T3.study_id
+JOIN users AS T4 ON T3.user_id = T4.user_id
+WHERE T2.study_status = 'completed'
+GROUP BY 
+    T1.study_id, 
+    T1.test_id, 
+    T2.study_name, 
+    T1.positive_predictive_value, 
+    T1.negative_predictive_value, 
+    T1.auc_roc, 
+    T1.confidence_interval,
+    T1.tp,
+    T1.fp,
+    T1.fn;
+       - Incorrect: SELECT 
+    T2.study_name,
+    T1.study_id,
+    T1.test_id,
+    CASE 
+        WHEN (T1.tp + T1.fp) > 0 
+        THEN CAST(T1.tp AS DECIMAL(10,4)) / (T1.tp + T1.fp)
+        ELSE NULL
+    END AS `precision`,
+    CASE 
+        WHEN (T1.tp + T1.fn) > 0 
+        THEN CAST(T1.tp AS DECIMAL(10,4)) / (T1.tp + T1.fn)
+        ELSE NULL
+    END AS recall,
+    T1.positive_predictive_value,
+    T1.negative_predictive_value,
+    T1.auc_roc,
+    T1.confidence_interval,
+    CASE 
+        WHEN (
+            (CASE WHEN (T1.tp + T1.fp) > 0 THEN CAST(T1.tp AS DECIMAL(10,4)) / (T1.tp + T1.fp) ELSE NULL END) >= 0.8
+            AND
+            (CASE WHEN (T1.tp + T1.fn) > 0 THEN CAST(T1.tp AS DECIMAL(10,4)) / (T1.tp + T1.fn) ELSE NULL END) >= 0.8
+        ) THEN 'High'
+        WHEN (
+            (CASE WHEN (T1.tp + T1.fp) > 0 THEN CAST(T1.tp AS DECIMAL(10,4)) / (T1.tp + T1.fp) ELSE NULL END) >= 0.5
+            OR
+            (CASE WHEN (T1.tp + T1.fn) > 0 THEN CAST(T1.tp AS DECIMAL(10,4)) / (T1.tp + T1.fn) ELSE NULL END) >= 0.5
+        ) THEN 'Medium'
+        ELSE 'Low'
+    END AS accuracy_rating,
+    COUNT(T3.access_id) AS access_count,
+    MIN(T3.access_date) AS first_access_date,
+    MAX(T3.access_date) AS last_access_date,
+    GROUP_CONCAT(DISTINCT T4.department ORDER BY T4.department SEPARATOR ',') AS departments
+FROM performance_metrics AS T1
+JOIN studies AS T2 ON T1.study_id = T2.study_id
+JOIN access_logs AS T3 ON T1.study_id = T3.study_id
+JOIN users AS T4 ON T3.user_id = T4.user_id
+WHERE T2.study_status = 'completed'
+GROUP BY 
+    T1.study_id, 
+    T1.test_id, 
+    T2.study_name, 
+    T1.positive_predictive_value, 
+    T1.negative_predictive_value, 
+    T1.auc_roc, 
+    T1.confidence_interval;
+       - Reason: The SELECT clause contains expressions (`precision`, `recall`, and `accuracy_rating`) that reference non-aggregated columns T1.tp, T1.fp, and T1.fn, which are not included in the GROUP BY clause. Under MySQL's ONLY_FULL_GROUP_BY mode, this violates the requirement that all non-aggregated columns in SELECT must be functionally dependent on or included in the GROUP BY list. Adding T1.tp, T1.fp, and T1.fn to GROUP BY resolves the error by ensuring all referenced non-aggregated columns are accounted for.
+@dialect2sql@
+
+@dialect2sql@
+<Window Functions>
+
+<Filtering on Window Function Aliases>:
+   1. Common Scenarios:
+      When using window functions (e.g., RANK(), ROW_NUMBER()) in a CTE or subquery, attempting to filter results using the alias of the window function directly in a HAVING or WHERE clause within the same query block will result in an error in MySQL.
+   2. Function Description:
+      In MySQL, column aliases defined for window function expressions cannot be referenced in the HAVING clause of the same query level because window functions are computed after the GROUP BY and HAVING phases. To filter based on window function results, wrap the query in an outer query or additional CTE and apply the filter there.
+
+    -- MySQL
+       - Correct: WITH model_region_unfiltered AS (
+  SELECT 
+    T1.region,
+    T1.model_id,
+    SUM(T1.quantity) AS total_units_sold,
+    SUM(CAST(T1.total_revenue AS DECIMAL(20,2))) AS total_revenue_generated,
+    RANK() OVER (PARTITION BY T1.region ORDER BY SUM(T1.quantity) DESC) AS sales_rank
+  FROM sales_data T1
+  JOIN car_models T2 ON T1.model_id = T2.model_id
+  GROUP BY T1.region, T1.model_id
+),
+model_region AS (
+  SELECT *
+  FROM model_region_unfiltered
+  WHERE sales_rank <= 5
+),
+top_dealer AS (
+  SELECT 
+    T1.region,
+    T1.model_id,
+    T3.dealer_name,
+    ROW_NUMBER() OVER (PARTITION BY T1.region, T1.model_id ORDER BY SUM(T1.quantity) DESC) AS dealer_rank
+  FROM sales_data T1
+  JOIN dealers T3 ON T1.dealer_id = T3.dealer_id
+  GROUP BY T1.region, T1.model_id, T3.dealer_name
+),
+model_config_price AS (
+  SELECT 
+    model_id,
+    SUM(CAST(price AS DECIMAL(20,2))) AS total_configuration_price
+  FROM car_configurations
+  GROUP BY model_id
+)
+SELECT 
+  T2.model_name,
+  mr.region,
+  mr.total_units_sold,
+  mr.total_revenue_generated,
+  mr.sales_rank,
+  td.dealer_name,
+  mcp.total_configuration_price
+FROM model_region mr
+JOIN car_models T2 ON mr.model_id = T2.model_id
+JOIN top_dealer td ON mr.region = td.region AND mr.model_id = td.model_id
+JOIN model_config_price mcp ON mr.model_id = mcp.model_id
+WHERE td.dealer_rank = 1;
+       - Incorrect: WITH model_region AS (
+  SELECT 
+    T1.region,
+    T1.model_id,
+    SUM(T1.quantity) AS total_units_sold,
+    SUM(CAST(T1.total_revenue AS DECIMAL(20,2))) AS total_revenue_generated,
+    RANK() OVER (PARTITION BY T1.region ORDER BY SUM(T1.quantity) DESC) AS sales_rank
+  FROM sales_data T1
+  JOIN car_models T2 ON T1.model_id = T2.model_id
+  GROUP BY T1.region, T1.model_id
+  HAVING sales_rank <= 5
+),
+top_dealer AS (
+  SELECT 
+    T1.region,
+    T1.model_id,
+    T3.dealer_name,
+    ROW_NUMBER() OVER (PARTITION BY T1.region, T1.model_id ORDER BY SUM(T1.quantity) DESC) AS dealer_rank
+  FROM sales_data T1
+  JOIN dealers T3 ON T1.dealer_id = T3.dealer_id
+  GROUP BY T1.region, T1.model_id, T3.dealer_name
+),
+model_config_price AS (
+  SELECT 
+    model_id,
+    SUM(CAST(price AS DECIMAL(20,2))) AS total_configuration_price
+  FROM car_configurations
+  GROUP BY model_id
+)
+SELECT 
+  T2.model_name,
+  mr.region,
+  mr.total_units_sold,
+  mr.total_revenue_generated,
+  mr.sales_rank,
+  td.dealer_name,
+  mcp.total_configuration_price
+FROM model_region mr
+JOIN car_models T2 ON mr.model_id = T2.model_id
+JOIN top_dealer td ON mr.region = td.region AND mr.model_id = td.model_id
+JOIN model_config_price mcp ON mr.model_id = mcp.model_id
+WHERE td.dealer_rank = 1;
+       - Reason: MySQL does not allow referencing a window function alias (like 'sales_rank') in the HAVING clause of the same query block because window functions are evaluated after HAVING. The fix separates the window computation and filtering into two steps using nested CTEs.
+@dialect2sql@
+
+@dialect2sql@
+SQL Column Reference Validity (1054 Unknown column)
+
+Schema & Column Name Matching:
+   1. Common Scenarios:
+      Referencing non-existent columns (wrong column names like param_name/param_value), using outdated schema fields, or confusing similar table structures/aliases in JOIN queries, causing MySQL error 1054 (42S22) Unknown column.
+   2. Function Description:
+      In MySQL, every selected/filtered column must exist in the referenced table (and under the correct alias). If a column name is wrong, MySQL raises 1054. Fix by using the actual column names defined in the table schema (e.g., T3.name and T3.value instead of T3.param_name and T3.param_value; T4.comment instead of T4.comment_text).
+
+    -- MySQL
+       - Correct: SELECT
+    T1.name AS model_name,
+    MAX(CASE
+            WHEN T2.performance_id = (
+                SELECT MAX(T2b.performance_id)
+                FROM model_performance AS T2b
+                WHERE T2b.model_id = T1.model_id
+            )
+            THEN T2.cv_score
+        END) AS cv_score,
+    MAX(CASE
+            WHEN T2.performance_id = (
+                SELECT MAX(T2b.performance_id)
+                FROM model_performance AS T2b
+                WHERE T2b.model_id = T1.model_id
+            )
+            THEN T2.holdout_score
+        END) AS holdout_score,
+    MAX(CASE
+            WHEN T2.performance_id = (
+                SELECT MAX(T2b.performance_id)
+                FROM model_performance AS T2b
+                WHERE T2b.model_id = T1.model_id
+            )
+            THEN T2.holdout_roc_auc_score
+        END) AS holdout_roc_auc_score,
+    MAX(CASE
+            WHEN T2.performance_id = (
+                SELECT MAX(T2b.performance_id)
+                FROM model_performance AS T2b
+                WHERE T2b.model_id = T1.model_id
+            )
+            THEN T2.training_time
+        END) AS training_time,
+    MAX(CASE
+            WHEN T2.performance_id = (
+                SELECT MAX(T2b.performance_id)
+                FROM model_performance AS T2b
+                WHERE T2b.model_id = T1.model_id
+            )
+            THEN T2.evaluation_time
+        END) AS evaluation_time,
+    COALESCE(
+        JSON_ARRAYAGG(
+            CASE
+                WHEN T3.name IS NOT NULL THEN JSON_OBJECT('name', T3.name, 'value', T3.value)
+                ELSE NULL
+            END
+        ),
+        JSON_ARRAY()
+    ) AS hyperparameters,
+    COALESCE(
+        JSON_ARRAYAGG(
+            CASE
+                WHEN T4.comment_id IS NOT NULL THEN JSON_OBJECT(
+                    'commenter_name', T5.name,
+                    'comment_text', T4.comment
+                )
+                ELSE NULL
+            END
+        ),
+        JSON_ARRAY()
+    ) AS comments
+FROM models AS T1
+LEFT JOIN model_performance AS T2 ON T1.model_id = T2.model_id
+LEFT JOIN hyperparameters AS T3 ON T1.model_id = T3.model_id
+LEFT JOIN model_comments AS T4 ON T1.model_id = T4.model_id
+LEFT JOIN users AS T5 ON T4.user_id = T5.user_id
+GROUP BY
+    T1.model_id,
+    T1.name
+ORDER BY
+    T1.name ASC;
+       - Incorrect: SELECT
+    T1.name AS model_name,
+    MAX(CASE
+            WHEN T2.performance_id = (
+                SELECT MAX(T2b.performance_id)
+                FROM model_performance AS T2b
+                WHERE T2b.model_id = T1.model_id
+            )
+            THEN T2.cv_score
+        END) AS cv_score,
+    MAX(CASE
+            WHEN T2.performance_id = (
+                SELECT MAX(T2b.performance_id)
+                FROM model_performance AS T2b
+                WHERE T2b.model_id = T1.model_id
+            )
+            THEN T2.holdout_score
+        END) AS holdout_score,
+    MAX(CASE
+            WHEN T2.performance_id = (
+                SELECT MAX(T2b.performance_id)
+                FROM model_performance AS T2b
+                WHERE T2b.model_id = T1.model_id
+            )
+            THEN T2.holdout_roc_auc_score
+        END) AS holdout_roc_auc_score,
+    MAX(CASE
+            WHEN T2.performance_id = (
+                SELECT MAX(T2b.performance_id)
+                FROM model_performance AS T2b
+                WHERE T2b.model_id = T1.model_id
+            )
+            THEN T2.training_time
+        END) AS training_time,
+    MAX(CASE
+            WHEN T2.performance_id = (
+                SELECT MAX(T2b.performance_id)
+                FROM model_performance AS T2b
+                WHERE T2b.model_id = T1.model_id
+            )
+            THEN T2.evaluation_time
+        END) AS evaluation_time,
+    COALESCE(
+        JSON_ARRAYAGG(
+            CASE
+                WHEN T3.param_name IS NOT NULL THEN JSON_OBJECT('name', T3.param_name, 'value', T3.param_value)
+                ELSE NULL
+            END
+        ),
+        JSON_ARRAY()
+    ) AS hyperparameters,
+    COALESCE(
+        JSON_ARRAYAGG(
+            CASE
+                WHEN T4.comment_id IS NOT NULL THEN JSON_OBJECT(
+                    'user_id', T5.user_id,
+                    'user_name', T5.name,
+                    'comment_id', T4.comment_id,
+                    'comment', T4.comment_text
+                )
+                ELSE NULL
+            END
+        ),
+        JSON_ARRAY()
+    ) AS comments
+FROM models AS T1
+LEFT JOIN model_performance AS T2 ON T1.model_id = T2.model_id
+LEFT JOIN hyperparameters AS T3 ON T1.model_id = T3.model_id
+LEFT JOIN model_comments AS T4 ON T1.model_id = T4.model_id
+LEFT JOIN users AS T5 ON T4.user_id = T5.user_id
+GROUP BY
+    T1.model_id,
+    T1.name
+ORDER BY
+    T1.name ASC;
+       - Reason: The query references columns that do not exist in the joined tables (e.g., T3.param_name/T3.param_value and T4.comment_text), so MySQL raises error 1054. Use the actual schema column names for each alias (e.g., T3.name/T3.value and T4.comment).
+@dialect2sql@
+
+@dialect2sql@
+C11 & JSON Aggregation and Ordering
+
+Aggregate Ordering Constraint (MySQL JSON_ARRAYAGG):
+   1. Common Scenarios:
+      When you need deterministic ordering inside an aggregated JSON array (e.g., comments sorted by comment_id) while also grouping by a parent key (e.g., model_id).
+   2. Function Description:
+      In MySQL, JSON_ARRAYAGG() does not accept an inline ORDER BY clause in some versions/contexts; to guarantee element order, sort rows in a derived table (subquery) before aggregation, then apply JSON_ARRAYAGG() over the pre-sorted result set.
+
+    -- MySQL
+       - Correct: SELECT
+  m.name AS model_name,
+  mp_sel.cv_score,
+  mp_sel.holdout_score,
+  mp_sel.holdout_roc_auc_score,
+  mp_sel.training_time,
+  mp_sel.evaluation_time,
+  COALESCE(hp_agg.hyperparameters, JSON_ARRAY()) AS hyperparameters,
+  COALESCE(c_agg.comments, JSON_ARRAY()) AS comments
+FROM models AS m
+LEFT JOIN (
+  SELECT mp.*
+  FROM model_performance AS mp
+  INNER JOIN (
+    SELECT model_id, MAX(performance_id) AS max_performance_id
+    FROM model_performance
+    GROUP BY model_id
+  ) AS x
+    ON x.model_id = mp.model_id
+   AND x.max_performance_id = mp.performance_id
+) AS mp_sel
+  ON m.model_id = mp_sel.model_id
+LEFT JOIN (
+  SELECT
+    t.model_id,
+    JSON_ARRAYAGG(
+      JSON_OBJECT('param_name', t.name, 'param_value', t.value)
+    ) AS hyperparameters
+  FROM (
+    SELECT
+      model_id,
+      name,
+      value
+    FROM hyperparameters
+    ORDER BY model_id, name ASC
+  ) AS t
+  GROUP BY t.model_id
+) AS hp_agg
+  ON m.model_id = hp_agg.model_id
+LEFT JOIN (
+  SELECT
+    t.model_id,
+    JSON_ARRAYAGG(
+      JSON_OBJECT(
+        'commenter_name', t.commenter_name,
+        'comment_text', t.comment_text
+      )
+    ) AS comments
+  FROM (
+    SELECT
+      mc.model_id,
+      u.name AS commenter_name,
+      mc.comment AS comment_text
+    FROM model_comments AS mc
+    LEFT JOIN users AS u
+      ON mc.user_id = u.user_id
+    ORDER BY mc.model_id, mc.comment_id ASC
+  ) AS t
+  GROUP BY t.model_id
+) AS c_agg
+  ON m.model_id = c_agg.model_id
+ORDER BY m.name ASC;
+       - Incorrect: SELECT
+  T1.name AS model_name,
+  T2.cv_score,
+  T2.holdout_score,
+  T2.holdout_roc_auc_score,
+  T2.training_time,
+  T2.evaluation_time,
+  COALESCE(T3.hyperparameters, JSON_ARRAY()) AS hyperparameters,
+  COALESCE(T4.comments, JSON_ARRAY()) AS comments
+FROM models AS T1
+LEFT JOIN (
+  SELECT
+    mp.model_id,
+    MAX(CASE WHEN mp.performance_id = (SELECT MAX(mp2.performance_id) FROM model_performance AS mp2 WHERE mp2.model_id = mp.model_id) THEN mp.cv_score END) AS cv_score,
+    MAX(CASE WHEN mp.performance_id = (SELECT MAX(mp2.performance_id) FROM model_performance AS mp2 WHERE mp2.model_id = mp.model_id) THEN mp.holdout_score END) AS holdout_score,
+    MAX(CASE WHEN mp.performance_id = (SELECT MAX(mp2.performance_id) FROM model_performance AS mp2 WHERE mp2.model_id = mp.model_id) THEN mp.holdout_roc_auc_score END) AS holdout_roc_auc_score,
+    MAX(CASE WHEN mp.performance_id = (SELECT MAX(mp2.performance_id) FROM model_performance AS mp2 WHERE mp2.model_id = mp.model_id) THEN mp.training_time END) AS training_time,
+    MAX(CASE WHEN mp.performance_id = (SELECT MAX(mp2.performance_id) FROM model_performance AS mp2 WHERE mp2.model_id = mp.model_id) THEN mp.evaluation_time END) AS evaluation_time
+  FROM model_performance AS mp
+  GROUP BY mp.model_id
+) AS T2
+  ON T1.model_id = T2.model_id
+LEFT JOIN (
+  SELECT
+    hp.model_id,
+    JSON_ARRAYAGG(
+      JSON_OBJECT('param_name', hp.param_name, 'param_value', hp.param_value)
+    ) AS hyperparameters
+  FROM (
+    SELECT
+      model_id,
+      param_name,
+      param_value
+    FROM hyperparameters
+    ORDER BY param_name ASC
+  ) AS hp
+  GROUP BY hp.model_id
+) AS T3
+  ON T1.model_id = T3.model_id
+LEFT JOIN (
+  SELECT
+    mc.model_id,
+    JSON_ARRAYAGG(
+      JSON_OBJECT(
+        'comment_id', mc.comment_id,
+        'comment_text', mc.comment_text,
+        'created_at', mc.created_at,
+        'user_id', u.user_id,
+        'user_name', u.user_name
+      )
+      ORDER BY mc.comment_id ASC
+    ) AS comments
+  FROM model_comments AS mc
+  LEFT JOIN users AS u
+    ON mc.user_id = u.user_id
+  GROUP BY mc.model_id
+) AS T4
+  ON T1.model_id = T4.model_id
+ORDER BY T1.name ASC;
+       - Reason: MySQL raises a syntax error because JSON_ARRAYAGG(...) cannot place ORDER BY directly inside the function call in this context/version; to enforce element order, rows must be ordered in a subquery (derived table) before performing JSON_ARRAYAGG(), then grouped.
+@dialect2sql@
+
+@dialect2sql@
+Window Function & Analytic Calculation
+
+Unsupported/Restricted Analytic Functions (MySQL):
+   1. Common Scenarios:
+      Using `PERCENTILE_CONT()` (or other non-supported analytic percentile functions) with `OVER (ORDER BY ...)` to compute medians/percentiles directly in MySQL, which triggers a syntax error.
+   2. Function Description:
+      In MySQL, not all ANSI SQL analytic functions are supported. Specifically, `PERCENTILE_CONT()` is not available as a window function, so expressions like `PERCENTILE_CONT(0.5) OVER (ORDER BY col)` are invalid. To compute a median, use window functions such as `ROW_NUMBER()` and `COUNT()` to locate middle rows, then aggregate (e.g., `AVG`) those values in a derived table/CTE.
+
+    -- MySQL
+       - Correct: WITH
+econ AS (
+  SELECT
+    suburb_code,
+    AVG(median_weekly_income) AS median_weekly_income,
+    AVG(median_rent) AS median_rent,
+    AVG(average_household_income) AS average_household_income
+  FROM economic_statistics
+  WHERE suburb_code IS NOT NULL
+  GROUP BY suburb_code
+),
+soc AS (
+  SELECT
+    suburb_code,
+    AVG(life_satisfaction_score) AS life_satisfaction_score,
+    AVG(sentiment_score) AS sentiment_score,
+    AVG(crime_rate) AS crime_rate,
+    AVG(healthcare_quality_score) AS healthcare_quality_score
+  FROM social_statistics
+  WHERE suburb_code IS NOT NULL
+  GROUP BY suburb_code
+),
+demo AS (
+  SELECT
+    suburb_code,
+    AVG(median_age) AS median_age,
+    AVG(population) AS population,
+    AVG(unemployment_rate) AS unemployment_rate,
+    AVG(homeless_rate) AS homeless_rate,
+    AVG(nonreligious_percentage) AS nonreligious_percentage,
+    AVG(citizenship_percentage) AS citizenship_percentage
+  FROM demographic_statistics
+  WHERE suburb_code IS NOT NULL
+  GROUP BY suburb_code
+),
+base AS (
+  SELECT
+    e.suburb_code,
+    s.suburb_name,
+    e.median_weekly_income,
+    e.median_rent,
+    e.average_household_income,
+    so.life_satisfaction_score,
+    so.sentiment_score,
+    so.crime_rate,
+    so.healthcare_quality_score,
+    d.median_age,
+    d.population,
+    d.unemployment_rate,
+    d.homeless_rate,
+    d.nonreligious_percentage,
+    d.citizenship_percentage
+  FROM econ e
+  INNER JOIN soc so ON so.suburb_code = e.suburb_code
+  INNER JOIN demo d ON d.suburb_code = e.suburb_code
+  INNER JOIN suburbs s ON s.suburb_code = e.suburb_code
+  WHERE
+    e.suburb_code IS NOT NULL
+    AND e.median_weekly_income IS NOT NULL
+    AND e.median_rent IS NOT NULL
+    AND e.average_household_income IS NOT NULL
+    AND so.life_satisfaction_score IS NOT NULL
+    AND so.sentiment_score IS NOT NULL
+    AND so.crime_rate IS NOT NULL
+    AND so.healthcare_quality_score IS NOT NULL
+    AND d.median_age IS NOT NULL
+    AND d.population IS NOT NULL
+    AND d.unemployment_rate IS NOT NULL
+    AND d.homeless_rate IS NOT NULL
+    AND d.nonreligious_percentage IS NOT NULL
+    AND d.citizenship_percentage IS NOT NULL
+),
+median_prep AS (
+  SELECT
+    median_age,
+    ROW_NUMBER() OVER (ORDER BY median_age) AS rn,
+    COUNT(*) OVER () AS cnt
+  FROM base
+),
+global_median AS (
+  SELECT AVG(median_age) AS global_median_age
+  FROM median_prep
+  WHERE rn IN (FLOOR((cnt + 1) / 2), FLOOR((cnt + 2) / 2))
+),
+with_dev AS (
+  SELECT
+    b.*,
+    ABS(b.median_age - gm.global_median_age) AS median_age_dev
+  FROM base b
+  CROSS JOIN global_median gm
+),
+stats AS (
+  SELECT
+    MIN(median_weekly_income) AS min_mwi, MAX(median_weekly_income) AS max_mwi,
+    MIN(average_household_income) AS min_ahi, MAX(average_household_income) AS max_ahi,
+    MIN(median_rent) AS min_rent, MAX(median_rent) AS max_rent,
+    MIN(life_satisfaction_score) AS min_lss, MAX(life_satisfaction_score) AS max_lss,
+    MIN(sentiment_score) AS min_sent, MAX(sentiment_score) AS max_sent,
+    MIN(healthcare_quality_score) AS min_hcqs, MAX(healthcare_quality_score) AS max_hcqs,
+    MIN(crime_rate) AS min_crime, MAX(crime_rate) AS max_crime,
+    MIN(population) AS min_pop, MAX(population) AS max_pop,
+    MIN(unemployment_rate) AS min_unemp, MAX(unemployment_rate) AS max_unemp,
+    MIN(homeless_rate) AS min_home, MAX(homeless_rate) AS max_home,
+    MIN(citizenship_percentage) AS min_citz, MAX(citizenship_percentage) AS max_citz,
+    MIN(nonreligious_percentage) AS min_nonrel, MAX(nonreligious_percentage) AS max_nonrel,
+    MIN(median_age_dev) AS min_madev, MAX(median_age_dev) AS max_madev
+  FROM with_dev
+),
+scored AS (
+  SELECT
+    wd.suburb_name,
+    (
+      (
+        (
+          /* economic_score (3) */
+          (
+            /* median_weekly_income (higher better) */
+            CASE
+              WHEN (st.max_mwi - st.min_mwi) = 0 THEN 0.5
+              ELSE (wd.median_weekly_income - st.min_mwi) / (st.max_mwi - st.min_mwi)
+            END
+          ) +
+          (
+            /* average_household_income (higher better) */
+            CASE
+              WHEN (st.max_ahi - st.min_ahi) = 0 THEN 0.5
+              ELSE (wd.average_household_income - st.min_ahi) / (st.max_ahi - st.min_ahi)
+            END
+          ) +
+          (
+            /* median_rent (lower better) */
+            CASE
+              WHEN (st.max_rent - st.min_rent) = 0 THEN 0.5
+              ELSE (st.max_rent - wd.median_rent) / (st.max_rent - st.min_rent)
+            END
+          )
+        ) / 3.0
+      ) +
+      (
+        (
+          /* social_score (4) */
+          (
+            /* life_satisfaction_score (higher better) */
+            CASE
+              WHEN (st.max_lss - st.min_lss) = 0 THEN 0.5
+              ELSE (wd.life_satisfaction_score - st.min_lss) / (st.max_lss - st.min_lss)
+            END
+          ) +
+          (
+            /* sentiment_score (higher better) */
+            CASE
+              WHEN (st.max_sent - st.min_sent) = 0 THEN 0.5
+              ELSE (wd.sentiment_score - st.min_sent) / (st.max_sent - st.min_sent)
+            END
+          ) +
+          (
+            /* healthcare_quality_score (higher better) */
+            CASE
+              WHEN (st.max_hcqs - st.min_hcqs) = 0 THEN 0.5
+              ELSE (wd.healthcare_quality_score - st.min_hcqs) / (st.max_hcqs - st.min_hcqs)
+            END
+          ) +
+          (
+            /* crime_rate (lower better) */
+            CASE
+              WHEN (st.max_crime - st.min_crime) = 0 THEN 0.5
+              ELSE (st.max_crime - wd.crime_rate) / (st.max_crime - st.min_crime)
+            END
+          )
+        ) / 4.0
+      ) +
+      (
+        (
+          /* demographic_score (6) */
+          (
+            /* population (higher better) */
+            CASE
+              WHEN (st.max_pop - st.min_pop) = 0 THEN 0.5
+              ELSE (wd.population - st.min_pop) / (st.max_pop - st.min_pop)
+            END
+          ) +
+          (
+            /* unemployment_rate (lower better) */
+            CASE
+              WHEN (st.max_unemp - st.min_unemp) = 0 THEN 0.5
+              ELSE (st.max_unemp - wd.unemployment_rate) / (st.max_unemp - st.min_unemp)
+            END
+          ) +
+          (
+            /* homeless_rate (lower better) */
+            CASE
+              WHEN (st.max_home - st.min_home) = 0 THEN 0.5
+              ELSE (st.max_home - wd.homeless_rate) / (st.max_home - st.min_home)
+            END
+          ) +
+          (
+            /* citizenship_percentage (higher better) */
+            CASE
+              WHEN (st.max_citz - st.min_citz) = 0 THEN 0.5
+              ELSE (wd.citizenship_percentage - st.min_citz) / (st.max_citz - st.min_citz)
+            END
+          ) +
+          (
+            /* nonreligious_percentage (higher better) */
+            CASE
+              WHEN (st.max_nonrel - st.min_nonrel) = 0 THEN 0.5
+              ELSE (wd.nonreligious_percentage - st.min_nonrel) / (st.max_nonrel - st.min_nonrel)
+            END
+          ) +
+          (
+            /* median_age deviation (lower better) */
+            CASE
+              WHEN (st.max_madev - st.min_madev) = 0 THEN 0.5
+              ELSE (st.max_madev - wd.median_age_dev) / (st.max_madev - st.min_madev)
+            END
+          )
+        ) / 6.0
+      )
+    ) / 3.0 AS overall_score
+  FROM with_dev wd
+  CROSS JOIN stats st
+)
+SELECT suburb_name
+FROM scored
+ORDER BY overall_score DESC
+LIMIT 1;
+       - Incorrect: SELECT
+  T4.suburb_name
+FROM (
+  SELECT suburb_code
+  FROM economic_statistics
+  GROUP BY suburb_code
+) AS T1
+JOIN (
+  SELECT suburb_code
+  FROM social_statistics
+  GROUP BY suburb_code
+) AS T2 ON T1.suburb_code = T2.suburb_code
+JOIN (
+  SELECT suburb_code
+  FROM demographic_statistics
+  GROUP BY suburb_code
+) AS T3 ON T1.suburb_code = T3.suburb_code
+JOIN (
+  SELECT suburb_code, suburb_name
+  FROM suburbs
+  GROUP BY suburb_code, suburb_name
+) AS T4 ON T1.suburb_code = T4.suburb_code
+JOIN (
+  SELECT
+    suburb_code,
+    MAX(median_weekly_income) AS median_weekly_income,
+    MAX(median_rent) AS median_rent,
+    MAX(average_household_income) AS average_household_income
+  FROM economic_statistics
+  GROUP BY suburb_code
+) AS economic_statistics ON economic_statistics.suburb_code = T1.suburb_code
+JOIN (
+  SELECT
+    suburb_code,
+    MAX(life_satisfaction_score) AS life_satisfaction_score,
+    MAX(sentiment_score) AS sentiment_score,
+    MAX(crime_rate) AS crime_rate,
+    MAX(healthcare_quality_score) AS healthcare_quality_score
+  FROM social_statistics
+  GROUP BY suburb_code
+) AS social_statistics ON social_statistics.suburb_code = T1.suburb_code
+JOIN (
+  SELECT
+    suburb_code,
+    MAX(median_age) AS median_age,
+    MAX(population) AS population,
+    MAX(unemployment_rate) AS unemployment_rate,
+    MAX(homeless_rate) AS homeless_rate,
+    MAX(nonreligious_percentage) AS nonreligious_percentage,
+    MAX(citizenship_percentage) AS citizenship_percentage
+  FROM demographic_statistics
+  GROUP BY suburb_code
+) AS demographic_statistics ON demographic_statistics.suburb_code = T1.suburb_code
+WHERE
+  economic_statistics.suburb_code IS NOT NULL
+  AND economic_statistics.median_weekly_income IS NOT NULL
+  AND economic_statistics.median_rent IS NOT NULL
+  AND economic_statistics.average_household_income IS NOT NULL
+  AND social_statistics.life_satisfaction_score IS NOT NULL
+  AND social_statistics.sentiment_score IS NOT NULL
+  AND social_statistics.crime_rate IS NOT NULL
+  AND social_statistics.healthcare_quality_score IS NOT NULL
+  AND demographic_statistics.median_age IS NOT NULL
+  AND demographic_statistics.population IS NOT NULL
+  AND demographic_statistics.unemployment_rate IS NOT NULL
+  AND demographic_statistics.homeless_rate IS NOT NULL
+  AND demographic_statistics.nonreligious_percentage IS NOT NULL
+  AND demographic_statistics.citizenship_percentage IS NOT NULL
+ORDER BY
+  (
+    (
+      (
+        (
+          CASE
+            WHEN (MAX(economic_statistics.median_weekly_income) OVER () - MIN(economic_statistics.median_weekly_income) OVER ()) = 0 THEN 0.5
+            ELSE (
+              economic_statistics.median_weekly_income - MIN(economic_statistics.median_weekly_income) OVER ()
+            ) / (
+              MAX(economic_statistics.median_weekly_income) OVER () - MIN(economic_statistics.median_weekly_income) OVER ()
+            )
+          END
+        )
+        +
+        (
+          CASE
+            WHEN (MAX(economic_statistics.average_household_income) OVER () - MIN(economic_statistics.average_household_income) OVER ()) = 0 THEN 0.5
+            ELSE (
+              economic_statistics.average_household_income - MIN(economic_statistics.average_household_income) OVER ()
+            ) / (
+              MAX(economic_statistics.average_household_income) OVER () - MIN(economic_statistics.average_household_income) OVER ()
+            )
+          END
+        )
+        +
+        (
+          CASE
+            WHEN (MAX(economic_statistics.median_rent) OVER () - MIN(economic_statistics.median_rent) OVER ()) = 0 THEN 0.5
+            ELSE (
+              MAX(economic_statistics.median_rent) OVER () - economic_statistics.median_rent
+            ) / (
+              MAX(economic_statistics.median_rent) OVER () - MIN(economic_statistics.median_rent) OVER ()
+            )
+          END
+        )
+      ) / 3.0
+    )
+    +
+    (
+      (
+        (
+          CASE
+            WHEN (MAX(social_statistics.life_satisfaction_score) OVER () - MIN(social_statistics.life_satisfaction_score) OVER ()) = 0 THEN 0.5
+            ELSE (
+              social_statistics.life_satisfaction_score - MIN(social_statistics.life_satisfaction_score) OVER ()
+            ) / (
+              MAX(social_statistics.life_satisfaction_score) OVER () - MIN(social_statistics.life_satisfaction_score) OVER ()
+            )
+          END
+        )
+        +
+        (
+          CASE
+            WHEN (MAX(social_statistics.sentiment_score) OVER () - MIN(social_statistics.sentiment_score) OVER ()) = 0 THEN 0.5
+            ELSE (
+              social_statistics.sentiment_score - MIN(social_statistics.sentiment_score) OVER ()
+            ) / (
+              MAX(social_statistics.sentiment_score) OVER () - MIN(social_statistics.sentiment_score) OVER ()
+            )
+          END
+        )
+        +
+        (
+          CASE
+            WHEN (MAX(social_statistics.healthcare_quality_score) OVER () - MIN(social_statistics.healthcare_quality_score) OVER ()) = 0 THEN 0.5
+            ELSE (
+              social_statistics.healthcare_quality_score - MIN(social_statistics.healthcare_quality_score) OVER ()
+            ) / (
+              MAX(social_statistics.healthcare_quality_score) OVER () - MIN(social_statistics.healthcare_quality_score) OVER ()
+            )
+          END
+        )
+        +
+        (
+          CASE
+            WHEN (MAX(social_statistics.crime_rate) OVER () - MIN(social_statistics.crime_rate) OVER ()) = 0 THEN 0.5
+            ELSE (
+              MAX(social_statistics.crime_rate) OVER () - social_statistics.crime_rate
+            ) / (
+              MAX(social_statistics.crime_rate) OVER () - MIN(social_statistics.crime_rate) OVER ()
+            )
+          END
+        )
+      ) / 4.0
+    )
+    +
+    (
+      (
+        (
+          CASE
+            WHEN (MAX(demographic_statistics.population) OVER () - MIN(demographic_statistics.population) OVER ()) = 0 THEN 0.5
+            ELSE (
+              demographic_statistics.population - MIN(demographic_statistics.population) OVER ()
+            ) / (
+              MAX(demographic_statistics.population) OVER () - MIN(demographic_statistics.population) OVER ()
+            )
+          END
+        )
+        +
+        (
+          CASE
+            WHEN (MAX(demographic_statistics.unemployment_rate) OVER () - MIN(demographic_statistics.unemployment_rate) OVER ()) = 0 THEN 0.5
+            ELSE (
+              MAX(demographic_statistics.unemployment_rate) OVER () - demographic_statistics.unemployment_rate
+            ) / (
+              MAX(demographic_statistics.unemployment_rate) OVER () - MIN(demographic_statistics.unemployment_rate) OVER ()
+            )
+          END
+        )
+        +
+        (
+          CASE
+            WHEN (MAX(demographic_statistics.homeless_rate) OVER () - MIN(demographic_statistics.homeless_rate) OVER ()) = 0 THEN 0.5
+            ELSE (
+              MAX(demographic_statistics.homeless_rate) OVER () - demographic_statistics.homeless_rate
+            ) / (
+              MAX(demographic_statistics.homeless_rate) OVER () - MIN(demographic_statistics.homeless_rate) OVER ()
+            )
+          END
+        )
+        +
+        (
+          CASE
+            WHEN (MAX(demographic_statistics.citizenship_percentage) OVER () - MIN(demographic_statistics.citizenship_percentage) OVER ()) = 0 THEN 0.5
+            ELSE (
+              demographic_statistics.citizenship_percentage - MIN(demographic_statistics.citizenship_percentage) OVER ()
+            ) / (
+              MAX(demographic_statistics.citizenship_percentage) OVER () - MIN(demographic_statistics.citizenship_percentage) OVER ()
+            )
+          END
+        )
+        +
+        (
+          CASE
+            WHEN (MAX(demographic_statistics.nonreligious_percentage) OVER () - MIN(demographic_statistics.nonreligious_percentage) OVER ()) = 0 THEN 0.5
+            ELSE (
+              demographic_statistics.nonreligious_percentage - MIN(demographic_statistics.nonreligious_percentage) OVER ()
+            ) / (
+              MAX(demographic_statistics.nonreligious_percentage) OVER () - MIN(demographic_statistics.nonreligious_percentage) OVER ()
+            )
+          END
+        )
+        +
+        (
+          CASE
+            WHEN (MAX(demographic_statistics.median_age) OVER () - MIN(demographic_statistics.median_age) OVER ()) = 0 THEN 0.5
+            ELSE 1 - (
+              ABS(
+                demographic_statistics.median_age - PERCENTILE_CONT(0.5) OVER (ORDER BY demographic_statistics.median_age)
+              ) / (
+                MAX(demographic_statistics.median_age) OVER () - MIN(demographic_statistics.median_age) OVER ()
+              )
+            )
+          END
+        )
+      ) / 6.0
+    )
+  ) / 3.0 DESC
+LIMIT 1;
+       - Reason: MySQL does not support `PERCENTILE_CONT()` as a window/analytic function, so `PERCENTILE_CONT(0.5) OVER (ORDER BY ...)` causes a syntax error; compute the median via window ranking (e.g., `ROW_NUMBER()`/`COUNT()`) and then aggregate the middle row(s) instead.
+@dialect2sql@
+
+@dialect2sql@
+SQL107 & Column/Field Reference
+
+<Sub-category>:
+   1. Common Scenarios:
+      Referencing a non-existent column name (often due to wrong schema assumption or mismatched field naming) inside SELECT/expressions of a derived table or joined subquery, causing MySQL error 1054 (42S22) Unknown column.
+   2. Function Description:
+      In MySQL, every column referenced (e.g., in SELECT, CONCAT, GROUP_CONCAT) must exist in the corresponding table/derived-table alias scope. If the physical column name is different (e.g., `value` vs `setting_value`), you must reference the real column name or alias it explicitly in the subquery output.
+
+    -- MySQL
+       - Correct: SELECT
+  T1.device_name,
+  T3S.settings_kv_string
+FROM devices AS T1
+LEFT JOIN (
+  SELECT
+    device_id,
+    config_id,
+    created_date
+  FROM (
+    SELECT
+      T2.*,
+      ROW_NUMBER() OVER (
+        PARTITION BY T2.device_id
+        ORDER BY T2.created_date DESC, T2.config_id DESC
+      ) AS rn
+    FROM configurations AS T2
+  ) AS T2R
+  WHERE T2R.rn = 1
+) AS T2L
+  ON T1.device_id = T2L.device_id
+LEFT JOIN (
+  SELECT
+    T3D.device_id,
+    GROUP_CONCAT(
+      CONCAT(T3D.setting_name, '=', T3D.value)
+      ORDER BY T3D.setting_name ASC, T3D.setting_id ASC
+      SEPARATOR ','
+    ) AS settings_kv_string
+  FROM (
+    SELECT
+      T3.*,
+      ROW_NUMBER() OVER (
+        PARTITION BY T3.device_id, T3.setting_name
+        ORDER BY T3.setting_id ASC
+      ) AS rn
+    FROM settings AS T3
+  ) AS T3D
+  WHERE T3D.rn = 1
+  GROUP BY T3D.device_id
+) AS T3S
+  ON T1.device_id = T3S.device_id;
+       - Incorrect: SELECT
+  T1.device_name,
+  T3S.settings_kv_string
+FROM devices AS T1
+LEFT JOIN (
+  SELECT
+    device_id,
+    config_id,
+    created_date
+  FROM (
+    SELECT
+      T2.*,
+      ROW_NUMBER() OVER (
+        PARTITION BY T2.device_id
+        ORDER BY T2.created_date DESC, T2.config_id DESC
+      ) AS rn
+    FROM configurations AS T2
+  ) AS T2R
+  WHERE T2R.rn = 1
+) AS T2L
+  ON T1.device_id = T2L.device_id
+LEFT JOIN (
+  SELECT
+    T3D.device_id,
+    GROUP_CONCAT(
+      CONCAT(T3D.setting_name, '=', T3D.setting_value)
+      ORDER BY T3D.setting_name ASC, T3D.setting_id ASC
+      SEPARATOR ','
+    ) AS settings_kv_string
+  FROM (
+    SELECT
+      T3.*,
+      ROW_NUMBER() OVER (
+        PARTITION BY T3.device_id, T3.setting_name
+        ORDER BY T3.setting_id ASC
+      ) AS rn
+    FROM settings AS T3
+  ) AS T3D
+  WHERE T3D.rn = 1
+  GROUP BY T3D.device_id
+) AS T3S
+  ON T1.device_id = T3S.device_id;
+       - Reason: `T3D` (derived from `settings AS T3` via `SELECT T3.*`) does not contain a column named `setting_value`; the actual column name is `value`, so referencing `T3D.setting_value` causes MySQL 1054 Unknown column. 
+@dialect2sql@
+
+@dialect2sql@
+<MySQL Query Parameterization & Prepared Statement Placeholders>
+
+<Sub-category>:
+   1. Common Scenarios:
+      Using `?` placeholders in ad-hoc SQL run directly in MySQL clients (e.g., mysql CLI, Workbench) instead of binding parameters via a prepared statement, causing a syntax error near `?`.
+   2. Function Description:
+      In MySQL, `?` is only valid as a parameter marker within a prepared statement executed with bound parameters; otherwise you must replace it with a literal value (or a user variable) before execution.
+
+    -- MySQL
+       - Correct: SELECT
+  X.team_id,
+  X.team_combined_average
+FROM (
+  SELECT
+    T1.team_id AS team_id,
+    (
+      (SUM(T3.runs_scored) / NULLIF(COUNT(DISTINCT T1.player_id), 0)) +
+      (SUM(T3.per_player_runs_conceded) / NULLIF(SUM(T3.per_player_wickets), 0))
+    ) AS team_combined_average
+  FROM team_compositions AS T1
+  INNER JOIN (
+    SELECT
+      T2.match_id,
+      T2.player_id,
+      SUM(
+        CASE
+          WHEN T2.batting_score REGEXP '^[0-9]+$' THEN CAST(T2.batting_score AS UNSIGNED)
+          ELSE 0
+        END
+      ) AS runs_scored,
+      SUM(T2.bowling_runs) AS per_player_runs_conceded,
+      SUM(T2.bowling_wickets) AS per_player_wickets
+    FROM player_match_records AS T2
+    GROUP BY
+      T2.match_id,
+      T2.player_id
+  ) AS T3
+    ON T1.match_id = T3.match_id
+   AND T1.player_id = T3.player_id
+  WHERE T1.match_id = 12345
+  GROUP BY
+    T1.match_id,
+    T1.team_id
+) AS X
+WHERE X.team_combined_average IS NOT NULL
+ORDER BY X.team_combined_average DESC
+LIMIT 1;
+       - Incorrect: SELECT
+  X.team_id,
+  X.team_combined_average
+FROM (
+  SELECT
+    T1.team_id AS team_id,
+    (
+      (SUM(T3.runs_scored) / NULLIF(COUNT(DISTINCT T1.player_id), 0)) +
+      (SUM(T3.per_player_runs_conceded) / NULLIF(SUM(T3.per_player_wickets), 0))
+    ) AS team_combined_average
+  FROM team_compositions AS T1
+  JOIN (
+    SELECT
+      T2.match_id,
+      T2.player_id,
+      SUM(
+        CASE
+          WHEN T2.batting_score REGEXP '^[0-9]+$' THEN CAST(T2.batting_score AS UNSIGNED)
+          ELSE 0
+        END
+      ) AS runs_scored,
+      SUM(T2.bowling_runs) AS per_player_runs_conceded,
+      SUM(T2.bowling_wickets) AS per_player_wickets
+    FROM player_match_records AS T2
+    GROUP BY
+      T2.match_id,
+      T2.player_id
+  ) AS T3
+    ON T1.match_id = T3.match_id
+   AND T1.player_id = T3.player_id
+  WHERE T1.match_id = ?
+  GROUP BY
+    T1.match_id,
+    T1.team_id
+) AS X
+WHERE X.team_combined_average IS NOT NULL
+ORDER BY X.team_combined_average DESC
+LIMIT 1;
+       - Reason: `?` is not valid SQL syntax in MySQL when executing a plain query; it is only a parameter marker for prepared statements with bound values, so it must be replaced with a literal (e.g., `12345`) or executed via a prepared statement API.
+@dialect2sql@
+
+@dialect2sql@
+CTE-001 & CTE中参数占位符使用规则（MySQL）
+
+<Sub-category>:
+   1. Common Scenarios:
+      在MySQL中直接执行包含CTE（WITH ...）的SQL时，不能在WHERE等位置使用“?”这类客户端预处理占位符；需要先用用户变量（如@patient_id）或在客户端以Prepared Statement方式绑定参数后执行。
+   2. Function Description:
+      MySQL服务端解析普通SQL文本时不识别“?”占位符；“?”仅在客户端Prepared Statement/预处理语句协议中作为参数标记有效。若要在脚本/控制台直接运行，应先SET用户变量并在CTE与后续查询中统一引用该变量。
+
+    -- MySQL
+       - Correct: SET @patient_id := 0;
+
+WITH
+demographics AS (
+  SELECT
+    T1.patient_id,
+    T1.gender,
+    T1.age,
+    T1.ethnicity,
+    T1.income,
+    T1.zip_code,
+    T1.address,
+    T1.phone_number,
+    T1.email,
+    T1.date_of_birth,
+    T1.registration_date
+  FROM patients AS T1
+  WHERE T1.patient_id = @patient_id
+),
+conditions AS (
+  SELECT
+    T2.patient_id,
+    T2.condition_name,
+    AVG(
+      CASE
+        WHEN T2.severity_level = 'mild' THEN 1
+        WHEN T2.severity_level = 'moderate' THEN 2
+        WHEN T2.severity_level = 'severe' THEN 3
+        ELSE NULL
+      END
+    ) AS avg_severity_level_per_condition
+  FROM medical_conditions AS T2
+  WHERE T2.patient_id = @patient_id
+  GROUP BY
+    T2.patient_id,
+    T2.condition_name
+),
+lifestyle AS (
+  SELECT
+    T3.patient_id,
+    MAX(T3.exercise_frequency) AS exercise_frequency,
+    MAX(T3.diet_type) AS diet_type,
+    MAX(T3.alcohol_consumption) AS alcohol_consumption,
+    MAX(T3.sleep_quality) AS sleep_quality,
+    MAX(T3.stress_level) AS stress_level
+  FROM lifestyle_factors AS T3
+  WHERE T3.patient_id = @patient_id
+  GROUP BY
+    T3.patient_id
+),
+outcomes_ranked AS (
+  SELECT
+    T4.patient_id,
+    T4.outcome_type,
+    T4.outcome_date,
+    T4.outcome_value,
+    T4.unit_of_measure,
+    ROW_NUMBER() OVER (
+      PARTITION BY T4.patient_id, T4.outcome_type
+      ORDER BY COALESCE(
+        STR_TO_DATE(T4.outcome_date, '%Y-%m-%d %H:%i:%s'),
+        STR_TO_DATE(T4.outcome_date, '%Y-%m-%d'),
+        STR_TO_DATE(T4.outcome_date, '%Y/%m/%d %H:%i:%s'),
+        STR_TO_DATE(T4.outcome_date, '%Y/%m/%d'),
+        STR_TO_DATE(T4.outcome_date, '%m/%d/%Y %H:%i:%s'),
+        STR_TO_DATE(T4.outcome_date, '%m/%d/%Y'),
+        STR_TO_DATE(T4.outcome_date, '%Y%m%d%H%i%s'),
+        STR_TO_DATE(T4.outcome_date, '%Y%m%d')
+      ) DESC,
+      T4.outcome_id DESC
+    ) AS rn
+  FROM health_outcomes AS T4
+  WHERE T4.patient_id = @patient_id
+),
+outcomes_latest AS (
+  SELECT
+    patient_id,
+    outcome_type,
+    outcome_date,
+    outcome_value,
+    unit_of_measure
+  FROM outcomes_ranked
+  WHERE rn = 1
+),
+providers AS (
+  SELECT
+    T5.patient_id,
+    T5.provider_id,
+    T5.relationship_type,
+    T6.provider_name,
+    T6.specialty
+  FROM patient_provider AS T5
+  LEFT JOIN healthcare_providers AS T6
+    ON T5.provider_id = T6.provider_id
+  WHERE T5.patient_id = @patient_id
+  GROUP BY
+    T5.patient_id,
+    T5.provider_id,
+    T5.relationship_type,
+    T6.provider_name,
+    T6.specialty
+)
+SELECT
+  JSON_OBJECT(
+    'patient_id', d.patient_id,
+    'gender', d.gender,
+    'age', d.age,
+    'ethnicity', d.ethnicity,
+    'income', d.income,
+    'zip_code', d.zip_code,
+    'address', d.address,
+    'phone_number', d.phone_number,
+    'email', d.email,
+    'date_of_birth', d.date_of_birth,
+    'registration_date', d.registration_date,
+    'lifestyle', JSON_OBJECT(
+      'exercise_frequency', l.exercise_frequency,
+      'diet_type', l.diet_type,
+      'alcohol_consumption', l.alcohol_consumption,
+      'sleep_quality', l.sleep_quality,
+      'stress_level', l.stress_level
+    ),
+    'medical_conditions', COALESCE(
+      (
+        SELECT JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'condition_name', c.condition_name,
+            'avg_severity_level_per_condition', c.avg_severity_level_per_condition
+          )
+        )
+        FROM conditions AS c
+        WHERE c.patient_id = d.patient_id
+      ),
+      JSON_ARRAY()
+    ),
+    'health_outcomes_latest_by_type', COALESCE(
+      (
+        SELECT JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'outcome_type', o.outcome_type,
+            'outcome_date', o.outcome_date,
+            'outcome_value', o.outcome_value,
+            'unit_of_measure', o.unit_of_measure
+          )
+        )
+        FROM outcomes_latest AS o
+        WHERE o.patient_id = d.patient_id
+      ),
+      JSON_ARRAY()
+    ),
+    'providers', COALESCE(
+      (
+        SELECT JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'provider_id', p.provider_id,
+            'relationship_type', p.relationship_type,
+            'provider_name', p.provider_name,
+            'specialty', p.specialty
+          )
+        )
+        FROM providers AS p
+        WHERE p.patient_id = d.patient_id
+      ),
+      JSON_ARRAY()
+    )
+  ) AS patient_profile
+FROM demographics AS d
+LEFT JOIN lifestyle AS l
+  ON l.patient_id = d.patient_id;
+       - Incorrect: WITH
+demographics AS (
+  SELECT
+    T1.patient_id,
+    T1.gender,
+    T1.age,
+    T1.ethnicity,
+    T1.income,
+    T1.zip_code,
+    T1.address,
+    T1.phone_number,
+    T1.email,
+    T1.date_of_birth,
+    T1.registration_date
+  FROM patients AS T1
+  WHERE T1.patient_id = ?
+),
+conditions AS (
+  SELECT
+    T2.patient_id,
+    T2.condition_name,
+    AVG(
+      CASE
+        WHEN T2.severity_level = 'mild' THEN 1
+        WHEN T2.severity_level = 'moderate' THEN 2
+        WHEN T2.severity_level = 'severe' THEN 3
+        ELSE NULL
+      END
+    ) AS avg_severity_level_per_condition
+  FROM medical_conditions AS T2
+  WHERE T2.patient_id = ?
+  GROUP BY
+    T2.patient_id,
+    T2.condition_name
+),
+lifestyle AS (
+  SELECT
+    T3.patient_id,
+    MAX(CASE WHEN T3.lifestyle_id IS NOT NULL THEN T3.exercise_frequency END) AS exercise_frequency,
+    MAX(CASE WHEN T3.lifestyle_id IS NOT NULL THEN T3.diet_type END) AS diet_type,
+    MAX(CASE WHEN T3.lifestyle_id IS NOT NULL THEN T3.alcohol_consumption END) AS alcohol_consumption,
+    MAX(CASE WHEN T3.lifestyle_id IS NOT NULL THEN T3.sleep_quality END) AS sleep_quality,
+    MAX(CASE WHEN T3.lifestyle_id IS NOT NULL THEN T3.stress_level END) AS stress_level
+  FROM lifestyle_factors AS T3
+  WHERE T3.patient_id = ?
+  GROUP BY
+    T3.patient_id
+),
+outcomes_ranked AS (
+  SELECT
+    T4.patient_id,
+    T4.outcome_type,
+    T4.outcome_date,
+    T4.outcome_value,
+    T4.unit_of_measure,
+    ROW_NUMBER() OVER (
+      PARTITION BY T4.outcome_type
+      ORDER BY COALESCE(
+        STR_TO_DATE(T4.outcome_date, '%Y-%m-%d %H:%i:%s'),
+        STR_TO_DATE(T4.outcome_date, '%Y-%m-%d'),
+        STR_TO_DATE(T4.outcome_date, '%Y/%m/%d %H:%i:%s'),
+        STR_TO_DATE(T4.outcome_date, '%Y/%m/%d'),
+        STR_TO_DATE(T4.outcome_date, '%m/%d/%Y %H:%i:%s'),
+        STR_TO_DATE(T4.outcome_date, '%m/%d/%Y'),
+        STR_TO_DATE(T4.outcome_date, '%Y%m%d%H%i%s'),
+        STR_TO_DATE(T4.outcome_date, '%Y%m%d')
+      ) DESC,
+      T4.outcome_id DESC
+    ) AS rn
+  FROM health_outcomes AS T4
+  WHERE T4.patient_id = ?
+),
+outcomes_latest AS (
+  SELECT
+    patient_id,
+    outcome_type,
+    outcome_date,
+    outcome_value,
+    unit_of_measure
+  FROM outcomes_ranked
+  WHERE rn = 1
+),
+providers AS (
+  SELECT
+    T5.patient_id,
+    T5.provider_id,
+    T5.relationship_type,
+    T6.provider_name,
+    T6.specialty
+  FROM patient_provider AS T5
+  LEFT JOIN healthcare_providers AS T6
+    ON T5.provider_id = T6.provider_id
+  WHERE T5.patient_id = ?
+    AND T6.provider_id IS NOT NULL
+  GROUP BY
+    T5.patient_id,
+    T5.provider_id,
+    T5.relationship_type,
+    T6.provider_name,
+    T6.specialty
+)
+SELECT
+  JSON_OBJECT(
+    'patient_id', d.patient_id,
+    'gender', d.gender,
+    'age', d.age,
+    'ethnicity', d.ethnicity,
+    'income', d.income,
+    'zip_code', d.zip_code,
+    'address', d.address,
+    'phone_number', d.phone_number,
+    'email', d.email,
+    'date_of_birth', d.date_of_birth,
+    'registration_date', d.registration_date,
+    'lifestyle', JSON_OBJECT(
+      'exercise_frequency', l.exercise_frequency,
+      'diet_type', l.diet_type,
+      'alcohol_consumption', l.alcohol_consumption,
+      'sleep_quality', l.sleep_quality,
+      'stress_level', l.stress_level
+    ),
+    'medical_conditions', COALESCE(
+      (
+        SELECT JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'condition_name', c.condition_name,
+            'avg_severity_level_per_condition', c.avg_severity_level_per_condition
+          )
+        )
+        FROM conditions AS c
+        WHERE c.patient_id = d.patient_id
+      ),
+      JSON_ARRAY()
+    ),
+    'health_outcomes_latest_by_type', COALESCE(
+      (
+        SELECT JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'outcome_type', o.outcome_type,
+            'outcome_date', o.outcome_date,
+            'outcome_value', o.outcome_value,
+            'unit_of_measure', o.unit_of_measure
+          )
+        )
+        FROM outcomes_latest AS o
+        WHERE o.patient_id = d.patient_id
+      ),
+      JSON_ARRAY()
+    ),
+    'providers', COALESCE(
+      (
+        SELECT JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'provider_id', p.provider_id,
+            'relationship_type', p.relationship_type,
+            'provider_name', p.provider_name,
+            'specialty', p.specialty
+          )
+        )
+        FROM providers AS p
+        WHERE p.patient_id = d.patient_id
+      ),
+      JSON_ARRAY()
+    )
+  ) AS patient_profile
+FROM demographics AS d
+LEFT JOIN lifestyle AS l
+  ON l.patient_id = d.patient_id;
+       - Reason: MySQL在直接执行SQL/CTE时不会把“?”当作合法语法标记；“?”仅用于客户端Prepared Statement参数占位。应改用用户变量（SET @patient_id := ... 并在SQL中引用@patient_id），或在应用层用预处理语句绑定参数后再执行。
+@dialect2sql@
+
+@dialect2sql@
+SYN-CAST-001 & CAST/CONVERT 类型转换语法
+
+Expression Formatting & Casting:
+   1. Common Scenarios:
+      在表达式中将数值转换为 UNSIGNED/INTEGER 并用于 LPAD/CONCAT 等字符串格式化时，避免使用错误的 CAST 写法导致 1064 语法错误；复杂计算建议拆分到 CTE/子查询中先得到整型字段再拼接显示格式。
+   2. Function Description:
+      MySQL 中 CAST() 必须使用标准语法 `CAST(expr AS type)`；将表达式转为 UNSIGNED 推荐使用 `CONVERT(expr, UNSIGNED)` 或 `CAST(expr AS UNSIGNED)`。不要写成 `CAST(expr) AS UNSIGNED`（括号提前结束会触发语法错误）。
+
+    -- MySQL
+       - Correct: WITH base AS (
+  SELECT
+    s.nationality,
+    s.swimmer_id,
+    s.first_name,
+    s.last_name,
+    CASE
+      WHEN r.time REGEXP '^[0-9]{1,2}:[0-9]{2}\\.[0-9]+$' THEN
+        (CAST(SUBSTRING_INDEX(r.time, ':', 1) AS DECIMAL(12,3)) * 60
+         + CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(r.time, ':', -1), '.', 1) AS DECIMAL(12,3))
+         + CAST(CONCAT('0.', SUBSTRING_INDEX(r.time, '.', -1)) AS DECIMAL(12,3)))
+      WHEN r.time REGEXP '^[0-9]{1,2}:[0-9]{2}$' THEN
+        (CAST(SUBSTRING_INDEX(r.time, ':', 1) AS DECIMAL(12,3)) * 60
+         + CAST(SUBSTRING_INDEX(r.time, ':', -1) AS DECIMAL(12,3)))
+      WHEN r.time REGEXP '^[0-9]{1,2}\\.[0-9]+$' THEN
+        CAST(r.time AS DECIMAL(12,3))
+      WHEN r.time REGEXP '^[0-9]+$' THEN
+        CAST(r.time AS DECIMAL(12,3))
+      ELSE NULL
+    END AS TimeSeconds,
+    r.nisca_score
+  FROM results AS r
+  INNER JOIN events AS e ON r.event_id = e.event_id
+  INNER JOIN swimmers AS s ON r.swimmer_id = s.swimmer_id
+  WHERE
+    e.is_olympic = 1
+    AND r.is_disqualified = 0
+    AND r.time IS NOT NULL
+    AND TRIM(r.time) <> ''
+    AND s.nationality IS NOT NULL
+    AND TRIM(s.nationality) <> ''
+),
+agg AS (
+  SELECT
+    nationality,
+    swimmer_id,
+    first_name,
+    last_name,
+    AVG(TimeSeconds) AS AvgTimeSeconds,
+    AVG(nisca_score) AS AvgNiscaScore
+  FROM base
+  WHERE TimeSeconds IS NOT NULL
+  GROUP BY
+    nationality, swimmer_id, first_name, last_name
+),
+fmt AS (
+  SELECT
+    a.*,
+    CONVERT(FLOOR(a.AvgTimeSeconds / 60), UNSIGNED) AS avg_min_int,
+    CONVERT(FLOOR(MOD(a.AvgTimeSeconds, 60)), UNSIGNED) AS avg_sec_int,
+    CONVERT(ROUND((a.AvgTimeSeconds - FLOOR(a.AvgTimeSeconds)) * 1000), UNSIGNED) AS avg_ms_int
+  FROM agg AS a
+),
+ranked AS (
+  SELECT
+    f.*,
+    ROW_NUMBER() OVER (
+      PARTITION BY f.nationality
+      ORDER BY f.AvgTimeSeconds ASC, f.AvgNiscaScore DESC
+    ) AS rn
+  FROM fmt AS f
+)
+SELECT
+  nationality,
+  first_name,
+  last_name,
+  CONCAT(
+    avg_min_int, ':',
+    LPAD(avg_sec_int, 2, '0'), '.',
+    LPAD(avg_ms_int, 3, '0')
+  ) AS AvgTimeDisplay,
+  AvgTimeSeconds,
+  AvgNiscaScore
+FROM ranked
+WHERE rn <= 5
+ORDER BY nationality, rn;
+       - Incorrect: WITH agg AS (
+  SELECT
+    T3.nationality,
+    T3.swimmer_id,
+    T3.first_name,
+    T3.last_name,
+    AVG((CASE
+      WHEN T1.time REGEXP '^[0-9]{1,2}:[0-9]{2}\\.[0-9]+$' THEN
+        (CAST(SUBSTRING_INDEX(T1.time, ':', 1) AS DECIMAL(10,3)) * 60
+         + CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(T1.time, ':', -1), '.', 1) AS DECIMAL(10,3))
+         + CAST(CONCAT('0.', SUBSTRING_INDEX(T1.time, '.', -1)) AS DECIMAL(10,3)))
+      WHEN T1.time REGEXP '^[0-9]{1,2}:[0-9]{2}$' THEN
+        (CAST(SUBSTRING_INDEX(T1.time, ':', 1) AS DECIMAL(10,3)) * 60
+         + CAST(SUBSTRING_INDEX(T1.time, ':', -1) AS DECIMAL(10,3)))
+      WHEN T1.time REGEXP '^[0-9]{1,2}\\.[0-9]+$' THEN
+        CAST(T1.time AS DECIMAL(10,3))
+      WHEN T1.time REGEXP '^[0-9]+$' THEN
+        CAST(T1.time AS DECIMAL(10,3))
+      ELSE NULL
+    END)) AS AvgTimeSeconds,
+    CONCAT(
+      FLOOR(AVG((CASE
+        WHEN T1.time REGEXP '^[0-9]{1,2}:[0-9]{2}\\.[0-9]+$' THEN
+          (CAST(SUBSTRING_INDEX(T1.time, ':', 1) AS DECIMAL(10,3)) * 60
+           + CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(T1.time, ':', -1), '.', 1) AS DECIMAL(10,3))
+           + CAST(CONCAT('0.', SUBSTRING_INDEX(T1.time, '.', -1)) AS DECIMAL(10,3)))
+        WHEN T1.time REGEXP '^[0-9]{1,2}:[0-9]{2}$' THEN
+          (CAST(SUBSTRING_INDEX(T1.time, ':', 1) AS DECIMAL(10,3)) * 60
+           + CAST(SUBSTRING_INDEX(T1.time, ':', -1) AS DECIMAL(10,3)))
+        WHEN T1.time REGEXP '^[0-9]{1,2}\\.[0-9]+$' THEN
+          CAST(T1.time AS DECIMAL(10,3))
+        WHEN T1.time REGEXP '^[0-9]+$' THEN
+          CAST(T1.time AS DECIMAL(10,3))
+        ELSE NULL
+      END)) / 60),
+      ':',
+      LPAD(
+        CAST(FLOOR(MOD(AVG((CASE
+          WHEN T1.time REGEXP '^[0-9]{1,2}:[0-9]{2}\\.[0-9]+$' THEN
+            (CAST(SUBSTRING_INDEX(T1.time, ':', 1) AS DECIMAL(10,3)) * 60
+             + CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(T1.time, ':', -1), '.', 1) AS DECIMAL(10,3))
+             + CAST(CONCAT('0.', SUBSTRING_INDEX(T1.time, '.', -1)) AS DECIMAL(10,3)))
+          WHEN T1.time REGEXP '^[0-9]{1,2}:[0-9]{2}$' THEN
+            (CAST(SUBSTRING_INDEX(T1.time, ':', 1) AS DECIMAL(10,3)) * 60
+             + CAST(SUBSTRING_INDEX(T1.time, ':', -1) AS DECIMAL(10,3)))
+          WHEN T1.time REGEXP '^[0-9]{1,2}\\.[0-9]+$' THEN
+            CAST(T1.time AS DECIMAL(10,3))
+          WHEN T1.time REGEXP '^[0-9]+$' THEN
+            CAST(T1.time AS DECIMAL(10,3))
+          ELSE NULL
+        END)), 60)) AS UNSIGNED),
+        2,
+        '0'
+      ),
+      '.',
+      LPAD(
+        CAST(ROUND(
+          (MOD(AVG((CASE
+            WHEN T1.time REGEXP '^[0-9]{1,2}:[0-9]{2}\\.[0-9]+$' THEN
+              (CAST(SUBSTRING_INDEX(T1.time, ':', 1) AS DECIMAL(10,3)) * 60
+               + CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(T1.time, ':', -1), '.', 1) AS DECIMAL(10,3))
+               + CAST(CONCAT('0.', SUBSTRING_INDEX(T1.time, '.', -1)) AS DECIMAL(10,3)))
+            WHEN T1.time REGEXP '^[0-9]{1,2}:[0-9]{2}$' THEN
+              (CAST(SUBSTRING_INDEX(T1.time, ':', 1) AS DECIMAL(10,3)) * 60
+               + CAST(SUBSTRING_INDEX(T1.time, ':', -1) AS DECIMAL(10,3)))
+            WHEN T1.time REGEXP '^[0-9]{1,2}\\.[0-9]+$' THEN
+              CAST(T1.time AS DECIMAL(10,3))
+            WHEN T1.time REGEXP '^[0-9]+$' THEN
+              CAST(T1.time AS DECIMAL(10,3))
+            ELSE NULL
+          END)), 1) * 1000
+        ) AS UNSIGNED),
+        3,
+        '0'
+      )
+    ) AS AvgTimeDisplay,
+    AVG(T1.nisca_score) AS AvgNiscaScore
+  FROM results AS T1
+  JOIN events AS T2 ON T1.event_id = T2.event_id
+  JOIN swimmers AS T3 ON T1.swimmer_id = T3.swimmer_id
+  WHERE
+    T2.is_olympic = 1
+    AND T1.is_disqualified = 0
+    AND T1.time IS NOT NULL
+    AND TRIM(T1.time) <> ''
+    AND T3.nationality IS NOT NULL
+    AND TRIM(T3.nationality) <> ''
+  GROUP BY
+    T3.nationality, T3.swimmer_id, T3.first_name, T3.last_name
+  HAVING AvgTimeSeconds IS NOT NULL
+),
+ranked AS (
+  SELECT
+    agg.*,
+    ROW_NUMBER() OVER (
+      PARTITION BY agg.nationality
+      ORDER BY agg.AvgTimeSeconds ASC, agg.AvgNiscaScore DESC
+    ) AS rn
+  FROM agg
+)
+SELECT
+  nationality,
+  first_name,
+  last_name,
+  AvgTimeDisplay,
+  AvgTimeSeconds,
+  AvgNiscaScore
+FROM ranked
+WHERE rn <= 5
+ORDER BY nationality, rn;
+       - Reason: 在 MySQL 中 `CAST` 语法必须是 `CAST(expr AS type)`；错误写法 `CAST(expr) AS UNSIGNED` 会在 `)` 后出现无法解析的 `AS UNSIGNED`，从而触发 1064 语法错误。应改用 `CAST(expr AS UNSIGNED)` 或 `CONVERT(expr, UNSIGNED)`，并可将复杂格式化计算拆分到独立 CTE 中先得到整型字段再进行 CONCAT/LPAD 拼接。
+@dialect2sql@
+
+@dialect2sql@ Query Optimization Subquery and Correlation 1. When computing aggregate statistics (e.g., mode) per group that require ranking within groups, avoid deeply correlated scalar subqueries referencing outer query columns that may cause unresolved column errors or performance issues. 2. Use window functions with ROW_NUMBER() or RANK() in a derived table to precompute the desired metric per group, then JOIN back to main tables -- MySQL - Correct/Incorrect/Reason: Correct – The fixed query avoids an invalid correlated subquery by using a derived table with a window function to compute the mode per major; this prevents ambiguous or unknown column references and improves performance by eliminating N+1 query patterns. @dialect2sql@
+
+@dialect2sql@ GROUP BY Compliance only_full_group_by 1. When sql_mode includes only_full_group_by, any non-aggregated column in SELECT, ORDER BY, or HAVING must be functionally dependent on the GROUP BY clause. 2. MySQL - Correct -- Including all non-aggregated columns from SELECT and ORDER BY (such as th_latest.change_date) in the GROUP BY clause satisfies functional dependency requirements under only_full_group_by mode. @dialect2sql@
+
+@dialect2sql@ Column Reference Scope Subquery Column Exposure 1. When referencing a column from an inner subquery in the outer SELECT clause, ensure the column is explicitly selected (or aliased) in the subquery's projection list. 2. Function -- MySQL - Incorrect: Referencing a table-qualified column (e.g., `bs`.`stop_id`) in the outer query when that table (`bs`) is not in scope at that level. Correct: Use only columns exposed by the immediate subquery (e.g., `stop_id` or `rd`.`stop_id` if `rd` is the alias of the subquery and it selects `rd`.`stop_id`). Reason: In MySQL, columns from tables joined inside a subquery are not visible outside that subquery unless explicitly projected; referencing non-exposed columns causes "Unknown column" errors. @dialect2sql@
+
+@dialect2sql@ Column Scoping Derived Tables 1. When using UNION ALL inside a derived table (subquery in FROM clause), ensure all referenced columns in the outer query exist in the derived table's result set. 2. COALESCE/SUM -- MySQL - Correct/Incorrect/Reason: The error "Unknown column 'sa.sales_count' in 'field list'" occurs because outer queries cannot reference columns from inner subqueries (like sa.sales_count) directly—only columns exposed by the derived table alias (here, combined). The fix correctly projects sales_count and change_amount as part of the combined derived table, making them accessible to the outer SELECT. @dialect2sql@
+
+@dialect2sql@ Column Reference Aliasing 1. Nested Subqueries with Reused Columns 2. When a column is already selected in an inner subquery, referencing it in an outer query using the original table alias (e.g., d.deployment_name) is invalid because the outer scope no longer has access to that alias — only the column name itself is available. -- MySQL - Incorrect: Using table-qualified column name from inner query in outer SELECT; Correct: Use unqualified column name as it is projected by the subquery; Reason: Table aliases from inner queries are not visible in outer scopes, only the resulting column names are. @dialect2sql@
+
+@dialect2sql@ SELECT Clause DISTINCT vs GROUP BY 1. When using GROUP BY to ensure uniqueness per group, avoid combining it with DISTINCT as it is redundant and may cause errors if ORDER BY references non-SELECTed or aggregated expressions. 2. Function -- MySQL - Correct: Use GROUP BY with only the grouping columns and aggregated expressions in SELECT and ORDER BY; Incorrect: Using DISTINCT alongside GROUP BY with ORDER BY referencing aggregate functions not in SELECT; Reason: MySQL’s ONLY_FULL_GROUP_BY mode (and related checks) requires ORDER BY expressions to be functionally dependent on GROUP BY columns or appear in SELECT when DISTINCT is used. @dialect2sql@
+
+@dialect2sql@ SQL Syntax ORDER BY with DISTINCT 1. When using SELECT DISTINCT, any column referenced in the ORDER BY clause must appear in the SELECT list. 2. Function -- MySQL - Correct: Include all ORDER BY columns (or their expressions) in the SELECT list; Incorrect: Reference non-selected columns from joined tables in ORDER BY with DISTINCT; Reason: MySQL enforces that ORDER BY expressions be functionally dependent on the SELECT list under DISTINCT to avoid ambiguous results. @dialect2sql@
+
+@dialect2sql@ JOIN FULL_OUTER_JOIN_SIMULATION 1. Scenarios where a true FULL OUTER JOIN is needed in MySQL (which doesn't support it natively) to combine rows from two tables including unmatched rows from both sides, especially when computing aggregated metrics per key (e.g., rental_id) across separate sources. 2. Function -- MySQL - Correct: Simulate FULL OUTER JOIN using LEFT JOIN + RIGHT JOIN with UNION, ensuring all computed columns (e.g., total_interactions) are derived within each joined branch before unioning; wrap the UNION in a subquery to enable ORDER BY on computed columns. Incorrect: Using UNION ALL without handling NULL matches properly or referencing aliased columns (like a.rental_id) outside their scope after union. Reason: MySQL lacks native FULL OUTER JOIN; improper scoping of table aliases after UNION causes "Unknown column" errors, and computed fields must be materialized before final sorting. @dialect2sql@
+
+@dialect2sql@ SQL Query Construction Aggregation and Subquery Reference 1. Scenarios where an alias from an outer query is incorrectly referenced inside a HAVING clause or subquery without proper scoping. 2. Function -- MySQL - Incorrect: Referencing a non-existent or out-of-scope alias (e.g., inner_agg.total_paid) in the SELECT or HAVING clause; Correct: Use a correlated subquery with properly scoped table aliases and aggregate logic to compute derived values like maximum per-group totals; Reason: MySQL does not allow referencing arbitrary aliases in HAVING that aren’t defined in the current or inner scope, and aggregation logic must be encapsulated in valid subqueries with correct correlation. @dialect2sql@
+
+@dialect2sql@ GROUP BY and ORDER BY Compatibility only_full_group_by 1. When using GROUP BY under sql_mode=only_full_group_by, any column referenced in ORDER BY must either be in the GROUP BY clause or be wrapped in an aggregate function. 2. MIN()/MAX() -- MySQL - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Column Reference in Nested Queries 1. Scenarios involving multi-layered subqueries where columns computed or selected in inner queries are referenced in outer queries. 2. Function -- MySQL - Incorrect: Referencing a column in an outer query using a table qualifier (e.g., `team_stats.total_points`) when that column is not directly available from the immediate subquery result set. Correct: Select required columns without table qualifiers in innermost query, propagate them through each subquery layer as bare column names, and reference them directly (without table prefixes) in outer queries. Reason: In nested subqueries, the outer scope only sees the column names exposed by the immediate inner subquery—not their original table sources—so qualified names like `team_stats.col` become invalid once inside an aliasing subquery. @dialect2sql@
+
+@dialect2sql@ Query Structure Column Reference 1. Referencing columns from a derived table in the outer query 2. Always use the derived table's alias to qualify column names in the outer SELECT — never reference inner subquery aliases (e.g., `e`) directly from the outer scope -- MySQL - Incorrect/Correct/Reason: Using an inner subquery table alias (`e`) in the outer SELECT is invalid because it is out of scope; instead, select columns via the derived table alias (`ranked_activities`) which exposes those columns properly. @dialect2sql@
+
+@dialect2sql@ SQL Syntax Compatibility NULL Handling 1. When using ORDER BY with nullable columns in MySQL and needing to emulate NULLS LAST/FIRST behavior (which MySQL does not natively support) 2. Function -- MySQL - Incorrect: Using standard SQL clause 'NULLS LAST' or 'NULLS FIRST' in ORDER BY; Correct: Replace with explicit NULL sorting logic using IS NULL or CASE expressions in the ORDER BY clause; Reason: MySQL does not support the NULLS LAST/FIRST syntax, so explicit boolean or conditional ordering must be used to control NULL placement @dialect2sql@
+
+@dialect2sql@ Aggregation Filtering HAVING Clause Misuse 1. When filtering on non-aggregated columns that are not in GROUP BY, especially those from joined tables, referencing them directly in HAVING causes "Unknown column" errors because HAVING operates after aggregation and only recognizes grouped or aggregated columns. 2. Move such per-group conditions to WHERE using a subquery or precomputed logic to evaluate row-level criteria before aggregation -- MySQL - Incorrect/Correct/Referencing non-aggregated, non-GROUP BY columns from joined tables in HAVING is invalid; instead, use WHERE with a correlated subquery or CTE to enforce per-group constraints prior to aggregation. @dialect2sql@
+
+@dialect2sql@ MySQL Column Reference HAVING Clause 1. When using an aggregated column from a subquery in the HAVING clause of the outer query, that column must be included in the outer query's SELECT list. 2. MySQL requires all non-aggregate columns referenced in HAVING to be present in SELECT (due to SQL mode and evaluation order) -- MySQL - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Query Construction Row-Value Comparison 1. Scenarios involving per-group extremum (e.g., latest/earliest term per student) where tuple comparisons are mistakenly used with scalar subqueries or mismatched column counts. 2. Function -- MySQL - Incorrect: Using row-value syntax like (col1, col2) = (subquery returning single scalar) causes Error 1241 due to operand column count mismatch. Correct: Compute composite keys (e.g., via CONCAT/LPAD) to represent ordering, then use scalar subqueries or window functions to isolate records matching the extremum key. Avoid mixing tuple comparison semantics with scalar contexts. @dialect2sql@
+
+@dialect2sql@ Syntax Backtick Usage 1. Scenarios where backticks are incorrectly applied to expressions or functions instead of only identifiers 2. Function -- MySQL - Incorrect: Wrapping aggregate expressions like `SUM(`m`.`deaths`)` in outer backticks (e.g., `` `SUM(`m`.`deaths`)` ``); Correct: Only wrap column and table identifiers in backticks, not expressions or function calls; Reason: Backticks in MySQL are for quoting identifiers (e.g., column, table names), not for delimiting expressions or function results—doing so causes syntax errors. @dialect2sql@
+
+@dialect2sql@ Column Reference Scope Subquery Column Exposure 1. When selecting columns from a subquery (derived table), only columns explicitly included in the subquery’s SELECT list are accessible in the outer query. 2. Function -- MySQL - Incorrect: Referencing a column alias or table-qualified column (e.g., wd.data_id) from inside a subquery using the original table alias (wd) in the outer query after the subquery has been defined without exposing that column. Correct: Use the column name as projected by the subquery alias (e.g., ranked_data.data_id). Reason: The outer query cannot access tables or aliases defined inside the subquery; it can only access the columns returned by the subquery itself. @dialect2sql@
+
+@dialect2sql@ GROUP BY Functional Dependency 1. Scenarios where non-aggregated columns from a table are referenced in SELECT but not included in GROUP BY under sql_mode=only_full_group_by 2. Function -- MySQL - Correct: Include all non-aggregated, functionally dependent columns from the same table in the GROUP BY clause to satisfy ONLY_FULL_GROUP_BY requirements; Incorrect: Omitting such columns leads to Error 1055; Reason: MySQL enforces that every column in SELECT (not inside an aggregate) must be functionally dependent on the GROUP BY columns, and explicitly listing them ensures compliance. @dialect2sql@
+
+@dialect2sql@ Column Reference Scope Aliasing 1. Referencing columns from a subquery in the outer SELECT clause 2. Use of column aliases and qualified names -- MySQL - Incorrect: Using table alias from inner query (e.g., u.username) in outer SELECT; Correct: Reference column by its alias or unqualified name as projected by subquery; Reason: Outer query cannot access table aliases defined inside subquery, only the columns exposed by the subquery's SELECT list @dialect2sql@
+
+@dialect2sql@ Column Reference HAVING Clause 1. When using a column in the HAVING clause, it must either appear in the SELECT list, be functionally dependent on columns in the GROUP BY clause, or be included in the GROUP BY clause itself—especially under MySQL’s ONLY_FULL_GROUP_BY SQL mode. 2. Verify column existence and correct naming via DESCRIBE table_name; ensure referenced columns comply with grouping rules to avoid Error 1054. -- MySQL - Incorrect/Correct/Using a non-aggregated, non-GROUP BY column (e.g., c.current_market_price) in HAVING without functional dependency violates ONLY_FULL_GROUP_BY; fix by including it in GROUP BY or ensuring it's derivable from grouped keys. @dialect2sql@

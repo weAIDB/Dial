@@ -1,0 +1,1237 @@
+@dialect2sql@
+1.4 Date and Time Functions: Frequent Operations with Significant Differences
+
+1.4.1 Getting Current Time:
+   1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+      Questions like "current time", "what time is it now", "today's date", "current timestamp" typically use this syntax.  
+   2. Relevant Function Description:  
+      This syntax is used to get the database server's current date, time, or timestamp. It is commonly used for recording operation times, calculating time intervals, filtering time ranges, etc.
+
+ 	-- MySQL
+
+ 	   -SELECT NOW(); -- Date + time, equivalent to CURTIME()
+
+ 	   -SELECT CURDATE(); -- Date only
+      - Supports CURRENT_DATE (parentheses can be omitted, CURRENT_DATE()), which is completely equivalent to CURDATE(), both returning the current date (format YYYY-MM-DD); CURRENT_DATE can directly participate in date operations or function nesting (e.g., YEAR(CURRENT_DATE) to get the current year).
+      eg:
+      Get current date: SELECT CURRENT_DATE; or SELECT CURRENT_DATE(); (Same result as CURDATE(), e.g., 2025-11-19)
+      Extract current year: SELECT YEAR(CURRENT_DATE); (Result: 2025)
+      Date arithmetic (current date plus 7 days): SELECT CURRENT_DATE + INTERVAL 7 DAY;
+@dialect2sql@
+
+
+@dialect2sql@
+1.4.2 Extracting Date Components:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Situations requiring extraction of date components include: asking about "specific year/month/quarter", "day of the week", "day of the year", "hour/minute number", and other specific time unit questions.
+
+2. Relevant Function Description:
+   This syntax function includes: obtaining specified parts (like year, month, day, hour, minute, second) from a date or time value, supports extraction of components like week, quarter, and can be combined with conditional filtering or aggregation to achieve grouping statistics by time dimensions.
+
+   	-- MySQL
+
+ 	SELECT YEAR(order\_date), MONTH(order\_date), DAY(order\_date);
+
+ 	DATE\_FORMAT( CAST( birthday AS DATETIME ) , '%Y' ) = '1980'
+
+
+@dialect2sql@
+
+@dialect2sql@
+1.4.3 Date Calculation:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+   - Calculating the number of days to/from a specific date (e.g., "How many days until National Day from today?")  
+   - Calculating past or future dates (e.g., "What is the date 3 months from now?")  
+   - Calculating durations like age, length of service (e.g., "Someone's age")  
+   - Determining the period a date belongs to (e.g., "What day of the week is a specific date?")  
+
+2. Relevant Function Description:  
+   - Supports date addition and subtraction operations (e.g., adding/subtracting days/months/years)  
+   - Calculates the number of days/months/years between two dates  
+   - Extracts date components (e.g., year, month, weekday value)  
+   - Implements date truncation (e.g., truncating to the start of the month or year)  
+   - Timezone conversion and cross-timezone calculations
+
+ 	-- MySQL
+
+ 	SELECT order\_date + INTERVAL 7 DAY; -- Add 7 days
+
+
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.4.4 Date Truncation Functions:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+   - Calculating age (e.g., "Someone's age")  
+   - Statistical analysis of monthly/quarterly/annual data (e.g., "This month's sales", "This quarter's order volume")  
+   - Weekly grouping analysis (e.g., "Weekly active user count")  
+   - Comparing period-over-period data (e.g., "Profit for the same period last year")  
+
+2. Relevant Function Description:  
+   - Truncates date-time values to a specified precision (e.g., start of year, month, day, hour, etc.)  
+   - Used for date grouping statistics or time interval comparisons  
+   - Assists in calculating date differences (e.g., calculating day difference ignoring the time part)  
+   - Generates standardized time coordinates for correlated queries
+
+ 	-- MySQL:
+
+ 	  Method 1: DATE\_FORMAT(date_column, 'format_string') (Indirect truncation via formatting)
+
+ 	eg:
+
+ 		Truncate to "year": DATE\_FORMAT(lastaccessdate, '%Y-01-01').
+
+ 		Truncate to "month": DATE\_FORMAT(lastaccessdate, '%Y-%m-01').
+
+ 	Method 2: DATE(date_column) (Only truncates the "time part", retains date YYYY-MM-DD).
+
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.4.5 Age Calculation:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+   - Calculating age (e.g., "Someone's age")  
+   - Calculating birthday (e.g., "What is someone's birthday and how many days until it from today?")
+   - Calculating exact age in years (e.g., "What is someone's exact age in years this year?")
+   - Determining legal age (e.g., "Has someone reached the legal adult age / legal marriage age?")
+   - Age group statistics (e.g., "Purchase preferences of users aged 30-40")
+   - Retirement age calculation (e.g., "How many years until someone reaches the legal retirement age?")
+   - Birthday cycle calculation (e.g., "Which week of the month is someone's birthday, how many days until the next birthday?")
+
+2. Relevant Function Description:  
+   - Truncates date-time values to a specified precision (e.g., start of year, month, day, hour, etc.)
+   - Used for date grouping statistics or time interval comparisons
+   - Assists in calculating date differences (e.g., calculating day difference ignoring the time part)
+   - Generates standardized time coordinates for correlated queries
+   - Truncates birth date to year dimension, calculates difference from current year for exact age in years
+   - Truncates date to month-day dimension, compares birthday with current date to determine if birthday has passed
+   - Calculates age difference at year granularity, assists in legal age threshold determination
+   - Standardizes birth date (truncate to year/month) for age group analysis
+
+-- MySQL:
+   Method: Use TIMESTAMPDIFF(unit, start_date, end_date) (Calculates age in years, automatically handles cases where birthday hasn't occurred yet)
+   eg:
+      Calculate current age: TIMESTAMPDIFF(YEAR, birthdate, CURDATE()) (birthdate is the birth date column, CURDATE() gets current date)
+      Calculate age up to a specified date (e.g., 2025-12-31): TIMESTAMPDIFF(YEAR, '1990-05-20', '2025-12-31')
+
+@dialect2sql@
+
+@dialect2sql@
+1.5 Pagination Queries
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Viewing data lists for a specified page (e.g., "Show the user list for page 3")
+   - Retrieving the top N records (e.g., "Query the top 10 products with the highest sales")
+   - Fetching data after skipping some records (e.g., "Display 10 records starting from the 21st record")
+   - Loading large amounts of data in batches (e.g., "Load the next batch of 20 order records")
+
+2. Relevant Function Description
+   - Supports specifying the limit on the number of records returned
+   - Supports skipping a specified number of records (offset setting)
+   - Supports pagination queries combined with sorting conditions
+   - Supports efficient pagination implementation via window functions
+
+* MySQL
+     -- LIMIT/OFFSET: Clear and intuitive
+     SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 items per page)
+     -- LIMIT OFFSET,ROW_COUNT
+     SELECT * FROM products ORDER BY price DESC LIMIT 20, 10;-- Page 3 (10 items per page)
+     -- Window function ROW_NUMBER() + FETCH FIRST: Modern standard
+     SELECT * FROM products
+     ORDER BY price DESC
+     OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY; -- Standard, clear, and high potential for performance optimization
+
+@dialect2sql@
+
+@dialect2sql@
+1.6 Join Syntax
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Querying associated information involving multiple entities (e.g., "List all employees and their department names" where "and their" implies association)
+   - Summarizing aggregated data across joined tables (e.g., "Count the number of employees per department" where "per department" implies grouping)
+   - Filtering records that require data from other tables (e.g., "Find employees not assigned to any department" where "not assigned to any department" implies a check for non-existence in another table)
+   - Comparing relationships between multiple entities (e.g., "Query common customers of the Sales and Marketing departments" where "common customers" implies an intersection)
+
+2. Relevant Function Description
+   - Supports multi-table join queries (including INNER JOIN, LEFT/RIGHT/FULL OUTER JOIN)
+   - Implements record filtering and matching based on join conditions
+   - Provides cross-table data aggregation and grouped statistical capabilities
+   - Supports existence checks for relationships (e.g., checking if a record in one table has a corresponding entry in another table)
+
+1.6.1 Two-Table Joins
+* INNER JOIN: Recommended standard form
+     SELECT e.name, d.department_name
+     FROM employees e
+     INNER JOIN departments d ON e.dept_id = d.id; -- Clearly expresses the join condition
+
+* Old-style comma list + WHERE: Legacy style (not recommended, poor readability, error-prone)
+     SELECT e.name, d.department_name
+     FROM employees e, departments d
+     WHERE e.dept_id = d.id; -- Implicit inner join, easy to forget conditions leading to Cartesian products
+
+Important: All modern versions recommend using explicit LEFT/RIGHT/FULL OUTER JOIN syntax.
+@dialect2sql@
+
+@dialect2sql@
+1.6.2 Multi-Table Joins (Three Tables or More)
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   Multi-entity association queries (e.g., "Query competition scores, athlete information, and associated profile data", "Get four-table association results for loans, accounts, authorization records, and customer information", "Match test records, patient information, and test item data across three tables")
+   Multi-table joins with filter conditions (e.g., "Filter athletes with competition scores greater than 80 and their profile information", "Query test records after 2023 and their corresponding patients and test items", "Get competition results for athletes born before 1985")
+   Association queries with multi-column composite conditions (e.g., "Associate orders with store information based on store ID and region dual conditions", "Associate order and product data via foreign key + status condition")
+   LEFT JOIN requirements preserving primary table data (e.g., "Query all customers and their order and product information, display NULL if no orders exist")
+   Custom requirements for specific join order (e.g., "Force join order by specified table sequence to optimize query efficiency")
+
+2. Relevant Function Description
+   Supports chained multi-table associations (three tables or more), adapting to multi-level entity relationships in business (e.g., competition→athlete→profile, loan→account→customer)
+   Flexible control over join order (MySQL/SQLite execute in written order; PostgreSQL/Oracle/SQL Server auto-adjust via optimizer; supports LEADING hint or OPTION (FORCE ORDER) to force order)
+   Diverse ON condition support (foreign key association, multi-column composite association, nested conditions / subquery association, ensuring accuracy of association logic)
+   Adaptation of different join types (INNER JOIN for matching data filtering, LEFT JOIN for preserving full primary table data, avoiding Cartesian products)
+   Performance optimization mechanisms (relying on indexes for join columns, prioritizing HASH JOIN / MERGE JOIN for large tables, NESTED LOOP for small tables, filtering data early to reduce intermediate result sets)
+   Cross-data type association adaptation (requires matching data types for join columns, avoiding implicit conversion, unifying text field formats before association)
+   Support for complex business scenario associations (deep associations of four tables or more, covering entity association needs in finance, healthcare, sports events, and other fields)
+
+-- MySQL:
+   Method:
+   Join Order: Executes from left to right by default according to the written order (A JOIN B JOIN C is equivalent to (A JOIN B) JOIN C), no automatic join order optimization;
+   ON Condition Logic: Must follow foreign key chain integrity (e.g., A→B→C requires association via B's primary key / foreign key), non-foreign key associations require matching data types (avoid implicit conversion);
+   Performance Optimization: Relies on indexes for join columns, large tables are recommended to be placed later in the join order, prioritize INNER JOIN (smaller data volume after filtering), avoid non-join conditions across tables (easily triggers Cartesian products).
+   eg:
+   Three-table join:
+   SELECT t1.*, t2.name, t3.dob FROM competition t1 JOIN athletes t2 ON t1.athlete_id = t2.id JOIN profiles t3 ON t2.id = t3.athlete_id WHERE t1.score > 80;
+   Four-table join (corresponding to scenario 169 "loan - account - authorization - customer"):
+   SELECT l.loan_id, a.account_no, c.name FROM loans l JOIN accounts a ON l.account_id = a.id JOIN authorizations au ON a.id = au.account_id JOIN customers c ON au.cust_id = c.id WHERE l.status = 'active';
+
+@dialect2sql@
+
+@dialect2sql@
+1.7 Grouping Queries
+
+1.7.1 GROUP BY
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Counting quantities per category (e.g., "What is the sales quantity per product category?")
+   - Calculating averages per department (e.g., "What is the average salary per department?")
+   - Summarizing data per time period (e.g., "Monthly sales statistics")
+   - Analyzing maximum values per region (e.g., "What is the maximum temperature per province?")
+
+2. Relevant Function Description
+   - Supports grouping data statistics by specified columns
+   - Works with aggregate functions to calculate summary values per group (e.g., COUNT, SUM, AVG)
+   - Implements multi-column composite grouping (e.g., grouping simultaneously by department and position)
+   - Provides result filtering capability after grouping (using the HAVING clause)
+
+     (1) MySQL: In non-strict mode, GROUP BY can include only part of the non-aggregated columns, eg: GROUP BY t2.name
+
+@dialect2sql@
+
+@dialect2sql@
+1.8 NULL Usage
+
+1.8.1 NULL Sorting
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Querying the highest score and placing NULLs last (e.g., "Find the highest score, place NULL scores last")
+   - Getting the latest records and placing missing dates first (e.g., "Show the latest orders, prioritize orders without dates")
+   - Ranking sales figures and handling NULL sales (e.g., "Rank sales, place NULLs at the bottom")
+   - Filtering for the lowest price and placing unpriced items last (e.g., "Lowest priced product, place unpriced items last")
+
+2. Relevant Function Description
+   - Supports explicit control over NULL position during sorting (NULLS FIRST/NULLS LAST)
+   - Manually implements NULL sorting via conditional expressions (CASE WHEN handling)
+   - Simulates NULL sorting using value replacement (e.g., ISNULL replacement)
+   - Combines type conversion and NULL handling for sorting (using CAST with NULLIF)
+
+     (1) MySQL: NULLS FIRST, NULLS LAST are invalid in MySQL, need to be removed or handled with CASE WHEN
+
+@dialect2sql@
+
+@dialect2sql@
+1.8.3 NULL Value Checking:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Filter records with valid information (e.g., "List all users who have filled in their email" where "have filled in" implies non-null)
+   - Exclude entries with missing data (e.g., "Query customers whose phone number is not empty" where "not empty" implies IS NOT NULL)
+   - Count the number of valid data entries (e.g., "Count the number of users who have completed real-name authentication" where "have completed" implies the field is not NULL)
+   - Verify the completeness of required fields (e.g., "Check if all orders have a shipping address" where "have" implies the field is not NULL)
+
+2. Relevant Function Description:
+   - Supports IS NOT NULL syntax to check for non-null values in a field
+   - Supports IS NULL syntax to check for null value status in a field
+   - Provides the `columnname notnull` shorthand syntax (supported by some databases)
+   - Implements record filtering and statistics based on null value conditions
+
+- General Cases
+
+  MySQL: Must use IS NOT NULL
+
+- Aggregate Function (MAX()/AVG() etc.) Handling of NULL Values
+-- MySQL:
+   Method:
+   MAX()/MIN()/AVG()/SUM() ignore NULL values by default (only calculate non-NULL data); COUNT(*) counts all rows (including NULLs), COUNT(column) ignores NULLs;
+   Explicitly use `WHERE column IS NOT NULL` to filter NULLs; if the column has an index, it can filter quickly, potentially offering slightly better performance than relying on the aggregate function's automatic NULL ignoring when data volume is large;
+   In conditional aggregation, `AVG(CASE WHEN condition THEN column ELSE NULL END)` ignores the NULL returned by ELSE, only calculating non-NULL values that meet the condition.
+   eg:
+   Automatically ignores NULL (calculates average height excluding NULLs): `SELECT AVG(height) FROM students;` (records where height is NULL are ignored)
+   Explicitly excludes NULL (performance optimization): `SELECT MAX(score) FROM exams WHERE score IS NOT NULL;` (indexed column score can reduce scan volume)
+   NULL in conditional aggregation: `SELECT AVG(CASE WHEN subject = 'Math' THEN score ELSE NULL END) FROM scores;` (only calculates non-NULL scores for the 'Math' subject)
+
+@dialect2sql@
+
+@dialect2sql@
+1.9 Functions for Calculating Age Difference:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Calculate a person's age (e.g., "What is someone's age?")
+   - Determine if an age condition is met (e.g., "Is he/she 18 years or older?")
+   - Calculate service years (e.g., "How long is the employee's length of service?")
+   - Compare age differences (e.g., "What is the age difference between two people?")
+
+2. Relevant Function Description:
+   - Calculates the year difference between two dates
+   - Handles age correction for birthdays not yet passed in the current year
+   - Supports precise age calculation down to year, month, and day
+   - Provides multiple date difference calculation methods (year difference, month difference, etc.)
+
+
+   -MySQL: Use MySQL's native functions, e.g.: `YEAR(CURDATE()) - YEAR(birthday)` or `TIMESTAMPDIFF(YEAR, birthday, CURRENT_DATE)`. The former is simple "current year - birth year" (may have error due to "birthday not yet passed"); the latter uses TIMESTAMPDIFF for precise year difference calculation.
+@dialect2sql@
+
+@dialect2sql@
+1.10 Splitting Strings:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Extract a substring at a specific position (e.g., "Get the username part from the email address" where "username part" implies a specific segment)
+   - Analyze structured text data (e.g., "Extract the third column data from CSV format" where "extract the third column" implies splitting)
+   - Process path or hierarchical information (e.g., "Get the filename from the file path" where "filename" implies the last segment)
+   - Parse composite identifiers (e.g., "Extract the specification code from the product code" where "specification code" implies a specific segment)
+
+2. Relevant Function Description:
+   - Splits a string by a specified delimiter and returns the substring at the specified position
+   - Supports counting and extracting segments from the beginning or end of the string
+   - Provides regular expression pattern matching for extracting complex format string segments
+   - Implements substring extraction based on delimiter position
+
+
+    -MySQL: Syntax: `SUBSTRING_INDEX(str, delim, count)`,
+    Parameters: str: source string to split (e.g., 'a:b:c'), delim: delimiter (e.g., ':'), count: controls "from which side to count delimiters": positive number means count from the beginning of the string, returns the substring before the count-th delimiter. Negative number means count from the end of the string, returns the substring after the absolute value of count-th delimiter from the end.
+    eg: `SUBSTRING_INDEX('a:b:c', ':', 2)` → returns 'a:b' (from the beginning, the part before the 2nd :), `SUBSTRING_INDEX('a:b:c', ':', -1)` → returns 'c' (from the end, the part after the 1st : from the end).
+
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.11 Usage of Virtual Tables:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query system information or constant values (e.g., "What is the current system time?" where "current system time" implies a function call)
+   - Execute simple calculation expressions (e.g., "Calculate what is 1 plus 1" where "calculate...equals" implies an expression)
+   - Get database function results (e.g., "What is the database version number?" where "version number" implies a system function)
+   - Test database connection status (e.g., "Is the database connection normal?" where "connection normal" might involve a simple query)
+
+2. Relevant Function Description:
+   - Supports table-less queries returning constant values and expression results
+   - Provides system function call interface (e.g., time functions, version functions)
+   - Implements virtual table mechanism to satisfy SELECT syntax completeness requirements
+   - Allows direct execution of functions and expressions without relying on actual data tables
+
+(1)MySQL: MySQL has the DUAL virtual table, but FROM DUAL is optional (table-less queries can be executed directly), Used when "no actual business table is involved", returns constants, expression results, or function values (e.g., system time), e.g.: `SELECT 1 + 1 AS result FROM DUAL;` or directly write `SELECT NOW() AS current_time;`
+@dialect2sql@
+
+@dialect2sql@
+1.12 BETWEEN Conditional Operator
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Numeric range filtering (e.g., "Students aged between 18 and 22", "Products priced between 100 and 200 yuan")
+   - Date/Time range queries (e.g., "Orders from 1990 to 1993", "Customers registered in 2020", "Log records within this week")
+   - String lexicographical range matching (e.g., "Users whose username starts with A to C", "Students whose last name is between Li and Zhang")
+   - Reverse range filtering (e.g., "Products not priced between 100 and 200 yuan", "Students not aged between 18 and 22")
+   - Business indicator range queries (e.g., "Employees with salary between 5000 and 8000 yuan", "Products with stock not between 10 and 50")
+   - Time granularity range statistics (e.g., "Sales from Q1 to Q2 2023", "Access records from 9 AM to 6 PM daily")
+   - Reverse filtering with quantity limit (e.g., "Top 10 sales records where amount is not between 1000 and 5000")
+
+2. Relevant Function Description:
+   - Implements closed interval range filtering, directly matching the natural language requirement of "between X and Y"
+   - Supports range comparison for multiple data types like numeric, date, string, adapting to different business field types
+   - Implements reverse range query "not between X and Y" via NOT BETWEEN, meeting exclusion filtering needs
+   - Combines with date formatting/type conversion functions (e.g., TO_DATE, strftime) to adapt to different database date range query logic
+   - Supports string lexicographical range matching, meeting interval filtering scenarios for text fields
+   - Can combine with TOP/LIMIT clauses to implement range filtering with quantity limits
+   - Adapts to different database implicit/explicit type conversion rules, ensuring accuracy in date, string, and numeric range comparisons
+   - Meets interval statistics and filtering needs for business indicators like salary, stock, sales, supporting business analysis scenarios
+
+-- MySQL:
+   Method:
+      BETWEEN includes both upper and lower bounds by default (closed interval [lower bound, upper bound]);
+      Implicit conversion between date type and string: If a date column is compared with a string range, MySQL attempts to convert the string to a date type according to the corresponding format (e.g., strings formatted by DATE_FORMAT can directly participate in date range comparison);
+      NOT BETWEEN implements reverse range filtering (result is value < lower bound OR value > upper bound).
+   eg:
+      Numeric range filtering (includes bounds): `SELECT * FROM students WHERE age BETWEEN 18 AND 22;` (includes age 18 and 22)
+      Date string range filtering: `SELECT * FROM orders WHERE DATE_FORMAT(order_date, '%Y') BETWEEN '1990' AND '1993';` (includes years 1990 and 1993)
+      NOT BETWEEN reverse filtering: `SELECT * FROM products WHERE price NOT BETWEEN 100 AND 200;` (price <100 OR> 200)
+@dialect2sql@
+
+@dialect2sql@
+II. Data Types: Underlying Differences in Basic Storage Definitions
+
+2.1 Numeric Types: Precision, Range, and Storage Optimization
+
+2.1.1 Integer Types:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query integer data within a specific range (e.g., "Query users aged between 18 and 25")
+   - Count or sum integer types (e.g., "Calculate the number of orders with total amount exceeding 1000")
+   - Compare integer size relationships (e.g., "Find products with stock quantity less than 50")
+   - Perform integer operations and conversions (e.g., "Convert user points to levels")
+
+2. Relevant Function Description:
+   - Supports querying and filtering integer ranges (e.g., BETWEEN, comparison operators)
+   - Provides integer aggregate functions (e.g., COUNT, SUM, AVG for statistical calculations)
+   - Implements integer comparison and sorting operations (e.g., greater than, less than, equal to)
+   - Supports integer type conversion and arithmetic operations (e.g., addition, subtraction, multiplication, division, type conversion functions)
+
+(1)MySQL: Tiny Integer TINYINT(-128~127), Standard Small Integer SMALLINT, Standard Integer INT/INTEGER, Big Integer BIGINT
+
+@dialect2sql@
+
+@dialect2sql@
+2.1.2 Exact Decimal Types:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Precise calculation of monetary amounts (e.g., "What is the price of this product after discount?" where "price" implies precision)
+   - Statistical precision of financial data (e.g., "This month's sales rounded to two decimal places" where "rounded to two decimal places" implies fixed scale)
+   - Processing scientific calculation data (e.g., "Experimental data needs to be precise to four decimal places" where "precise to four decimal places" implies high precision)
+   - Calculating percentages or ratios (e.g., "Calculate profit margin precise to three decimal places" where "precise to three decimal places" implies fixed scale)
+
+2. Relevant Function Description:
+   - Supports specifying precision and scale (e.g., DECIMAL(10,2) means total 10 digits, 2 decimal places)
+   - Ensures precision in numerical calculations, avoiding floating-point precision errors
+   - Provides high-precision numerical storage, suitable for financial, scientific computing, etc.
+   - Supports special handling for currency types, such as rounding and formatted output
+
+  -- MySQL
+
+  DECIMAL(10, 2) -- Total 10 digits, 2 decimal places
+
+  NUMERIC(10, 2)  -- Same as DECIMAL
+
+@dialect2sql@
+
+@dialect2sql@
+2.2 String Types: Fixed-length, Variable-length, and Encoding Handling
+
+2.2.1 CHAR vs VARCHAR Behavior Comparison:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query fixed-length encoded information (e.g., "Query employee IDs, required to display as 5 digits" where "display as 5 digits" implies fixed length)
+   - Process data sensitive to trailing spaces (e.g., "Find all department codes ending with 'ABC '" where "ending with 'ABC '" implies trailing spaces matter)
+   - Storage space optimization scenarios (e.g., "Store user remarks, requiring space saving" where "space saving" implies variable length)
+   - Exact matching of character data (e.g., "Exactly find the customer named 'Smith '" where "exactly find" implies exact string match including potential spaces)
+
+2. Relevant Function Description:
+   - Fixed-length storage guarantee (ensures all values have the same byte length)
+   - Trailing space handling control (supports preserving or automatically removing trailing spaces)
+   - Variable-length storage optimization (dynamically allocates storage space based on actual data length)
+   - Character comparison semantics definition (defines rules for comparing strings with and without spaces)
+
+-- MySQL:
+   Method:Mandatory Constraint: CHAR(N) uses character count as length unit (depends on character set, e.g., max 4 bytes per character in UTF8mb4), fixed-length storage; pads with trailing spaces if input length < N, automatically truncates trailing spaces during retrieval (retain only if PAD_CHAR_TO_FULL_LENGTH is enabled), max N=255; VARCHAR(N) uses character count as length unit, variable-length storage (actual length + 1/2 byte length identifier), retains trailing spaces in retrieval/comparison, max N=65535 (limited by total row bytes);Error Scenario: CHAR(N) length exceeds 255; mistaking VARCHAR trailing spaces are truncated during comparison; inserting data exceeding VARCHAR(N) length limit;Solution: Ensure CHAR(N) ≤255, VARCHAR(N) ≤65535; explicitly match trailing spaces for VARCHAR comparison; enable PAD_CHAR_TO_FULL_LENGTH if need to retain CHAR trailing spaces during retrieval.eg:Error example (CHAR length exceeds limit, triggers "Column length too big" error):CREATE TABLE err_emp (emp_id CHAR(300));Error example (VARCHAR comparison ignores trailing spaces, no matching result):CREATE TABLE dept (dept_code VARCHAR(20)); INSERT INTO dept VALUES ('ABC '); SELECT * FROM dept WHERE dept_code = 'ABC';Correct example (CHAR with valid length, retrieval truncates spaces):CREATE TABLE emp (emp_id CHAR(5)); INSERT INTO emp VALUES ('123'); SELECT emp_id FROM emp;Correct example (VARCHAR retains trailing spaces, accurate comparison):CREATE TABLE dept (dept_code VARCHAR(20)); INSERT INTO dept VALUES ('ABC '); SELECT * FROM dept WHERE dept_code = 'ABC ';
+@dialect2sql@
+
+@dialect2sql@
+2.2.2 Large Object (LOB) Types:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Store very long article content (e.g., "Save the full text of this novel over 100,000 words")
+   - Record detailed product description information (e.g., "Upload the complete technical specification document for this product")
+   - Store user-generated long content (e.g., "Save the long comment content submitted by the user")
+   - Handle file content storage (e.g., "Store the entire log file content into the database")
+
+2. Relevant Function Description:
+   - Supports storing very large capacity text data (from MB to TB level)
+   - Provides specialized read/write operation methods (e.g., stream reading, segmented writing)
+   - Implements text content integrity and consistency guarantees
+   - Supports large text storage with different character set encodings
+
+  (1)MySQL: Small text extension TEXT(64KB), Large text storage MEDIUMTEXT(16MB)/LONGTEXT(4GB)
+
+@dialect2sql@
+
+
+@dialect2sql@
+2.2.3 Fixed-Length String:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query fixed-length codes or identifiers (e.g., "Query employee ID, must be 6 digits" where "must be 6 digits" implies fixed length)
+   - Process fixed-format data validation (e.g., "Is the ID card number in the correct format?" where "correct format" implies specific length and pattern)
+   - Match strings of specific length (e.g., "Find all 3-letter country codes" where "3-letter" implies fixed length)
+   - Generate fixed-length output results (e.g., "Generate a fixed 8-digit order number" where "fixed 8-digit" implies fixed length)
+
+2. Relevant Function Description:
+   - Defines fixed-length string storage structure
+   - Automatically pads with spaces to the specified length
+   - Validates if input data length meets requirements
+   - Ensures consistent length during data storage and comparison
+
+(1)MySQL: CHAR(n), n is 0~255 (number of characters)
+
+@dialect2sql@
+
+@dialect2sql@
+2.2.4 Variable-Length String:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query user-input variable length information (e.g., "Find all users whose username contains 'Zhang'" where "username contains" implies variable content)
+   - Process variable-length text fields like addresses, remarks (e.g., "Count records where the address field length exceeds 50 characters" where "field length exceeds" implies variable length)
+   - Store long text data like product descriptions, comments (e.g., "Query products whose description contains 'discount'" where "description contains" implies searching within variable content)
+   - Process strings of uncertain length like names, titles (e.g., "Find documents whose title ends with 'Report'" where "title ends with" implies variable length matching)
+
+2. Relevant Function Description:
+   - Supports storing variable-length character data, allocating storage based on actual space used
+   - Provides string matching and search functions (e.g., LIKE operation, regular expression matching)
+   - Implements string length calculation and substring operations
+   - Supports basic text processing functions like string concatenation, replacement
+
+
+(1)MySQL: VARCHAR(n), n is 0~65535 (number of characters, limited by total row byte size);
+
+
+@dialect2sql@
+
+
+@dialect2sql@
+2.3 Date and Time Types: Differences in Time Representation Precision
+
+2.3.1 Basic Date and Time Type Comparison:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying data within a specific time range (e.g., "today" in "query all orders for today")
+   - Comparing data at different time points (e.g., "this month" and "last month" in "compare this month's sales with last month's")
+   - Aggregating statistics by time dimension (e.g., "per hour" in "count visits per hour")
+   - Handling timezone-related queries (e.g., "convert to" in "convert Beijing time to New York time")
+
+2. Relevant Function Description:
+   - Supports storage and formatted output of date and time types
+   - Provides date and time extraction and conversion functions (e.g., extract hour, convert to different timezone)
+   - Implements comparison and filtering for date and time ranges
+   - Supports time interval calculation and date-time arithmetic operations
+
+ 	(1)MySQL: Date only DATE, Time only TIME[(fsp)], Date+Time DATETIME[(fsp)], Timezone support (manual handling)
+
+@dialect2sql@
+
+@dialect2sql@
+2.3.2 Important Parameters for Time Precision:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Recording timestamps with millisecond precision (e.g., "record the exact time of the operation, precise to milliseconds")
+   - Controlling timestamp precision (e.g., "store the current time, including microsecond precision")
+   - Precise measurement of time intervals (e.g., "calculate the time difference between two events, precise to nanoseconds")
+   - Formatted output of time data (e.g., "display time, keeping three decimal places")
+
+2. Relevant Function Description:
+   - Supports definition of fractional seconds precision (e.g., storage of milliseconds, microseconds)
+   - Controls storage precision and display format of time types
+   - Implements high-precision time calculation and comparison
+   - Manages the balance between storage space and precision for time data
+
+-- MySQL:
+   Method:
+      Mandatory Constraint: Supports fsp (Fractional Seconds Precision) for TIME/DATETIME/TIMESTAMP types, fsp range 0-6 (0 = second-level, 3 = millisecond-level, 6 = microsecond-level); fsp defines fractional seconds precision, storage/retrieval follow this precision, default fsp=0 if not specified; fsp >6 triggers syntax error; DATE type does not support fsp (no fractional seconds); inserting data with precision exceeding defined fsp will be truncated to fsp digits;
+      Error Scenario: Setting fsp >6 (e.g., TIME(7)); adding fsp to DATE type (e.g., DATE(3)); inserting data with higher precision than defined fsp and expecting full precision retention;
+      Solution: Restrict fsp to 0-6; only apply fsp to TIME/DATETIME/TIMESTAMP (not DATE); truncate or adjust input data precision to match defined fsp before insertion.
+   eg:
+      Error example (fsp exceeds limit, triggers "Invalid precision value" error):
+      CREATE TABLE err_time (op_time TIME(7));
+      Error example (fsp applied to DATE type, triggers "Invalid data type for datetime precision" error):
+      CREATE TABLE err_date (create_date DATE(3));
+      Correct example (TIME(3) stores millisecond precision):
+      CREATE TABLE op_log (op_time TIME(3));
+      INSERT INTO op_log VALUES ('15:30:45.123');
+      Correct example (TIMESTAMP(6) stores microsecond precision):
+      CREATE TABLE order_log (create_time TIMESTAMP(6));
+      INSERT INTO order_log VALUES (NOW(6));
+@dialect2sql@
+
+@dialect2sql@
+2.5 Type Conversion
+
+2.5.1 LIKE Operator:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying data for a specific year (e.g., "find all orders from 1991")
+   - Searching for information for a specific month (e.g., "find sales records for October")
+   - Matching patterns with date prefixes (e.g., "query all dates starting with 1991-10")
+   - Filtering records by date pattern (e.g., "filter employees whose birthday is in October")
+
+2. Relevant Function Description:
+   - Supports string pattern matching on date fields
+   - Implements fuzzy queries by time dimensions like year/month
+   - Provides conversion functions from date type to string type
+   - Allows partial date matching using wildcards
+
+ 	(1)MySQL: MySQL allows DATE type to be used directly with LIKE, LIKE usage: "t2"."date" LIKE '1991-10-%'
+
+@dialect2sql@
+
+
+@dialect2sql@
+2.5.2 Comparison Rules for Date/Time and Strings:
+
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying data records for a specific date (e.g., "October 1, 2023" in "query sales data for October 1, 2023")
+   - Filtering records within a time range (e.g., "last 7 days" in "find orders from the last 7 days")
+   - Aggregating statistics by time period (e.g., "each month of this quarter" in "aggregate sales for each month of this quarter")
+   - Comparing chronological relationships (e.g., "earlier than a certain date" in "find contracts earlier than a certain date")
+
+2. Relevant Function Description:
+   - Supports implicit or explicit conversion comparison between date/time types and strings
+   - Provides date format parsing functions to adapt to different string input formats
+   - Implements date range queries and interval filtering
+   - Supports partial date matching (e.g., comparing by year, month, day separately)
+
+ 	(1)MySQL: Allows DATE/TIME types to be directly compared with strings (automatically adapts format), eg: WHERE t1.date= '2012-08-24' AND t1.time = '16:25:00'
+
+@dialect2sql@
+
+
+@dialect2sql@
+2.5.3 General Type Conversion:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Numeric strings participating in calculations (e.g., "convert the string '100' to a number for calculation")
+   - Date format conversion for display (e.g., "display the current date as 'YYYY year MM month DD day' format")
+   - Handling type compatibility (e.g., "convert text field to number for sorting")
+   - Data formatting output (e.g., "convert amount number to a string with thousand separators")
+
+2. Relevant Function Description:
+   - Supports mutual conversion between strings and numeric types
+   - Provides formatted output functions for date-time types
+   - Implements explicit conversion operations between different data types
+   - Supports data conversion with custom format templates
+
+
+(1)MySQL: MySQL does not support ::, must use CAST(expression AS target_type)
+
+@dialect2sql@
+
+
+@dialect2sql@
+2.5.4 Explicit Field Type Conversion (Non-Basic Types):
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Conditional filtering after converting text to numeric (e.g., "records where the DOC field converted to integer equals 54 and the SOC field converted to integer equals 62", "filter data where the text field converted to numeric is greater than 100", "query the result of converting non-pure-numeric text to numeric")
+   Operations and filtering after converting text to date (e.g., "convert '2023-10-01' to date type", "convert text to date according to MM/DD/YYYY format", "filter records where the text date converted to standard date is within a specified range")
+   Handling conversion of malformed data (e.g., "get the result of converting text containing non-numeric characters to numeric", "handle the result of converting text that does not conform to standard format to date", "requirement to return a default value when invalid text is converted to numeric")
+   Type conversion with specified format (e.g., "convert text to numeric with decimals according to '999.99' format", "convert text to date according to YYYY/MM/DD format")
+
+2. Relevant Function Description:
+   Diverse conversion syntax support (PostgreSQL exclusive ::target_type syntax, CAST/CONVERT for MySQL/SQLite/SQL Server, TO_NUMBER/TO_DATE functions for Oracle, meeting the syntactic habits of different databases)
+   Differentiated format validation rules (PostgreSQL/Oracle/SQL Server have strict validation, non-standard formats directly report errors; MySQL in loose mode automatically truncates valid parts, strict mode reports errors; SQLite validation is very loose, invalid conversions return default values)
+   Error tolerance and default value mechanism (SQLite/MySQL in loose mode, text to numeric returns 0 if no valid digits, text to date returns NULL for non-standard formats, avoiding query interruption)
+   Multi-format adaptation capability (MySQL compatible with YYYY/MM/DD and other non-standard date formats, SQL Server supports multiple date formats like MM/DD/YYYY via format codes, Oracle requires explicit format string specification for matching conversion)
+   Coverage of non-basic type conversions (Supports conversion of text to integer/date/numeric and other non-basic types, meeting conversion needs for heterogeneous data types in business)
+   Syntax priority and conciseness (PostgreSQL's :: syntax has higher priority than function conversion, syntax is more concise; Oracle relies on dedicated conversion functions, allowing finer format control)
+
+-- MySQL:
+   Method:
+      Use CAST(expression AS target_type) or CONVERT(expression, target_type), supports text to integer (UNSIGNED/SIGNED), text to date;
+      Loose format validation: When converting text to numeric, automatically truncates the leading consecutive numeric part (e.g., '54a' converted to UNSIGNED gives 54), returns 0 if no leading digits; In strict SQL mode (sql_mode=STRICT_TRANS_TABLES) will report error due to non-numeric characters;
+      Text to date must conform to YYYY-MM-DD/YYYYMMDD and other standard formats, otherwise returns NULL.
+   eg:
+      Text to unsigned integer: SELECT * FROM table WHERE CAST(T2.DOC AS UNSIGNED) = 54;
+      Non-pure-numeric text conversion (loose mode): SELECT CAST('54a' AS SIGNED); (returns 54)
+      Text to date: SELECT CAST('2023/10/01' AS DATE); (automatically compatible with / separator, returns 2023-10-01)
+@dialect2sql@
+
+@dialect2sql@
+III. Functional Features: Performance and Support for Complex Business
+
+**3.1 Window Functions:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Calculating rankings and ordering (e.g., "rank" in "rank employees by sales")
+   - Analyzing changes in adjacent data (e.g., "compared to last month" in "see how much sales grew each month compared to last month")
+   - Calculating cumulative values and moving averages (e.g., "cumulative sum" in "calculate the cumulative sum of salaries by department")
+   - Performing data bucket analysis (e.g., "divide into levels" in "divide student grades into 4 levels")
+
+2. Relevant Function Description:
+   - Supports sorting and numbering within data partitions (e.g., ranking functions like ROW_NUMBER, RANK)
+   - Provides access to preceding and following row data (e.g., offset functions like LAG, LEAD)
+   - Implements aggregate calculations within window frames (e.g., aggregate functions like SUM, AVG combined with window frame clauses)
+   - Supports data equi-frequency bucketing (e.g., bucketing function like NTILE)
+
+1) **Syntax Structure: function_name([expression]) OVER ([PARTITION BY partition_expression, ... ][ORDER BY sort_expression [ASC | DESC], ... ][frame_clause] -- e.g., ROWS/RANGE BETWEEN...)**
+2) **MySQL 8.0+, PostgreSQL, Oracle, SQL Server, SQLite all have these functions:
+Ranking: ROW_NUMBER(), RANK(), DENSE_RANK(); Offset: LAG(), LEAD(); First/Last Value: FIRST_VALUE(); Bucketing: NTILE()
+
+-- MySQL:
+   Method:
+      Mandatory Constraint: Window functions are only supported in MySQL 8.0 and above (MySQL 5.x triggers "FUNCTION window_function does not exist" error); OVER() clause is mandatory (omitting triggers syntax error); PARTITION BY is optional (no partition means the entire result set is one partition); ORDER BY in OVER() determines sorting for ranking/offset functions (omitting ROW_NUMBER() returns arbitrary order); frame_clause supports ROWS/RANGE (default RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW for aggregate window functions); NTILE(n) requires n ≥1 (n=0 triggers error);
+      Error Scenario: Using window functions in MySQL 5.7; omitting OVER() clause (e.g., ROW_NUMBER()); setting NTILE(0); using invalid frame_clause syntax (e.g., ROWS BETWEEN CURRENT ROW AND UNBOUNDED PRECEDING);
+      Solution: Upgrade to MySQL 8.0+; ensure OVER() clause is included for all window functions; set NTILE(n) with n ≥1; follow frame_clause order (PRECEDING before FOLLOWING/CURRENT ROW).
+   eg:
+      Error example (MySQL 5.7 unsupported, triggers "Unknown function 'ROW_NUMBER'" error):
+      SELECT emp_id, ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY sales DESC) AS rank FROM emp_sales;
+      Error example (omit OVER() clause, triggers "Syntax error near ')'"):
+      SELECT emp_id, ROW_NUMBER() AS rank FROM emp_sales;
+      Correct example (ROW_NUMBER() for sales ranking by department):
+      SELECT emp_id, dept_id, sales, ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY sales DESC) AS sales_rank FROM emp_sales;
+      Correct example (LAG() to compare monthly sales with previous month):
+      SELECT month, sales, LAG(sales, 1, 0) OVER (ORDER BY month) AS last_month_sales FROM monthly_sales;
+
+@dialect2sql@
+
+@dialect2sql@
+3.1.1 Aggregate: SUM(Conditional Expression):
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Counting the number of records satisfying specific conditions (e.g., "how many employees have a salary over 10,000")
+   - Calculating the proportion of data meeting conditions (e.g., "the proportion of orders with sales over 100,000 to total orders")
+   - Summarizing data entries with specific statuses (e.g., "how many orders are in completed status")
+   - Counting data volume within a specific time range (e.g., "how many new registered users this month")
+
+2. Relevant Function Description:
+   - Supports conditional counting statistics (by converting Boolean values to 1 and 0 for summation)
+   - Implements conditional ratio calculation (combining SUM and COUNT functions)
+   - Provides multi-condition grouped statistics capability (used with GROUP BY)
+   - Supports direct participation of Boolean expressions in aggregate operations (some database dialects)
+
+(1)MySQL: MySQL supports SUM(conditional expression) shorthand (returns 1 when condition is TRUE, 0 when FALSE)
+
+@dialect2sql@
+
+@dialect2sql@
+3.2 Common Table Expressions (CTE) and Recursive Queries:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying organizational hierarchy (e.g., "find all subordinates of a certain employee")
+   - Traversing category tree structures (e.g., "get all subcategories of a certain category")
+   - Analyzing path dependencies (e.g., "find the complete assembly path of a product")
+   - Handling graph data traversal (e.g., "find all indirect relationships of a person")
+
+2. Relevant Function Description:
+   - Supports recursive query definition, connecting initial query and recursive part via UNION ALL
+   - Implements infinite level traversal of tree-like structures, can set recursion depth control
+   - Provides path tracking capability, recording the complete path from root node to current node
+   - Supports cycle detection to prevent performance issues caused by infinite recursion
+
+* Basic CTE Syntax (Universal):
+
+  WITH cte_name (col1, col2) AS (
+
+      SELECT ...
+
+      FROM ...
+
+      WHERE ...
+
+  )
+
+  SELECT * FROM cte_name ...
+
+  
+
+* Recursive CTE Capability:
+
+  (1)All platforms support it, it is the ideal choice for handling tree structures (organizational charts, category directories), graph traversal.
+
+       Example: Find employee and all their subordinates (recursive infinite levels):
+
+   	WITH RECURSIVE EmployeeHierarchy AS (
+
+      		-- Anchor member(s)
+
+      		SELECT id, name, manager_id, 0 AS level
+
+      		FROM employees WHERE manager_id IS NULL
+
+      		UNION ALL
+
+      		-- Recursive member
+
+      		SELECT e.id, e.name, e.manager_id, eh.level + 1
+
+      		FROM employees e
+
+      		INNER JOIN EmployeeHierarchy eh ON e.manager_id = eh.id
+
+   	)
+
+   	SELECT * FROM EmployeeHierarchy ORDER BY level, name;
+
+  
+
+@dialect2sql@
+
+@dialect2sql@
+  3.3 JSON Support: Comparison of Semi-Structured Data Processing Capabilities
+
+  3.3.1 Basic JSON Operation Function Comparison:
+
+  3.3.1.1  Construct JSON Object:
+  1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying complete user information and packaging as JSON (e.g., "get all information of user Zhang San and form a JSON object")
+   - Building nested configuration data (e.g., "build system configuration items into JSON format and return")
+   - Combining multiple fields into structured data (e.g., "form product name, price, inventory into a JSON object")
+   - Generating response data needed by API interfaces (e.g., "return order details JSON, containing order number, amount, status")
+
+2. Relevant Function Description:
+   - Supports combining multiple key-value pairs into a JSON object (e.g., field names as keys, field values as values)
+   - Supports nested JSON structure construction (e.g., object containing arrays, arrays containing objects)
+   - Supports automatic data type conversion (e.g., numbers, strings, Boolean values automatically converted to corresponding JSON types)
+   - Supports NULL handling and special character escaping (e.g., NULL value handling, quote escaping, etc.)
+  
+  1)MySQL(8.0+): JSON_OBJECT(), JSON_ARRAY()
+-- MySQL:
+   Method:
+      Mandatory Constraint: JSON_OBJECT()/JSON_ARRAY() are only supported in MySQL 8.0 and above (MySQL 5.x triggers "FUNCTION JSON_OBJECT does not exist" error); JSON_OBJECT() requires an even number of arguments (key-value pairs, odd count triggers syntax error); special characters (e.g., double quotes, backslashes) are automatically escaped; NULL values are retained as JSON null; nested JSON structures are supported by nesting JSON_OBJECT()/JSON_ARRAY();
+      Error Scenario: Using JSON_OBJECT() in MySQL 5.7; passing an odd number of arguments to JSON_OBJECT() (e.g., JSON_OBJECT('name', 'Zhang San', 'age')); using unescaped special characters in manual JSON strings (e.g., '{"name":"Zhang "San""}');
+      Solution: Upgrade to MySQL 8.0+; ensure JSON_OBJECT() has even number of key-value arguments; use JSON_OBJECT()/JSON_ARRAY() instead of manual JSON strings to avoid escaping errors; nest functions to build complex JSON structures.
+   eg:
+      Error example (odd arguments for JSON_OBJECT(), triggers "Invalid parameter count in the call to native function 'JSON_OBJECT'" error):
+      SELECT JSON_OBJECT('name', 'Zhang San', 'age') AS user_info;
+      Error example (MySQL 5.7 unsupported, triggers "Unknown function 'JSON_OBJECT'" error):
+      SELECT JSON_OBJECT('order_id', 1001, 'amount', 99.9) AS order_info;
+      Correct example (basic JSON object construction):
+      SELECT JSON_OBJECT('name', 'Zhang San', 'age', 30, 'is_vip', TRUE) AS user_info;
+      Correct example (nested JSON object with array):
+      SELECT JSON_OBJECT('order_id', 1001, 'amount', 99.9, 'items', JSON_ARRAY(JSON_OBJECT('prod_name', 'Phone', 'price', 99.9))) AS order_info;
+
+@dialect2sql@
+
+@dialect2sql@
+  3.3.1.2  Path Extraction:
+  1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Extracting user information from JSON documents (e.g., "mobile number in the user profile" in "get the mobile number in the user profile")
+   - Querying specific attributes of nested objects (e.g., "price of the product in the order" in "find the price of the product in the order")
+   - Getting specific fields of array elements (e.g., "first comment content in the comment list" in "view the first comment content in the comment list")
+   - Accessing data values in deep nesting (e.g., "department manager's email address in the company" in "get the department manager's email address in the company")
+
+2. Relevant Function Description:
+   - Supports extracting specific field values from JSON documents via path expressions
+   - Capable of handling queries for nested objects and multi-level paths
+   - Provides indexed access and field extraction capabilities for array elements
+   - Implements direct access and retrieval of data at any depth in JSON documents
+  
+  1)MySQL(8.0+): column->>'$.path', JSON_EXTRACT() 
+-- MySQL:
+   Method:
+      Mandatory Constraint: Path extraction via column->>'$.path' (returns unquoted scalar value) / JSON_EXTRACT(column, '$.path') (returns quoted string) is only supported in MySQL 8.0+ (MySQL 5.x triggers syntax error); path expressions follow standard JSONPath rules ($.key for top-level field, $.obj.key for nested field, $.array[0] for first array element (0-based index)); non-existent path returns NULL (no syntax error); deep nesting (multi-level paths like $.a.b.c.d) is fully supported;
+      Error Scenario: Using ->>/JSON_EXTRACT() in MySQL 5.7; incorrect JSONPath syntax (e.g., $.array[1] for array with only 1 element (index 0), $.obj..key (invalid wildcard in MySQL basic JSONPath)); expecting non-existent path to throw error (instead returns NULL); using JSON_EXTRACT() and failing to unquote the result (e.g., comparing quoted string with plain text);
+      Solution: Upgrade to MySQL 8.0+; follow standard JSONPath syntax (avoid double-dot wildcards in basic usage); check for NULL results when extracting non-existent paths; use ->> instead of JSON_EXTRACT() for unquoted values (simplifies string comparison);
+   eg:
+      Error example (MySQL 5.7 unsupported, triggers "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version" error):
+      SELECT user_info->>'$.mobile' FROM users WHERE user_id=1;
+      Error example (incorrect array index, returns NULL (logical error)):
+      SELECT JSON_EXTRACT(order_info, '$.items[1].price') FROM orders WHERE order_id=1001; -- items array only has index 0
+      Correct example (basic top-level field extraction with ->>):
+      SELECT user_info->>'$.name' AS user_name FROM users WHERE user_id=1;
+      Correct example (nested object + array extraction):
+      SELECT order_info->>'$.items[0].prod_name' AS first_product FROM orders WHERE order_id=1001;
+      Correct example (deep nesting extraction with JSON_EXTRACT()):
+      SELECT JSON_UNQUOTE(JSON_EXTRACT(company_info, '$.dept.sales.manager.email')) AS manager_email FROM company WHERE id=1;
+
+@dialect2sql@
+
+@dialect2sql@
+  3.3.1.3  Existence Check:
+  1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Checking if a specific key exists in a JSON field (e.g., "whether the user information contains a mobile number field")
+   - Verifying if an array contains a specific element (e.g., "whether the order product list contains a laptop")
+   - Judging if a path exists in a nested structure (e.g., "whether there is address information in the user profile")
+   - Confirming the validity of a JSON document (e.g., "whether this JSON data format is correct")
+
+2. Relevant Function Description:
+   - Supports checking the existence of specified paths in JSON documents
+   - Capable of verifying if JSON arrays contain specific values
+   - Provides multi-level path query capability for nested structures
+   - Implements validity verification of JSON document format
+  
+   (1)MySQL(8.0+)：
+      Key/Path existence: JSON_CONTAINS_PATH(json_doc, 'one/two', path1, path2...) ('one' means any path exists, 'two' means all paths exist)
+      Array element containment: JSON_CONTAINS(json_doc, value, path)
+      Example: SELECT * FROM users WHERE JSON_CONTAINS_PATH(info, 'one', '$.phone') (Check if info field has phone key)
+
+@dialect2sql@
+
+@dialect2sql@
+3.3.1.4 Modifying Properties
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Modify specific property values in JSON objects (e.g., "change to" in "change the theme in user configuration to dark mode")
+       - Update element content in arrays (e.g., "change to" in "change the quantity of the second item in the shopping cart to 3")
+       - Add or replace fields in nested objects (e.g., "add" in "add zip code information to the user address")
+       - Adjust values of configuration parameters (e.g., "modify to" in "modify the timeout in system settings to 30 minutes")
+
+    2. Relevant Function Description:
+       - Supports modifying property values at specified paths in JSON documents
+       - Capable of adding new property fields to existing JSON objects
+       - Provides replacement or update of specific elements in nested structures
+       - Implements modification operations on elements at specified positions in JSON arrays
+
+      (1) MySQL (8.0+): JSON_SET(), JSON_REPLACE()
+@dialect2sql@
+
+@dialect2sql@
+3.3.2 Deep Differences in Storage Methods
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Query specific property values in JSON fields (e.g., "find the theme setting in user configuration")
+       - Verify if data conforms to JSON format (e.g., "check if this field is valid JSON")
+       - Update partial content of a JSON document (e.g., "change the city in the user address to Beijing")
+       - Search for elements in JSON arrays (e.g., "find employees with Python skills")
+
+    2. Relevant Function Description:
+       - Supports JSON path expression queries (e.g., $.user.name)
+       - Provides JSON format validation functions (e.g., ISJSON())
+       - Implements partial updates of JSON fields (e.g., jsonb_set, JSON_MODIFY)
+       - Supports retrieval and manipulation of JSON array elements (e.g., array unnesting, element existence check)
+
+      (1) MySQL: Stores JSON type as serialized text by default, supports automatic validation but requires runtime parsing. Optimization is limited.
+
+@dialect2sql@
+
+
+@dialect2sql@
+    3.4 Stored Procedures and Custom Functions: Programming Interface Capabilities
+
+    3.4.1 Language Ecosystem Differences
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Execute data update operations (e.g., "increase" in "increase Zhang San's monthly salary by 1000 yuan")
+       - Handle conditional judgments in business logic (e.g., "if...then" in "if stock is insufficient, automatically replenish")
+       - Implement complex data processing workflows (e.g., "statistics...generate" in "statistically generate sales reports by month")
+       - Handle exceptions during program execution (e.g., "when...prompt" in "prompt an error message when inserting duplicate data")
+
+    2. Relevant Function Description:
+       - Supports creation and invocation of stored procedures and functions
+       - Provides conditional branching and loop control structures
+       - Implements explicit or implicit control of transactions
+       - Includes exception handling mechanisms (e.g., TRY-CATCH or EXCEPTION blocks)
+
+
+      (1) MySQL: Uses SQL/PSM style (similar to PL/SQL but incomplete). Exception handling is relatively basic.
+        DELIMITER //
+        CREATE PROCEDURE update_salary(IN emp_id INT, IN increase DECIMAL(10,2))
+        BEGIN
+            DECLARE EXIT HANDLER FOR SQLEXCEPTION ROLLBACK;
+            START TRANSACTION;
+                UPDATE employees SET salary = salary + increase WHERE id = emp_id;
+            COMMIT;
+        END //
+        DELIMITER ;
+
+@dialect2sql@
+
+@dialect2sql@
+    IV. Behavioral Characteristics: Fundamental Differences in Execution Mechanisms and Security Practices
+
+    4.1 Transaction Isolation and Locking Mechanisms
+
+    4.1.1 Default Isolation Level Comparison
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Query the default transaction isolation level of the database (e.g., "What is MySQL's default isolation level?")
+       - Compare isolation level differences between databases (e.g., "Which has a higher default isolation level, Oracle or PostgreSQL?")
+       - Analyze data consistency issues under specific isolation levels (e.g., "Will phantom reads occur under the default isolation level?")
+       - Choose a database suitable for the business scenario (e.g., "Which database's default isolation level can prevent dirty reads?")
+
+    2. Relevant Function Description:
+       - Supports querying the database's default transaction isolation level configuration
+       - Provides comparison of concurrency control mechanisms for different isolation levels
+       - Implements MVCC-based multi-version data access control
+       - Ensures the performance of transaction ACID properties under different isolation levels
+
+    (1) MySQL (InnoDB): Default uses REPEATABLE READ. Solves phantom reads through MVCC multi-version concurrency control.
+
+@dialect2sql@
+
+@dialect2sql@
+    4.1.2 Lock Contention Handling Strategies
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Query current lock wait situations in the database (e.g., "view which sessions are blocked by locks")
+       - Handle deadlock or lock timeout issues (e.g., "how to resolve database deadlocks?")
+       - Optimize lock contention in high-concurrency scenarios (e.g., "how to reduce lock waits during update operations?")
+       - Set session lock wait behavior (e.g., "set query to return immediately without waiting for lock")
+
+    2. Relevant Function Description:
+       - Provides lock monitoring and diagnostic views (e.g., query lock wait chains, blocking sessions)
+       - Supports automatic deadlock detection and transaction rollback mechanisms
+       - Implements row-level locks and gap locks to prevent phantom reads
+       - Provides non-blocking lock acquisition options like NOWAIT, SKIP LOCKED
+
+     (1) MySQL: InnoDB uses row-level locks, solves phantom reads through Next-Key Locking (locking range includes row and Gap intervals). Deadlock detection and automatic rollback.
+@dialect2sql@
+
+@dialect2sql@
+    4.2 Role Management and Permission System
+
+    4.2.1 Authorization Model
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Create new permission roles (e.g., "create a read-only report role")
+       - Assign data access permissions to roles (e.g., "grant query permission on sales data to the report role")
+       - Assign roles to specific users (e.g., "assign the report role to user Mike")
+       - Manage user permission hierarchies (e.g., "which users have data query permissions?")
+
+    2. Relevant Function Description:
+       - Supports creating and managing database roles
+       - Implements table-level permission control (e.g., granting operations like SELECT, INSERT, UPDATE)
+       - Provides permission assignment mechanism from roles to users
+       - Establishes a multi-level permission management system
+
+      -- MySQL 8.0+:
+      CREATE ROLE report_reader;
+      GRANT SELECT ON sales_data TO report_reader;
+      GRANT report_reader TO user_mike;
+
+
+@dialect2sql@
+
+@dialect2sql@
+    4.2.2 Permission Inheritance Behavior Differences
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Query user permission scope (e.g., "which tables can user A access?" in "can access which tables")
+       - Verify operation permissions (e.g., "does this role have permission to delete data?" in "has delete permission")
+       - Manage permission inheritance relationships (e.g., "grant all permissions of role A to role B" in "grant all permissions")
+       - Analyze permission impact scope (e.g., "which users will be affected by modifying role permissions?" in "affect which users")
+
+    2. Relevant Function Description:
+       - Supports role hierarchy nesting and automatic permission inheritance
+       - Provides permission verification mechanism (check user's operation permissions on specific objects)
+       - Implements permission transfer and batch granting functions
+       - Supports permission impact scope analysis (tracking permission inheritance paths)
+
+      (1) MySQL: Roles do not have true inheritance; permissions must be explicitly granted to roles and users.
+@dialect2sql@
+
+@dialect2sql@
+    4.3 Database Internal Mechanisms
+
+    4.3.1 Sequence (Sequence) or Auto-increment Mechanisms
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Get the next available unique identifier (e.g., "what is the next order number?")
+       - Automatically generate primary keys when creating new records (e.g., "automatically assign user ID when adding a new user")
+       - Consecutive numbering during batch data insertion (e.g., "import 100 product records and auto-number them")
+       - Reset the starting value of a sequence (e.g., "restart employee numbers from 1000")
+
+    2. Relevant Function Description:
+       - Supports automatically generating unique, incrementing numerical sequences
+       - Provides methods to get the next sequence value (e.g., NEXTVAL, AUTO_INCREMENT)
+       - Allows customizing sequence start value, step size, and cache size
+       - Supports resetting and cycling sequence values
+
+     -- MySQL: Primarily uses AUTO_INCREMENT column property (inline, bound to the table).
+          CREATE TABLE orders (id INT AUTO_INCREMENT PRIMARY KEY, ...);
+          INSERT INTO orders (...) VALUES (...); -- id is automatically generated
+
+@dialect2sql@
+
+@dialect2sql@
+    V. Supplementary Syntax
+    5.1 COUNT (DISTINCT column) Deduplication Aggregation Syntax:
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       Single-column unique value count (e.g., "Count distinct patient IDs", "Calculate the number of distinct customer IDs in orders", "Query the total number of distinct course IDs in the course selection system")
+       Multi-dimensional combination deduplication count (e.g., "Count the number of unique user + product purchase combinations", "Calculate the number of unique department + job combinations", "Query the number of unique doctor + patient consultation combinations")
+       Deduplication statistics under grouping dimensions (e.g., "Count monthly new distinct users by month", "Count distinct customers by region", "Count distinct students enrolled per semester by semester", "Count distinct users placing orders per year by year")
+       NULL value related counting (e.g., "Count the number of distinct non-NULL values in a column", "Query the result when NULL values participate in distinct count")
+       Unique entity statistics in business scenarios (e.g., "Count distinct patients treated by each department", "Calculate the number of distinct product SKUs in inventory")
+
+    2. Relevant Function Description:
+       Supports single-column COUNT(DISTINCT) for deduplication counting, accurately统计 the number of unique values in a single dimension
+       Multi-column combination deduplication count (natively supported by some databases, requires string concatenation / CONCAT in others), meeting multi-dimensional unique entity statistics needs
+       Combined with GROUP BY, performs deduplication counting on the target column after grouping by specified dimensions, supporting time-period / regional distinct analysis
+       Automatically ignores NULL values (COUNT(DISTINCT NULL) returns 0), ensuring counting result accuracy
+       Adapts to syntax characteristics of different databases (e.g., concatenation implementation in SQLite/Oracle, native multi-column support in PostgreSQL/MySQL), compatible with multi-environment deduplication counting
+       Can combine with WHERE filter conditions, filter data first then perform deduplication counting, meeting refined statistical needs
+       Supports combination with time formatting functions (e.g., DATE_FORMAT, YEAR) to achieve distinct statistics in time dimensions
+
+    -- MySQL:
+        Methods:
+        Supports single-column and multi-column COUNT(DISTINCT col1, col2, ...) combination deduplication counting;
+        When combined with GROUP BY, counts the number of distinct values for the specified column per group dimension;
+        COUNT(DISTINCT NULL) returns 0 (NULL values do not participate in distinct count).
+        Examples:
+        Single-column distinct count (Count distinct patient IDs): SELECT COUNT(DISTINCT patient_id) FROM checkups;
+        Multi-column combination distinct count (Count unique user + product combinations): SELECT COUNT(DISTINCT user_id, product_id) FROM orders;
+        Combined with GROUP BY (Count monthly new distinct users): SELECT DATE_FORMAT(create_time, '%Y-%m') AS month, COUNT(DISTINCT user_id) FROM users GROUP BY month;
+        NULL value handling: SELECT COUNT(DISTINCT NULL) FROM dual; (Returns 0)
+
+@dialect2sql@
+
+@dialect2sql@
+    5.2 SUBSTR String Substring Function:
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       Partial extraction from date strings (e.g., "Extract year from date string", "Extract month/date part from date", "Get the last two digits representing the day from a date string")
+       Segment extraction from fixed-format strings (e.g., "Extract the first four digits as identifier from a code", "Get the last two characters of a string")
+       Filtering based on extracted content (e.g., "Query records from the year 2012", "Filter data where the month is October")
+       Handling strings with abnormal length (e.g., "When substring length exceeds actual string length", "Omit length parameter to extract remaining all characters")
+       Substring combined with date conversion (e.g., "Extract current month from system date converted string")
+
+    2. Relevant Function Description:
+       Supports extracting substring from a specified start index (start index defaults to 1, some databases support negative index counting from the end)
+       Flexible handling of length parameter: returns remaining characters if exceeds string length; some databases support omitting length parameter to extract to the end
+       Adapts to TEXT/VARCHAR string types and date-converted strings, enabling extraction of time fragments like year/month/day
+       Negative index function allows directly extracting specified length content from the end of the string (e.g., last two characters)
+       Can combine with WHERE clause to filter data based on extraction result (e.g., filter records by extracted year)
+       Compatible with TO_CHAR and other date conversion functions, extracting specified time dimension from formatted date strings
+       Supports alias usage of SUBSTR/SUBSTRING, adapting to syntax habits of different databases
+       Automatically returns remaining characters when length exceeds boundary, avoiding abnormal substring results
+
+    -- MySQL:
+        Methods:
+        Supports SUBSTR(string, start_index, length) or SUBSTRING(...), start index starts from 1;
+        If length parameter exceeds remaining string length, returns all characters from start index to the end;
+        Can combine with TEXT type date to extract year/month/day (e.g., first 4 characters as year, 5-6 as month).
+        Examples:
+        Extract year: SELECT SUBSTR('2012-05-20', 1, 4); (Returns '2012')
+        Length exceeds string length: SELECT SUBSTR('2023', 1, 10); (Returns '2023')
+        Extract month: SELECT SUBSTR('2023-10-01', 6, 2); (Returns '10')
+
+@dialect2sql@
+
+
+@dialect2sql@
+5.3 Subquery (IN Subquery, Scalar Subquery) Syntax:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Set matching filtering with IN subqueries (e.g., "Filter patients with lab test HCT≥52 and count≥2", "Query Table1 records where ID is in Table2 with value≥100", "Get patient information belonging to a specific ID set")
+   Numerical calculation / single value extraction with scalar subqueries (e.g., "Calculate the average order amount", "Get the earliest year/year-month from records", "Calculate the total exam score for a student", "Query the average price for the electronics category")
+   Group extreme value filtering with correlated subqueries (e.g., "Filter the employee with the highest salary in each department", "Get the latest order for each user", "Find the student with the lowest score in each class", "Filter the most recently hired employee in each department")
+   Row-level filtering with correlated subqueries combined with extended syntax (e.g., "Get the top 3 orders for each customer", "Correlated query for the latest transaction record for each user")
+   Multi-level filtering with nested IN subqueries (e.g., "Filter target records through multi-level ID matching", "Record query for multi-level set membership")
+
+2. Relevant Function Description:
+   IN subqueries support multi-row result matching, fulfilling the filtering requirement of "belonging to a set" (some databases have limits on IN constant lists, but subquery results are not subject to this restriction)
+   Scalar subqueries return a single value, used for conditional comparison, field assignment, or aggregate calculation (different databases handle multi-row returns differently: PostgreSQL/Oracle/SQL Server report errors, MySQL/SQLite take the first row)
+   Correlated subqueries depend on outer table fields, enabling grouped filtering by outer dimensions (e.g., matching extreme values by department, class, etc.)
+   Combined with LATERAL (PostgreSQL)/APPLY (SQL Server) syntax, supports row-level calculation for correlated tables (e.g., getting the latest / top N records for each user)
+   Non-correlated subqueries execute independently, suitable for matching fixed sets; correlated subqueries execute row-by-row, adapting to dynamic correlation filtering
+   Performance optimization adaptation: For large result set IN subqueries, it's recommended to use JOIN/EXISTS instead to improve query efficiency
+   Supports nested IN subqueries, enabling multi-level set matching filtering
+   Combined with aggregate functions (MAX/MIN/AVG/SUM), implements statistical calculations by grouping dimensions through subqueries
+
+-- MySQL:
+   Method:
+      IN Subquery: Supports multi-row result matching, no hard row limit (for large data volumes, use JOIN to optimize performance); non-correlated subqueries execute once and then match with the outer query, correlated subqueries need row-by-row execution;
+      Scalar Subquery: Must return a single value; if multiple rows are returned, takes the first row result (no error); commonly used for conditional comparison, calculation assignment;
+      Correlated subqueries depend on outer table fields (e.g., filtered by outer ID), non-correlated subqueries execute independently.
+   eg:
+      Non-correlated IN Subquery:
+      SELECT * FROM Patients WHERE ID IN (SELECT ID FROM Laboratory WHERE HCT>=52 GROUP BY ID HAVING COUNT(ID)>=2);
+      Scalar Subquery Calculating Average:
+      SELECT (SELECT CAST(SUM(amount) AS REAL)/NULLIF(COUNT(*),0) FROM Orders) AS avg_amount;
+      Correlated Subquery (Filter employee with highest salary per department):
+      SELECT e.name, e.salary FROM Employees e WHERE salary = (SELECT MAX(salary) FROM Employees WHERE department = e.department);
+
+@dialect2sql@
+
+
+@dialect2sql@
+5.4 TEXT Type Date Processing Rules:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Time dimension extraction from TEXT dates (e.g., "Extract birth year from player birthday (TEXT type)", "Get the month from the game attribute record date (TEXT type)")
+   Range filtering for TEXT dates (e.g., "Query players born after 1990", "Filter game attribute records from the year 2012")
+   Processing non-standard format TEXT dates (e.g., "Process TEXT date in YYYY/MM/DD format, extract year", "Convert slash-separated TEXT date to standard date")
+   Comparison of TEXT dates (e.g., "Find players born before 2000", "Filter attribute records with date later than 2012-01-01")
+   Compatible processing of TEXT dates in different formats (e.g., "Unified processing of TEXT dates in YYYY-MM-DD and YYYYMMDD formats")
+
+2. Relevant Function Description:
+   Supports implicit conversion for TEXT dates conforming to standard format (MySQL), allowing direct use of date functions (DATE_FORMAT/YEAR) to extract time dimensions
+   Explicit conversion adaptation for non-standard format TEXT dates (PostgreSQL/Oracle/SQL Server require specifying format, SQLite requires manual parsing)
+   Direct comparison of standard format TEXT dates (SQLite can compare directly because string order matches date order; other databases require conversion for logical date comparison)
+   Combined use of date functions (strftime/TO_CHAR/EXTRACT) with TEXT dates to extract dimensions like year/month/day
+   Compatible with various TEXT date storage formats (YYYY-MM-DD/YYYYMMDD/YYYY/MM/DD), adapted through format conversion functions for different scenarios
+   Avoid errors from string dictionary order comparison by using explicit conversion to ensure TEXT dates are filtered according to actual date logic
+   Error tolerance handling for illegal format TEXT dates (MySQL converts to NULL, Oracle/PostgreSQL report error for format mismatch)
+
+-- MySQL:
+   Method:
+      For TEXT type dates conforming to standard date formats (YYYY-MM-DD/YYYY-MM-DD HH:MM:SS), supports implicit conversion to DATE/DATETIME types, allowing direct use of date functions (e.g., DATE_FORMAT/YEAR);
+      Compatible with some non-standard formats (e.g., YYYY/MM/DD), implicit conversion still works; if the format is illegal (e.g., 2023-13-01), converts to NULL;
+      Can directly compare TEXT dates (by date logic, not string dictionary order).
+   eg:
+      Implicit conversion extracting year (corresponding to Player.birthday being TEXT scenario): SELECT DATE_FORMAT(birthday, '%Y') FROM Player;
+      TEXT Date Comparison: SELECT * FROM Player WHERE birthday > '1990-01-01';
+      Non-standard format processing: SELECT YEAR('2023/10/01') FROM dual; (Returns 2023, implicit conversion supports / separator)
+
+@dialect2sql@
+
+
+@dialect2sql@
+5.5 SQLite Exclusive IIF Function and Equivalent Implementations in Other Databases:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Simple conditional judgment returning specified values (e.g., "Judge if birth year is earlier than 1985 and laps greater than 50, return 1 if satisfied otherwise 0", "Judge if date year is 2010, return 1 if yes otherwise 0", "Judge if creation date year is 2011 and reputation value greater than 1000, return 1 if satisfied otherwise 0")
+   Multi-condition nested grading / classification (e.g., "Grade based on score: A for 90 and above, B for 80-89, C for 60-79, F below 60", "Group by age: senior for 60 and above, adult for 18-59, minor below 18", "Categorize by order quantity: bulk for greater than 100, regular for 10-100, small for less than or equal to 10", "Grade by salary: high for greater than 10000, medium for 5000-10000, low below 5000")
+   NULL condition handling (e.g., "Return invalid when condition is NULL, return valid when not NULL")
+   Simple equality judgment (e.g., "Judge if date year is 2010, return corresponding identifier")
+   Complex combined condition judgment (e.g., "Filter and return identifier combining year and numerical conditions")
+
+2. Relevant Function Description:
+   Supports conditional branch return (IIF/IF/CASE/DECODE can implement "if... then... else..." logic, returning specified values based on condition truth)
+   Multi-condition nesting capability (Through nested IIF/IF/CASE expressions, implements multi-layer progressive condition judgment, meeting grading/classification needs)
+   NULL condition error tolerance handling (When condition is NULL, treated as false, uniformly returns else/val_false branch value, avoiding result anomalies caused by NULL)
+   Cross-database equivalent implementation adaptation (SQLite/SQL Server natively support IIF, MySQL supports IF function, PostgreSQL/Oracle rely on standard CASE expression, Oracle additionally provides DECODE for simple equality scenarios)
+   Compatible with standard CASE expression (All databases support CASE WHEN THEN ELSE END, as a universal replacement for IIF/IF, adapting to complex combined conditions)
+   Syntax simplification and performance balance (IIF/IF only simplify conditional judgment syntax, performance is close to CASE expression, complex conditions recommend using CASE for better readability)
+   Covers equality and range conditions (DECODE is suitable for simple equality judgment, CASE/IIF/IF support complex scenarios like ranges, multi-condition combinations)
+
+-- SQLite:
+   Method:
+      Supports exclusive IIF(condition, val_true, val_false) function; returns val_true if condition is true, val_false if false (equivalent to CASE WHEN condition THEN val_true ELSE val_false END, syntax is more concise);
+      When condition is NULL, treated as false, returns val_false; supports nesting for multi-condition judgment;
+      Performance is close to CASE expression, only simplifies syntax, no significant performance difference.
+   eg:
+      Basic condition judgment: SELECT IIF(STRFTIME('%Y', T3.dob) < '1985' AND T1.laps > 50, 1, 0) FROM competition;
+      Date filtering: SELECT IIF(STRFTIME('%Y', Date) = '2010', 1, 0) AS is_year_2010 FROM sales;
+      Nested IIF multi-condition: SELECT IIF(score >= 90, 'A', IIF(score >= 80, 'B', IIF(score >= 60, 'C', 'F'))) AS grade FROM exams;
+      NULL condition handling: SELECT IIF(NULL, 'valid', 'invalid'); (Returns 'invalid')
+-- MySQL:
+   Method:
+      Does not support SQLite-style IIF, but provides IF(condition, val_true, val_false) function (functionally equivalent); can also use standard CASE expression for compatibility;
+      IF function returns val_false when condition is NULL, supports nesting, complex conditions recommend using CASE.
+   eg:
+      SELECT IF(STRFTIME('%Y', T2.CreaionDate) = '2011' AND T1.Reputation > 1000, 1, 0) FROM users;
+      Nested IF judging grade: SELECT IF(age >= 60, 'senior', IF(age >= 18, 'adult', 'minor')) AS age_group FROM customers;
+      Standard CASE alternative: SELECT CASE WHEN STRFTIME('%Y', Date) = '2010' THEN 1 ELSE 0 END FROM records;
+
+@dialect2sql@
+
+
+@dialect2sql@
+5.6 Syntax Specification for Ratio and Growth Rate Calculation:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Ratio calculation scenarios (e.g., "Calculate the proportion of affirmative votes in voting", "Calculate the proportion of a certain type of data in the total", "Get the proportion of records meeting conditions")
+   Fixed period average calculation (e.g., "Calculate the monthly average of annual link counts", "Monthly average amount of annual sales", "Daily average value of quarterly indicators")
+   Growth rate calculation requirements (e.g., "Calculate the growth rate of loan amount", "Year-over-year growth rate of sales", "Growth percentage of current period vs. previous period indicators")
+   Percentage difference analysis (e.g., "Percentage difference between this year's and last year's sales", "Percentage change between current and previous period data", "Percentage gap between two sets of data")
+   Result presentation with precision/format requirements (e.g., "Loan growth rate rounded to two decimal places", "Formatted percentage ratio result", "Mean calculation with decimal places")
+
+2. Relevant Function Description:
+   Type conversion to prevent truncation (Via CAST(...) AS DECIMAL/REAL/FLOAT, ::FLOAT or *1.0 etc., convert integers to floating-point/high-precision numeric types, avoiding result truncation from integer division, ensuring calculation precision)
+   Division by zero error avoidance (Use NULLIF(denominator, 0) function to handle scenarios where denominator is 0, preventing division operation errors, ensuring robust calculation logic)
+   Fixed period calculation adaptation (Convert total to floating-point type then divide by fixed period number (e.g., 12 months), achieving accurate average/apportioned calculation)
+   Standardized growth rate calculation (Supports the universal growth rate formula (current_period_value - previous_period_value)/previous_period_value*100, implemented adapting to different database syntax characteristics)
+   Precision and formatting control (Use ROUND function to retain specified decimal places, TO_CHAR/FORMAT functions to format percentage results, improving data readability)
+   Aggregated data linkage calculation (Combined with COUNT/SUM etc. aggregate functions, implements ratio, average calculation based on aggregate results, supporting statistical analysis needs)
+   Cross-database syntax compatibility (Adapts to MySQL's DECIMAL, PostgreSQL's ::FLOAT, Oracle's NUMBER, SQL Server's FORMAT etc. characteristics, ensuring calculation logic universality)
+
+-- MySQL:
+   Method:
+      Ratio calculation: Integer division truncates by default (e.g., 5/2=2), requires conversion to floating-point via CAST(aggregate_value AS DECIMAL/REAL) or multiplying by 1.0 to ensure precision;
+      Fixed number division (e.g., monthly average): Total must be converted to floating-point first then divided by fixed number (e.g., divided by 12), avoiding integer truncation;
+      Growth rate calculation: Formula is (current_period_value - previous_period_value)*1.0/NULLIF(previous_period_value,0)*100 (NULLIF avoids division by zero error), percentage requires *100 combined with type conversion to ensure precision.
+   eg:
+      Vote ratio (Question 629 scenario): SELECT CAST(COUNT(CASE WHEN vote=1 THEN 1 END) AS DECIMAL(10,2))/COUNT(*) AS vote_ratio FROM votes;
+      Monthly average links (Question 665 scenario): SELECT SUM(links)*1.0/12 AS monthly_avg_links FROM site_metrics;
+      Loan growth rate (Question 169 scenario): SELECT (current_loan-prev_loan)*1.0/NULLIF(prev_loan,0)*100 AS loan_growth_rate FROM loan_stats;
+      Percentage difference (Question 598 scenario): SELECT (this_year_sales-last_year_sales)*1.0/last_year_sales*100 AS sales_percent_diff FROM annual_sales;
+
+@dialect2sql@
+
+
+@dialect2sql@
+5.7 Multi-Condition Combination Filtering (OR + Date Range):
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Date filtering with multiple OR conditions (e.g., "Schools where the open date year is greater than 1991 or the close date year is less than 2000", "Orders where the order date is between 2000-2005 or the amount is greater than 10000", "Log records where the log date is earlier than 2000 or later than 2020 or the level is error")
+   Combined conditional queries with priority (e.g., "Schools where the open date is greater than 1991 or the close date is less than 2000 and the status is active", "Sales records where the sale date is between 2010-2015 or the total amount is greater than 5000", "Records where (date is earlier than 2000 or later than 2020) and the region is north")
+   Performance optimization needs for OR conditions (e.g., "Solving full table scan issues caused by multiple OR conditions", "Rewriting OR conditions with UNION/UNION ALL to improve query efficiency", "Optimizing index utilization for single-field multiple OR conditions")
+   Combined queries of text dates and OR+BETWEEN (e.g., "Filtering orders where the text format date is in the 2000-2005 range or the amount exceeds 1000", "Performing OR range filtering after unifying text date formats via strftime")
+   Queries avoiding AND/OR priority ambiguity (e.g., "Explicitly using parentheses to clarify conditional logic, preventing result errors due to priority")
+
+2. Relevant Function Description:
+   Conditional priority control (AND has higher priority than OR, supports explicit parentheses to adjust logical order, avoids ambiguity, ensures query logic aligns with business requirements)
+   OR condition optimization mechanism (MySQL supports index merge, PostgreSQL supports BitmapOr bitmap OR, Oracle supports OR-expansion, databases with weaker optimization like SQLite can rewrite OR conditions via UNION/UNION ALL to solve full table scan issues)
+   Syntax adaptation for OR and BETWEEN (Supports mixing date range BETWEEN with other conditions using OR; text dates require format unification through formatting/conversion to avoid string lexicographical comparison errors)
+   Type consistency guarantee (When combining date fields with OR conditions, ensure field types match; text dates require explicit conversion/formatting to avoid index failure caused by implicit conversion)
+   Cross-database feature compatibility (Adapts to different databases' OR optimization strategies, such as MySQL's index_merge, PostgreSQL's Bitmap Merge, SQL Server's index merge, ensuring effective execution of OR conditions across multiple environments)
+   Complex logic splitting capability (Splits multiple OR conditions via UNION/UNION ALL, converting full table scans to index scans, improving large table query performance)
+   Date format fault tolerance (When combining text dates with OR conditions, supports format conversion/standardization to ensure accuracy of date range filtering)
+
+-- MySQL:
+   Method:
+      Conditional Priority: AND has higher priority than OR; A AND B OR C is equivalent to (A AND B) OR C; complex conditions are recommended to explicitly add parentheses (e.g., (date > '1991' OR date < '2000') AND type = 'school') to avoid ambiguity;
+      OR Condition Optimization: Index merge (index_merge) is only possible if fields on both sides of OR have indexes (e.g., both OpenDate and ClosedDate are indexed), otherwise full table scan occurs; single-field multiple condition OR (e.g., date BETWEEN '2000' AND '2005' OR date > '2020') can be rewritten with UNION to improve performance;
+      OR+BETWEEN Syntax: When connecting date ranges with other conditions using OR, ensure consistent field types (e.g., text dates require uniform format) to avoid index failure caused by implicit conversion.
+   eg:
+      Basic OR Date Condition (corresponding to question 27 scenario): SELECT * FROM schools WHERE STRFTIME('%Y', T2.OpenDate) > '1991' OR STRFTIME('%Y', T2.ClosedDate) < '2000';
+      Explicit Parentheses to Clarify Priority: SELECT * FROM schools WHERE (OpenDate > '1991-01-01' OR ClosedDate < '2000-12-31') AND status = 'active';
+      OR+BETWEEN Combination: SELECT * FROM orders WHERE order_date BETWEEN '2000-01-01' AND '2005-12-31' OR amount > 10000;
+
+@dialect2sql@

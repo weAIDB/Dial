@@ -1,0 +1,2301 @@
+@dialect2sql@
+**Title**: 1.1 Alias Definition and Reference
+
+**Content**:  
+DuckDB supports alias definition in SELECT clauses using the optional AS keyword or by direct assignment (omitting AS), consistent with standard SQL. However, unlike MySQL—which uses backticks (`) to quote identifiers—DuckDB uses **double quotes (")** to delimit identifiers that contain spaces, special characters, or reserved keywords. Single quotes in DuckDB are strictly for string literals and **cannot** be used to define aliases; attempting to do so results in a syntax error, not silent misinterpretation as in MySQL.
+
+**CRITICAL Differences / Dialect Features**:  
+- **Quoting mechanism**: DuckDB uses double quotes (`"alias name"`), whereas MySQL uses backticks (`` `alias name` ``).  
+- **Single quotes**: In MySQL, `SELECT salary 'Annual Salary'` is syntactically valid but returns a string literal instead of an alias—a common pitfall. In DuckDB, this would cause a **syntax error**, as single quotes cannot serve as identifier delimiters.  
+- **Case sensitivity**: DuckDB treats all identifiers (including quoted ones) as **case-insensitive** (unlike PostgreSQL, which treats quoted identifiers as case-sensitive). However, it preserves the original casing in output unless `preserve_identifier_case = false` is set.  
+- **Reserved keywords**: Aliases that match SQL keywords must be quoted with double quotes in DuckDB (e.g., `"SELECT"`), similar to MySQL’s requirement for backticks.
+
+**DuckDB Syntax Examples**:
+```sql
+-- Standard alias (AS optional)
+SELECT first_name AS fn, last_name ln FROM employees;
+
+-- Quoted alias with space/special chars
+SELECT salary AS "Annual Salary" FROM employees;
+SELECT id AS "id-field!" FROM employees;
+
+-- Using reserved keyword as alias (must be quoted)
+SELECT 123 AS "SELECT";  -- valid
+
+-- Invalid: single quotes for alias (syntax error in DuckDB)
+-- SELECT salary 'Annual Salary' FROM employees;  -- ❌ Not allowed
+```
+
+Thus, while both systems support explicit/implicit aliasing and require quoting for non-standard identifiers, they differ fundamentally in quoting syntax, handling of single quotes, and case-sensitivity behavior.
+@dialect2sql@
+
+@dialect2sql@
+**1.1 Alias Definition and Reference**
+
+DuckDB supports column aliasing using the standard SQL `AS` keyword, and also allows omitting `AS` (implicit aliasing). For aliases containing spaces, special characters, or reserved keywords, DuckDB requires **double quotes (`"`)**—not backticks—as identifier delimiters. Unlike MySQL, **single quotes in DuckDB are strictly for string literals** and cannot be used to define aliases; attempting to do so results in a syntax error, not silent misinterpretation as a string.
+
+**Key Differences vs. MySQL:**
+- **Quoting**: DuckDB uses double quotes (`"Alias Name"`) for delimited identifiers; MySQL uses backticks (`` `Alias Name` ``).
+- **Single quotes**: In DuckDB, `SELECT salary 'Annual Salary'` is **invalid syntax** and throws an error. MySQL parses this as a string literal adjacent to a column (implicit concatenation), which leads to unexpected results—but DuckDB does not allow this.
+- **Prefix alias syntax**: DuckDB uniquely supports an alternative alias syntax using colons (`res: col1 + col2`), which is not valid in MySQL.
+
+**DuckDB Syntax Examples:**
+```sql
+-- Standard alias with AS
+SELECT first_name AS fn, last_name AS ln FROM employees;
+
+-- Implicit alias (without AS)
+SELECT first_name fn FROM employees;
+
+-- Alias with space using double quotes
+SELECT salary AS "Annual Salary" FROM employees;
+
+-- Prefix-style alias (DuckDB-specific)
+SELECT
+    "Annual Salary": salary,
+    full_name: first_name || ' ' || last_name
+FROM employees;
+
+-- Invalid in DuckDB (syntax error):
+-- SELECT salary 'Annual Salary' FROM employees;  -- ❌ Not allowed
+```
+
+> **CRITICAL**: Unlike MySQL, DuckDB enforces stricter parsing: single quotes never define aliases, and identifier quoting uses SQL-standard double quotes instead of MySQL’s backticks. This avoids MySQL’s pitfall of silently returning a string instead of an aliased column.
+@dialect2sql@
+
+@dialect2sql@
+**Title**: 1.2.1 String Literal
+
+**Content**:  
+In DuckDB, string literals are **exclusively delimited by single quotes (`'`)** and produce values of the special `STRING_LITERAL` type, which can be implicitly converted to any other data type (e.g., DATE, INTEGER). Unlike MySQL, **double quotes (`"`) are never used for string literals** in DuckDB—they are reserved strictly for quoted identifiers (e.g., column or table names), and using them for strings results in a parser error.
+
+**CRITICAL Differences / Dialect Features**:
+- **Unlike MySQL**, which allows double-quoted strings in non-ANSI modes (though discouraged), **DuckDB forbids double quotes for strings entirely**—they always denote identifiers.
+- DuckDB supports **dollar-quoted string literals** (`$$...$$` or `$tag$...$tag$`), a PostgreSQL-style feature **not available in MySQL**, which is especially useful for strings containing quotes or newlines.
+- DuckDB allows **implicit concatenation of single-quoted string literals** *only* when separated by whitespace that includes **at least one newline**—adjacent single-quoted strings without a newline cause a syntax error. MySQL does not support implicit concatenation at all.
+- DuckDB supports **escape sequences** (e.g., `\n`, `\t`) via **`e'...'` prefixed literals**, whereas MySQL uses backslash escapes by default (configurable via `NO_BACKSLASH_ESCAPES` SQL mode).
+- To include a single quote inside a string, both systems use doubling (`''`), consistent with standard SQL.
+
+**DuckDB Syntax Examples**:
+```sql
+-- Standard single-quoted string (correct)
+WHERE name = 'John Doe';
+
+-- Double quotes cause error (identifier, not string)
+-- WHERE name = "John Doe";  -- ❌ Parser Error
+
+-- Dollar quoting (MySQL does not support this)
+SELECT $$It's "easy" to embed quotes!$$;
+
+-- Tagged dollar quoting
+SELECT $abc$Contains $$ and ' and " $abc$;
+
+-- Escape sequences with e-prefix
+SELECT e'Line 1\nLine 2';
+
+-- Implicit concatenation (requires newline)
+SELECT 'Hello'
+    ' World';  -- ✅ Valid → 'Hello World'
+
+-- This fails (no newline):
+-- SELECT 'Hello' 'World';  -- ❌ Syntax error
+```
+@dialect2sql@
+
+@dialect2sql@
+**Title**: 1.2.2 Identifier Quoting (Object Names)
+
+**Content**:  
+DuckDB handles identifier quoting using **double quotes (`"`)** rather than MySQL’s backticks (`` ` ``). Unquoted identifiers in DuckDB must adhere to standard SQL rules: they cannot be reserved keywords, cannot start with a digit or special character, and cannot contain whitespace. If any of these conditions are violated—such as using a keyword like `SELECT` as an alias—the identifier must be quoted.
+
+Unlike MySQL, **DuckDB does not allow unquoted use of reserved keywords** as object names. For example, `SELECT name, group FROM users;` would fail in DuckDB just as it would in MySQL if `group` is a keyword, but the quoting mechanism differs: DuckDB requires `"group"`, not `` `group` ``.
+
+**CRITICAL Differences / Dialect Features**:  
+- **Quoting character**: DuckDB uses double quotes (`"identifier"`), whereas MySQL uses backticks (`` `identifier` ``).  
+- **Case sensitivity**: DuckDB treats **all identifiers as case-insensitive**, including **quoted identifiers**—a notable divergence from most SQL databases (like PostgreSQL, which treats quoted identifiers as case-sensitive). For example, `"Group"` and `"group"` refer to the same column.  
+- **Identifier preservation**: By default, DuckDB preserves the original casing of identifiers in output (e.g., `AS CosineOfPi` appears as `CosineOfPi` in results), but comparisons remain case-insensitive. This behavior can be disabled via `SET preserve_identifier_case = false;`, forcing all identifiers to lowercase.  
+- **Escaping quotes**: To include a double quote inside a quoted identifier, DuckDB uses SQL-standard escaping by doubling the quote: `"IDENTIFIER ""X"""` represents an identifier named `IDENTIFIER "X"`.
+
+**DuckDB Syntax Examples**:
+```sql
+-- Valid: quoting a keyword
+SELECT "name", "group" FROM "users";
+
+-- Valid: quoted identifier with space
+SELECT "user id" FROM "my table";
+
+-- Escaping double quotes in identifier
+SELECT "column ""with"" quotes" FROM "data";
+
+-- Case-insensitivity in action (succeeds)
+SELECT col_A FROM (SELECT 'x' AS col_a);
+
+-- Using a reserved keyword as alias (requires quotes)
+SELECT 123 AS "SELECT";
+```
+
+In summary, while both MySQL and DuckDB require quoting for non-standard identifiers (e.g., keywords, special characters), they differ fundamentally in quoting syntax, case handling, and treatment of quoted identifiers.
+@dialect2sql@
+
+@dialect2sql@
+**Title**: Explicit Escaping of Keywords as Table/Column Names
+
+**Content**:  
+In DuckDB, identifiers (such as table and column names) that conflict with reserved keywords must be quoted using **double quotes (`"`)**, not backticks. Unlike MySQL—which uses backticks (`` ` ``) to escape keywords like `Match`, `Order`, or `User`—DuckDB follows the SQL standard by using double quotes for quoted identifiers. Unquoted identifiers in DuckDB cannot be reserved keywords (as listed by the built-in `duckdb_keywords()` function), and attempting to use them unquoted results in a syntax error.
+
+**CRITICAL**:  
+- **Unlike MySQL**, DuckDB **does not support backticks** for identifier quoting; it **requires double quotes**.
+- DuckDB treats **quoted identifiers as case-insensitive** (unlike PostgreSQL, which treats them as case-sensitive), though it preserves the original casing in output unless `preserve_identifier_case = false` is set.
+- Both systems require escaping when using keywords as identifiers, but the **quoting syntax differs fundamentally**: MySQL uses `` `keyword` ``, while DuckDB uses `"keyword"`.
+
+**DuckDB Syntax Examples**:
+```sql
+-- Escaping a keyword used as a table name
+SELECT * FROM "Match" WHERE id = 1;
+
+-- Escaping keyword column names
+SELECT "Order", "User" FROM orders_table;
+
+-- This would fail (unescaped keyword):
+-- SELECT * FROM Match;  -- Error: 'Match' is a reserved keyword
+```
+
+To check reserved keywords in DuckDB:
+```sql
+SELECT * FROM duckdb_keywords() WHERE keyword = 'MATCH';
+```
+@dialect2sql@
+
+@dialect2sql@
+**Title**: String Case Sensitivity
+
+**Content**:  
+In DuckDB, string comparisons are **case-sensitive by default** because the default collation is `BINARY` (also aliased as `C` or `POSIX`). This means that `'hello' = 'HeLLo'` evaluates to `false`. To perform case-insensitive comparisons, DuckDB provides the `NOCASE` collation, which can be applied per-expression using the `COLLATE` clause, set globally via `SET default_collation = NOCASE`, or defined at the column level during table creation.
+
+Unlike MySQL—where case insensitivity is the default behavior for non-binary collations and case sensitivity is explicitly triggered with the `BINARY` operator—DuckDB defaults to case-sensitive comparisons and requires explicit opt-in for case insensitivity.
+
+DuckDB also supports combining collations (e.g., `NOCASE.NOACCENT`) and offers ICU-based locale-specific collations when the ICU extension is loaded, enabling advanced linguistic sorting and comparison rules.
+
+**CRITICAL Differences**:  
+- **Default behavior**: MySQL is typically case-insensitive by default (depending on collation), while DuckDB is **case-sensitive by default** (`BINARY` collation).  
+- **Syntax**: MySQL uses `BINARY` as an operator (`expr BINARY = value`) to enforce sensitivity; DuckDB uses `COLLATE` clauses to specify comparison rules.  
+- **Flexibility**: DuckDB allows fine-grained control via per-expression, per-column, or global collation settings, and supports collation chaining (e.g., `NOCASE.NOACCENT`), which has no direct equivalent in MySQL.
+
+**DuckDB Syntax Examples**:
+```sql
+-- Default: case-sensitive
+SELECT 'apple' = 'APPLE';  -- returns false
+
+-- Case-insensitive via COLLATE
+SELECT 'apple' COLLATE NOCASE = 'APPLE';  -- returns true
+
+-- Set global default collation
+SET default_collation = NOCASE;
+SELECT 'apple' = 'APPLE';  -- now returns true
+
+-- Column-level collation
+CREATE TABLE fruits (name VARCHAR COLLATE NOCASE);
+INSERT INTO fruits VALUES ('Apple');
+SELECT * FROM fruits WHERE name = 'APPLE';  -- matches 'Apple'
+```
+@dialect2sql@
+
+@dialect2sql@
+**Title**: 2.4 Boolean Type: Representation of Abstract Logic  
+**Content**:  
+DuckDB natively supports the `BOOLEAN` data type (with alias `BOOL`), which strictly represents logical truth values: `true`, `false`, and `NULL` (for unknown). Unlike MySQL—where `BOOLEAN` is merely an alias for `TINYINT(1)` and treats any non-zero integer as `TRUE`—DuckDB enforces a true three-valued Boolean logic compliant with standard SQL semantics.
+
+In DuckDB, Boolean values are primarily generated through comparisons (e.g., `i > 10`) or logical expressions, and they cannot be implicitly converted from arbitrary integers. For example, inserting or casting an integer like `5` directly to `BOOLEAN` will result in an error unless explicitly handled via comparison or conditional logic.
+
+Boolean literals `true` and `false` are case-insensitive keywords in DuckDB and can be used directly in queries. The `WHERE` and `HAVING` clauses filter rows based on strict Boolean evaluation: only rows where the condition evaluates to `true` are retained; `false` and `NULL` results are excluded.
+
+**CRITICAL DIFFERENCES**:  
+- **Unlike MySQL**, DuckDB does **not** treat `BOOLEAN` as an integer type. There is **no implicit conversion** from numeric values to Boolean.  
+- DuckDB adheres to **standard SQL three-valued logic** (`true`, `false`, `NULL`), whereas MySQL’s Boolean behavior is tied to integer storage and coercion rules.  
+- In MySQL, `SELECT TRUE` returns `1`; in DuckDB, it returns the literal `true`.
+
+**DuckDB Syntax Examples**:
+```sql
+-- Valid Boolean literals
+SELECT true, false, NULL::BOOLEAN;
+
+-- Boolean from comparison
+CREATE TABLE integers (i INTEGER);
+INSERT INTO integers VALUES (5), (15), (NULL);
+SELECT * FROM integers WHERE i > 10;  -- Returns only 15
+
+-- Logical operations follow three-valued logic
+SELECT true AND NULL;  -- Returns NULL
+SELECT false OR NULL;  -- Returns NULL
+```
+@dialect2sql@
+
+@dialect2sql@
+**Title**: 2.4.2 BIT Type Handling Differences  
+**Content**:  
+DuckDB supports a `BITSTRING` type (aliased as `BIT`) that represents variable-length sequences of 1s and 0s. Unlike MySQL’s `BIT(1)`, which stores a single bit but often exhibits confusing behavior, DuckDB’s `BITSTRING` is more transparent and flexible—it behaves like a string of bits with no implicit padding by default.  
+
+**CRITICAL**: Unlike MySQL, DuckDB does **not** use fixed-width storage based on a declared size (e.g., `BIT(8)`). Instead, `BITSTRING` is variable-length, similar to a binary string. However, DuckDB provides the `bitstring(value, length)` function to explicitly left-pad a bitstring to a desired width—something MySQL lacks as a built-in convenience. Additionally, DuckDB allows direct casting from integers and strings to `BITSTRING`, automatically converting numbers to their full binary representation (e.g., `123::BITSTRING` yields a 32-bit zero-prefixed string), whereas MySQL requires functions like `BIN()` or literals like `b'1111011'`.
+
+**DuckDB Syntax Examples**:  
+```sql
+-- Cast string to BITSTRING (no padding)
+SELECT '101010'::BITSTRING AS b;
+
+-- Create fixed-length bitstring with left-padding
+SELECT bitstring('0101011', 12) AS b;  -- Result: '000000101011'
+
+-- Cast integer to BITSTRING (32-bit representation by default)
+SELECT 123::BITSTRING AS b;  -- Result: '00000000000000000000000001111011'
+```
+@dialect2sql@
+
+@dialect2sql@
+**Title**: 2.4.2 BIT Type Handling Differences
+
+**Content**:  
+DuckDB implements bit manipulation through its `BITSTRING` type, which is fundamentally different from MySQL’s `BIT(n)` type. In DuckDB, a bitstring is an explicit data type that represents a sequence of bits (e.g., `'1010'::BITSTRING`). Unlike MySQL, DuckDB does **not** have a fixed-width `BIT(n)` storage type that behaves like a binary integer; instead, it treats bitstrings as variable-length sequences of 0s and 1s, manipulated via dedicated operators and functions.
+
+**CRITICAL**:  
+- **Unlike MySQL**, DuckDB does not use `BIT(1)` to store a single-bit value in a numeric or binary context. Instead, it uses the `BITSTRING` type for all bitwise operations, and literals must be explicitly cast (e.g., `'1'::BITSTRING`).  
+- DuckDB **does not support** MySQL-style bit literals like `b'1'` or `0b1`. Bitstrings are written as quoted strings followed by `::BITSTRING`.  
+- All bitwise operations (`&`, `|`, `xor`, `~`, `<<`, `>>`) require operands to be of type `BITSTRING`, and for binary operators (`&`, `|`, `xor`), the bitstrings **must be of equal length**—a stricter requirement than MySQL’s implicit padding or truncation behavior.  
+- DuckDB provides rich built-in functions (`bit_count`, `get_bit`, `set_bit`, etc.) and aggregate functions (`bit_and`, `bit_or`, `bitstring_agg`) that have no direct equivalent in MySQL.
+
+**DuckDB Syntax Examples**:
+```sql
+-- Bitwise AND (equal length required)
+SELECT '10101'::BITSTRING & '10001'::BITSTRING;  -- Result: 10001
+
+-- Create a 7-bit string from a shorter one (left-padded with zeros)
+SELECT bitstring('1010'::BITSTRING, 7);  -- Result: 0001010
+
+-- Count set bits
+SELECT bit_count('1101011'::BITSTRING);  -- Result: 5
+
+-- Extract bit at index 2 (0-based from left)
+SELECT get_bit('0110010'::BITSTRING, 2);  -- Result: 1
+
+-- Aggregate distinct integers into a bitstring
+SELECT bitstring_agg(id) FROM (VALUES (1), (3), (5)) AS t(id);
+```
+@dialect2sql@
+
+@dialect2sql@
+**Title**: 4.3.1 Sequence or Auto-increment Mechanism
+
+**Content**:  
+DuckDB implements auto-incrementing identifiers using **standalone sequence objects**, created via the `CREATE SEQUENCE` statement. Unlike MySQL’s column-bound `AUTO_INCREMENT`, DuckDB sequences are independent database objects that generate numbers via the `nextval('sequence_name')` function. These sequences can be used as `DEFAULT` values in table columns to emulate auto-increment behavior.
+
+**CRITICAL Differences / Dialect Features**:  
+- **Unlike MySQL**, DuckDB does **not support an `AUTO_INCREMENT` column property**. Instead, it relies on explicit sequence objects and the `nextval()` function.
+- Sequences in DuckDB are **first-class schema objects**, supporting advanced features like custom start values, increments (including negative for descending), min/max bounds, and optional cycling (`CYCLE`).
+- MySQL ties auto-increment strictly to a single table column; **DuckDB sequences can be shared across multiple tables** or used independently.
+- DuckDB requires manual integration of sequences into tables via `DEFAULT nextval('seq')`, whereas MySQL handles this implicitly.
+- DuckDB provides `currval()` to inspect the last value obtained from a sequence in the current session—**a feature absent in MySQL**.
+- Sequence management (e.g., `DROP SEQUENCE`) may require `CASCADE` due to dependency tracking, which is not a concern in MySQL’s simpler model.
+
+**DuckDB Syntax Examples**:
+```sql
+-- Create a sequence
+CREATE SEQUENCE id_sequence START 1;
+
+-- Use it in a table for auto-increment-like behavior
+CREATE TABLE orders (
+    id INTEGER PRIMARY KEY DEFAULT nextval('id_sequence'),
+    name TEXT
+);
+
+-- Insert without specifying id
+INSERT INTO orders (name) VALUES ('Test Order');
+
+-- Get next sequence value directly
+SELECT nextval('id_sequence');
+```
+@dialect2sql@
+
+@dialect2sql@
+**Title**: 4.3.2 Semantic Difference Between Empty String ('') and NULL  
+**Content**:  
+In DuckDB, the empty string `''` is also treated as a distinct, valid string value and is **not equivalent to `NULL`**, aligning with MySQL’s behavior in this specific regard. DuckDB represents string literals using single quotes (`'...'`), and `''` denotes a zero-length string of type `STRING_LITERAL` (which can be implicitly converted to `VARCHAR`). The `NULL` literal, by contrast, is explicitly denoted with the keyword `NULL` and represents the absence of a value.
+
+However, there are **dialect and behavioral differences** worth noting:
+
+- **Unlike MySQL**, DuckDB enforces stricter type semantics through its literal typing system (e.g., `STRING_LITERAL` vs. `VARCHAR`). While `''` is a valid non-`NULL` string, operations involving it may behave differently due to DuckDB’s implicit conversion rules.
+- DuckDB allows implicit conversion from `STRING_LITERAL` (including `''`) to other types (e.g., dates or numbers) during parsing, but **explicitly typed `VARCHAR` values cannot be implicitly converted**—a nuance not present in MySQL.
+- Both systems distinguish `''` from `NULL`, but DuckDB’s type system makes this distinction more rigid in binding contexts.
+
+**DuckDB Syntax Examples**:
+```sql
+-- Empty string is NOT NULL
+SELECT '' IS NULL;        -- Returns false
+SELECT '' = '';           -- Returns true
+SELECT LENGTH('');        -- Returns 0
+
+-- NULL is distinct
+SELECT NULL IS NULL;      -- Returns true
+SELECT '' = NULL;         -- Returns NULL (unknown)
+
+-- Implicit conversion works for string literals (including empty)
+SELECT ''::INTEGER;       -- Fails at runtime (cannot cast empty string to int)
+SELECT '5'::INTEGER;      -- Succeeds (5)
+```
+
+**CRITICAL**: While both MySQL and DuckDB treat `''` and `NULL` as semantically distinct, **DuckDB’s literal typing system introduces stricter compile-time binding rules** that affect how string literals (including empty ones) interact with other types—unlike MySQL, which applies more permissive automatic conversions in many contexts.
+@dialect2sql@
+
+@dialect2sql@
+**Title**: Syntax Rules for GROUP BY Queries under sql_mode=only_full_group_by
+
+**Content**:  
+DuckDB enforces a strict and standards-compliant interpretation of GROUP BY semantics that aligns closely with the intent of MySQL’s only_full_group_by mode—but with key dialect differences and enhanced ergonomics.
+
+Unlike MySQL, **DuckDB does not have a configurable sql_mode**, and its GROUP BY behavior is always "strict" by default: in any query with a GROUP BY clause, every column in the SELECT list must either be:
+- A grouping column (i.e., explicitly listed in GROUP BY), or  
+- Enclosed within an aggregate function (e.g., SUM(), COUNT(), MAX(), etc.).
+
+This means DuckDB **automatically enforces functional dependency rules** similar to MySQL’s only_full_group_by, but without requiring mode configuration. However, **DuckDB does not provide a direct equivalent to MySQL’s ANY_VALUE()** function. Instead, if you need to select a representative non-grouping value, you must use an explicit aggregate like MIN(), MAX(), or FIRST() (a DuckDB extension).
+
+A major **dialect difference** is DuckDB’s support for **GROUP BY ALL**, which automatically groups by all non-aggregate columns in the SELECT list. This eliminates redundancy and reduces errors—something MySQL cannot do. For example:
+
+```sql
+-- DuckDB: valid and concise
+SELECT department, location, AVG(salary)
+FROM employees
+GROUP BY ALL;
+-- Equivalent to: GROUP BY department, location
+```
+
+In contrast, MySQL would require explicitly listing both department and location in GROUP BY, or wrapping one in ANY_VALUE().
+
+Additionally, **if a query contains aggregate functions but no GROUP BY clause**, DuckDB treats it as a scalar aggregation over the entire table—and **only allows aggregate expressions or literals in the SELECT list**. Attempting to select a bare column (e.g., SELECT id, COUNT(*) FROM users) results in an error, just like MySQL’s error 1140.
+
+**Examples**:
+
+✅ Valid in DuckDB:
+```sql
+SELECT city, COUNT(*) FROM addresses GROUP BY city;
+SELECT department, MAX(salary) FROM employees GROUP BY department;
+SELECT city, street_name, AVG(income) FROM addresses GROUP BY ALL;
+```
+
+❌ Invalid in DuckDB (and will error):
+```sql
+SELECT id, COUNT(*) FROM users;  -- Error: id is not aggregated and no GROUP BY
+SELECT department, location, MAX(salary) FROM employees GROUP BY department;  -- Error: location not in GROUP BY and not aggregated
+```
+
+**CRITICAL DIFFERENCES**:
+- **No ANY_VALUE()**: DuckDB lacks MySQL’s ANY_VALUE(); use FIRST(), MIN(), or MAX() instead.
+- **GROUP BY ALL**: A DuckDB-specific convenience feature with no MySQL equivalent.
+- **Always strict**: DuckDB enforces full group-by compliance by default—no mode toggling needed.
+- **No silent fallback**: Unlike older MySQL versions (without only_full_group_by), DuckDB never permits ambiguous non-aggregated columns.
+@dialect2sql@
+
+@dialect2sql@
+**Title**: Mandatory Rule: Derived Table (Table-level Subquery) Must Have an Alias
+
+**Content**:  
+In DuckDB, derived tables (i.e., subqueries used in the `FROM` clause) **do not require an alias**. Unlike MySQL, which enforces a mandatory alias for every derived table and throws error 1248 if omitted, DuckDB allows unaliased subqueries in the `FROM` clause without any syntax error.
+
+This is a significant **dialect difference**:  
+**Unlike MySQL, DuckDB permits derived tables without aliases**, treating them as valid syntactic constructs. This aligns DuckDB more closely with the SQL standard’s flexibility and other databases like PostgreSQL or SQLite in this regard.
+
+**DuckDB Syntax Examples**:
+```sql
+-- Valid in DuckDB: derived table without alias
+SELECT * FROM (SELECT * FROM tbl);
+
+-- Also valid: with alias (optional)
+SELECT t.x FROM (SELECT id AS x FROM users) t;
+
+-- Even complex nested cases work without alias
+SELECT COUNT(*) FROM (SELECT user_id FROM orders WHERE amount > 1000);
+```
+
+Thus, while MySQL strictly mandates an alias for all derived tables, DuckDB treats the alias as **optional**, offering greater syntactic convenience.
+@dialect2sql@
+
+@dialect2sql@
+**Title**: 5.10 Basic Syntax Rules for UNION Statements
+
+**Content**:  
+DuckDB supports standard `UNION` and `UNION ALL` operations with behavior largely aligned with SQL standards and similar to MySQL in core aspects: both require the same number of columns across subqueries when using positional `UNION`, perform implicit type coercion where possible, and apply set semantics (deduplication) for `UNION` versus bag semantics (no deduplication) for `UNION ALL`.
+
+However, **DuckDB introduces a significant dialect extension not found in MySQL**: `UNION [ALL] BY NAME`. This variant aligns columns by name rather than position, does **not** require matching column counts, and fills missing columns with `NULL`. This offers greater flexibility for combining heterogeneous schemas.
+
+Additionally, unlike MySQL, DuckDB also supports `INTERSECT` and `EXCEPT` (both with and without `ALL`), which are not part of MySQL’s feature set.
+
+**CRITICAL Differences**:
+- **Unlike MySQL**, DuckDB allows `UNION BY NAME`, which unions tables by column names and tolerates differing column counts.
+- **Unlike MySQL**, DuckDB fully implements `INTERSECT` and `EXCEPT` with both set and bag semantics.
+- Both systems enforce equal column counts for positional `UNION`, but DuckDB’s type coercion may differ slightly in edge cases due to its stricter type system (though it still attempts implicit casts like MySQL).
+
+**DuckDB Syntax Examples**:
+
+1. **Standard UNION (positional, deduplicated)**:
+```sql
+SELECT 'Tallest Player' AS type, AVG(finishing) AS avg_fin FROM players WHERE height = (SELECT MAX(height) FROM players)
+UNION
+SELECT 'Shortest Player' AS type, AVG(finishing) AS avg_fin FROM players WHERE height = (SELECT MIN(height) FROM players);
+```
+
+2. **UNION ALL (positional, retains duplicates)**:
+```sql
+SELECT id FROM team_a
+UNION ALL
+SELECT id FROM team_b;
+```
+
+3. **UNION BY NAME (column-name-based, flexible schema)**:
+```sql
+SELECT city, country FROM capitals
+UNION BY NAME
+SELECT city, degrees FROM weather;
+-- Result includes columns: city, country, degrees; missing values become NULL
+```
+
+4. **Derived table with UNION (alias required, same as MySQL)**:
+```sql
+SELECT COUNT(*) FROM (
+    SELECT user_id FROM orders_2023
+    UNION
+    SELECT user_id FROM orders_2024
+) AS all_users;
+```
+@dialect2sql@
+
+@dialect2sql@
+**Title**: Cross-Database Function Compatibility Differences
+
+**Content**:  
+DuckDB provides a rich set of built-in date functions that often align with or extend beyond SQL standard and other database dialects. Unlike MySQL—which strictly enforces its own function namespace and rejects non-MySQL functions with error 1305—DuckDB supports several functions commonly found in SQLite and PostgreSQL, including direct equivalents for some "incompatible" functions mentioned in the MySQL rule.
+
+**CRITICAL Differences / Dialect Features**:
+- **Unlike MySQL**, DuckDB **natively supports** `julian(date)` (equivalent to SQLite’s `JULIANDAY()`) and `strftime(date, format)` (same name as SQLite, but parameter order matches PostgreSQL/SQLite, not MySQL’s `DATE_FORMAT()`).
+- DuckDB **does not have an `IIF()` function**, but it **fully supports standard SQL `CASE WHEN`** and also provides a ternary-like `IF(condition, true_value, false_value)` function—similar to MySQL’s `IF()`.
+- DuckDB’s `date_diff()` (aliased as `datediff`) behaves differently from MySQL’s `DATEDIFF()`:  
+  - MySQL’s `DATEDIFF(date1, date2)` returns days only.  
+  - DuckDB’s `date_diff('day', date1, date2)` is explicit about the unit and supports multiple intervals (e.g., `'month'`, `'year'`).
+- DuckDB **does not throw an error for “unknown” functions from other dialects by default**, but since it doesn’t implement SQLite/PostgreSQL-specific functions unless they are part of its own catalog, using truly unsupported functions will result in an error—though the error message differs from MySQL’s 1305.
+
+**DuckDB Syntax Examples**:
+```sql
+-- Equivalent to SQLite's JULIANDAY()
+SELECT julian(DATE '1992-09-20');  -- Returns 2448886.0
+
+-- Equivalent to SQLite's STRFTIME (note: format string second)
+SELECT strftime(DATE '1992-01-01', '%Y-%m-%d');  -- Returns '1992-01-01'
+
+-- Conditional logic (like MySQL IF or SQLite IIF)
+SELECT IF(score > 60, 'pass', 'fail') FROM (VALUES (70), (50)) t(score);
+-- Or using CASE
+SELECT CASE WHEN score > 60 THEN 'pass' ELSE 'fail' END FROM (VALUES (70), (50)) t(score);
+
+-- Date difference in days (similar intent to MySQL DATEDIFF, but explicit unit)
+SELECT date_diff('day', DATE '1990-01-01', DATE '1990-01-10');  -- Returns 9
+
+-- Direct date sorting (no need for julian conversion)
+SELECT dob FROM (VALUES (DATE '1985-03-15'), (DATE '1990-07-22')) t(dob) ORDER BY dob DESC;
+```
+
+Thus, while DuckDB avoids MySQL’s strict rejection of foreign-function syntax by offering broader compatibility, it implements its own consistent dialect that blends PostgreSQL, SQLite, and standard SQL features—making cross-database migration smoother in many cases.
+@dialect2sql@
+
+@dialect2sql@
+**Title**: Format Consistency and Boundary Handling for Date Field Filtering
+
+**Content**:  
+DuckDB supports the `DATE` data type with strict adherence to the ISO 8601 format (`YYYY-MM-DD`) for literal input, aligning with MySQL’s requirement for standard date formatting in DATE-type comparisons. Date literals are constructed using the `DATE 'YYYY-MM-DD'` syntax or via cast (e.g., `'1993-07-05'::DATE`). Unlike MySQL, **DuckDB does not natively support non-standard string formats like `YYYY/MM/DD` in direct comparisons**—such strings must be explicitly parsed using date-parsing functions (e.g., `strptime(date_text, '%Y/%m/%d')::DATE`).
+
+For filtering, DuckDB allows standard equality and range operators (`=`, `BETWEEN`, `<`, `>`, etc.) on `DATE` columns, just like MySQL. However, **DuckDB lacks MySQL’s `STR_TO_DATE` function**; instead, it uses `strptime()` from its string-to-time parsing toolkit to convert non-standard text dates into proper `DATE` values before comparison.
+
+Boundary handling follows the same closed-interval logic as MySQL:  
+```sql
+SELECT * FROM orders WHERE create_date BETWEEN DATE '1993-07-01' AND DATE '1993-07-31';
+```
+
+Sorting by date fields is direct and efficient (`ORDER BY date_col DESC`), with no need for auxiliary functions—consistent with MySQL.
+
+**CRITICAL DIFFERENCES**:  
+- **No implicit format flexibility**: DuckDB requires explicit parsing of non-ISO date strings using `strptime()`, whereas MySQL offers `STR_TO_DATE`.  
+- **Special date values**: DuckDB supports `'infinity'`, `'-infinity'`, and `'epoch'` as valid `DATE` inputs—**a dialect feature absent in MySQL**.  
+- **Strict typing**: DuckDB enforces type consistency; comparing a `TEXT` column containing dates to a `DATE` literal without conversion will fail or produce unexpected results, while MySQL may perform silent coercion in some contexts.
+
+**DuckDB Syntax Examples**:  
+```sql
+-- Standard DATE filtering
+SELECT * FROM financial WHERE loan_date = DATE '1993-07-05';
+
+-- Converting non-standard text date (YYYY/MM/DD)
+SELECT * FROM logs WHERE strptime(date_text, '%Y/%m/%d')::DATE = DATE '1993-07-05';
+
+-- Date range with boundaries
+SELECT * FROM orders WHERE create_date BETWEEN '1993-07-01'::DATE AND '1993-07-31'::DATE;
+
+-- Sorting
+SELECT * FROM users ORDER BY dob DESC;
+
+-- Special date values
+SELECT 'infinity'::DATE, '-infinity'::DATE, 'epoch'::DATE;
+```
+@dialect2sql@
+
+@dialect2sql@
+Title: Column Reference & Join Conditions
+
+Content:  
+DuckDB enforces strict validation of column references in JOIN conditions, requiring that all columns used in ON clauses (or USING clauses) must exist in the respective tables being joined. Like MySQL, DuckDB will raise a binding error if a referenced column does not exist in the specified table or alias.
+
+However, DuckDB provides several dialect features and syntactic enhancements that differ from MySQL:
+
+- **USING Clause Support**: DuckDB fully supports the USING clause for equi-joins on columns with identical names, which simplifies syntax and avoids ambiguous column references. This is also supported in MySQL, but DuckDB’s implementation integrates cleanly with advanced join types (e.g., ASOF, SEMI).
+  
+- **NATURAL JOIN**: DuckDB supports NATURAL JOIN, which automatically joins tables on all columns with matching names—similar to MySQL—but this is generally discouraged in both systems due to fragility.
+
+- **Advanced Join Types**: Unlike MySQL, DuckDB supports specialized join types such as:
+  - **SEMI JOIN** and **ANTI JOIN**, which offer clearer semantics than equivalent EXISTS/NOT EXISTS or IN/NOT IN patterns.
+  - **ASOF JOIN** for time-series or ordered data, allowing inequality-based matching (e.g., t.when >= p.when).
+  - **POSITIONAL JOIN** for row-order-aligned tables (e.g., from CSVs or data frames), which has no equivalent in MySQL.
+  - **LATERAL JOIN**, enabling correlated subqueries in FROM clauses that reference earlier tables—MySQL supports LATERAL only from version 8.0.14 onward, and with more restrictions.
+
+- **Strict Binding Behavior**: DuckDB will reject queries with ambiguous or non-existent column references at bind time. For example, referencing d.doc_type_id when it doesn’t exist in table d results in a clear "Binder Error", similar to MySQL’s behavior under strict SQL mode.
+
+- **Alias Requirements in Self-Joins**: DuckDB requires unique aliases for self-joins, and will throw an error like "Duplicate alias 't' in query!" if omitted—this aligns with standard SQL and is consistent with MySQL’s requirement.
+
+Examples:
+
+✅ Valid JOIN with existing columns:
+```sql
+SELECT n.*, r.*
+FROM l_nations n
+JOIN l_regions r ON n.n_regionkey = r.r_regionkey;
+```
+
+✅ Using USING (columns must exist and match by name):
+```sql
+SELECT *
+FROM l_nations n
+JOIN l_regions r USING (regionkey);
+```
+
+❌ Invalid column reference (will error):
+```sql
+SELECT *
+FROM documents d
+JOIN document_types dt ON d.nonexistent_col = dt.type_id;
+-- Binder Error: column "nonexistent_col" not found in table "d"
+```
+
+✅ ASOF JOIN (DuckDB-specific):
+```sql
+SELECT t.*, p.price
+FROM trades t
+ASOF JOIN prices p ON t.symbol = p.symbol AND t.when >= p.when;
+```
+
+CRITICAL DIFFERENCES:
+- Unlike MySQL, DuckDB supports **SEMI**, **ANTI**, **ASOF**, **POSITIONAL**, and implicit **LATERAL** joins, offering richer join semantics.
+- DuckDB’s error messages for missing columns in JOIN conditions are explicit and occur at query planning time, similar to MySQL in strict mode—but DuckDB does not have a non-strict mode that permits undefined column references.
+- DuckDB allows **FROM-first syntax** and even omits SELECT entirely (e.g., FROM tbl), but this does not affect column reference rules in JOINs—they remain strictly validated.
+@dialect2sql@
+
+@dialect2sql@
+<SQL Syntax - Reserved Keywords and Identifiers>
+
+In DuckDB, identifiers (such as table or column names and aliases) that are reserved keywords or contain special characters must be quoted using double quotes ("), unlike MySQL which uses backticks (`). Unquoted identifiers in DuckDB must not be reserved keywords, cannot start with a digit or special character, and cannot contain whitespace. Quoted identifiers can include any character, including reserved words and spaces.
+
+**CRITICAL DIFFERENCES**:
+- **Quoting Style**: DuckDB uses double quotes (") for quoting identifiers, whereas MySQL uses backticks (`).
+- **Case Sensitivity**: DuckDB treats all identifiers—quoted or unquoted—as case-insensitive (using ASCII-based comparison), while MySQL’s identifier case sensitivity depends on the operating system and configuration (though alias resolution is generally case-insensitive).
+- **Reserved Keyword Handling**: Both systems require quoting when using reserved words as identifiers, but the quoting syntax differs.
+- **Whitespace and Special Characters**: Like MySQL, DuckDB allows such characters only in quoted identifiers—but again, with double quotes instead of backticks.
+
+**DuckDB Syntax Examples**:
+
+```sql
+-- Valid: quoting a reserved keyword alias
+SELECT u.user_name, SUM(o.total_cost) AS total_order_cost
+FROM users u
+JOIN orders o ON u.user_id = o.user_id
+JOIN order_frequency AS "of" ON u.user_id = "of".user_id
+WHERE "of".order_count > 3 AND "of".reordered = 1
+GROUP BY u.user_id, u.user_name
+HAVING SUM(o.total_cost) > 50
+ORDER BY total_order_cost DESC;
+```
+
+```sql
+-- Valid: quoted identifier with space
+SELECT 1 AS "total cost";
+```
+
+```sql
+-- Invalid: unquoted reserved word as alias
+SELECT 1 AS select;  -- Fails: 'select' is a keyword
+```
+
+```sql
+-- Escaping double quotes within identifier
+SELECT 1 AS "column ""name""";
+```
+@dialect2sql@
+
+@dialect2sql@
+**Title**: Reserved Keywords and Identifiers
+
+**Content**:  
+In DuckDB, identifiers such as table or column names that are reserved keywords or contain special characters (including spaces) must be quoted using **double quotes (`"`)**, not backticks. This follows the SQL standard, unlike MySQL, which uses backticks for identifier quoting.
+
+DuckDB treats unquoted identifiers as case-insensitive and folds them to lowercase internally. However, when an identifier matches a reserved keyword (e.g., `order`, `group`, `select`, `of`), it **must be quoted** to be used as a column or table alias or name—otherwise, a syntax error occurs.
+
+Unlike MySQL, DuckDB does **not** treat `of` as a reserved keyword in the same context (e.g., `INTERVAL ... OF` is not valid SQL in DuckDB), so `of` may often be used without quoting. However, if a keyword **is** reserved in DuckDB (such as `order`, `group`, `from`, etc.), quoting becomes mandatory when used as an identifier.
+
+**CRITICAL Differences**:
+- **Quoting style**: DuckDB uses **double quotes (`"`)** per SQL standard; MySQL uses **backticks (`` ` ``)**.
+- **Reserved keyword set**: DuckDB’s list of reserved words differs from MySQL’s. For example, `of` is not a reserved keyword in DuckDB, so it typically does **not** require quoting—unlike in MySQL where it must be quoted.
+- **Case sensitivity**: Quoted identifiers in DuckDB are **case-sensitive**, while unquoted ones are folded to lowercase.
+
+**DuckDB Syntax Examples**:
+```sql
+-- Using a reserved keyword as an alias (e.g., 'order') requires double quotes
+SELECT u.user_name, o.total_cost
+FROM users u
+JOIN orders o ON u.user_id = o.user_id
+JOIN order_frequency AS "order" ON u.user_id = "order".user_id;
+
+-- Column with space in name
+SELECT "Some Column Name" FROM tbl;
+
+-- Alias using a keyword (safe if not reserved; if reserved, quote it)
+SELECT col1 + col2 AS res FROM tbl;  -- 'res' is fine unquoted
+
+-- If using a truly reserved word like 'group' as alias:
+SELECT count(*) AS "group" FROM tbl;
+```
+
+> Note: Always check DuckDB’s current list of reserved keywords. When in doubt, quote identifiers containing special characters, spaces, or potential keywords using double quotes.
+@dialect2sql@
+
+@dialect2sql@
+<Window Function Support in MySQL>
+
+DuckDB fully supports standard SQL window functions (per SQL:2003), including ROW_NUMBER(), RANK(), DENSE_RANK(), LAG(), LEAD(), and all aggregate functions used in a windowing context. Unlike MySQL prior to version 8.0—which lacks window function support entirely—DuckDB has supported them since its early versions and implements a rich, standards-compliant windowing system.
+
+**Key Differences / Dialect Features**:
+- **No version-based limitations**: DuckDB does not have legacy versions that lack window functions; they are always available.
+- **Extended syntax**: DuckDB allows ORDER BY clauses within general-purpose window function arguments (e.g., first_value(expr ORDER BY time)), which is non-standard but useful.
+- **Advanced framing**: DuckDB supports ROWS, RANGE, and GROUPS framing, including INTERVAL-based RANGE (e.g., RANGE BETWEEN INTERVAL 3 DAYS PRECEDING AND CURRENT ROW), which MySQL 8.0+ only partially supports (without full INTERVAL syntax in all contexts).
+- **IGNORE NULLS / RESPECT NULLS**: DuckDB supports IGNORE NULLS for functions like LAG, LEAD, FIRST_VALUE, etc.—a feature absent in MySQL.
+- **WINDOW clause**: DuckDB supports named windows via the WINDOW clause for reuse across multiple functions, improving readability and performance—also supported in MySQL 8.0+, so this is a similarity.
+- **QUALIFY clause**: DuckDB supports QUALIFY to filter on window function results without subqueries; MySQL does not support QUALIFY.
+
+**DuckDB Syntax Examples**:
+
+```sql
+-- Basic ROW_NUMBER with partitioning and ordering
+SELECT 
+    user_id,
+    last_updated,
+    ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY last_updated DESC) AS rn
+FROM goals;
+
+-- Using window functions in LEFT JOIN subqueries (valid in DuckDB)
+SELECT 
+    u.user_name,
+    g.target_duration - g.current_duration AS remaining_duration,
+    cp.rank
+FROM users u
+LEFT JOIN (
+    SELECT 
+        user_id, 
+        target_duration, 
+        current_duration,
+        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY last_updated DESC) AS rn
+    FROM goals
+) g ON u.user_id = g.user_id AND g.rn = 1
+LEFT JOIN (
+    SELECT 
+        user_id, 
+        rank,
+        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY rank ASC) AS rn
+    FROM challenge_participants
+) cp ON u.user_id = cp.user_id AND cp.rn = 1;
+
+-- Advanced: RANGE framing with intervals
+SELECT 
+    "Date",
+    "MWh",
+    AVG("MWh") OVER (
+        PARTITION BY "Plant"
+        ORDER BY "Date"
+        RANGE BETWEEN INTERVAL 3 DAYS PRECEDING AND INTERVAL 3 DAYS FOLLOWING
+    ) AS moving_avg
+FROM "Generation History";
+
+-- IGNORE NULLS example
+SELECT 
+    time,
+    value,
+    LAG(value IGNORE NULLS) OVER (ORDER BY time) AS prev_non_null
+FROM sensor_data;
+```
+
+In summary, while MySQL 8.0+ aligns closely with standard window function syntax, DuckDB offers broader functionality (e.g., IGNORE NULLS, richer framing, QUALIFY, argument-level ORDER BY) and has no historical compatibility constraints. The “incorrect” MySQL query shown in the rule would execute successfully in DuckDB without modification.
+@dialect2sql@
+
+@dialect2sql@
+**Title**: Window Function Support in MySQL
+
+**Content**:  
+DuckDB fully supports standard SQL window functions such as `ROW_NUMBER()`, `RANK()`, `DENSE_RANK()`, and others, and extends their usability with the **`QUALIFY` clause**, which allows direct filtering of rows based on window function results—without requiring subqueries or common table expressions (CTEs).
+
+Unlike MySQL (prior to version 8.0), which lacks window function support entirely, **DuckDB has supported window functions since its early versions** and includes modern enhancements like `QUALIFY`. This makes queries that rely on ranking or partitioning logic significantly more concise and readable in DuckDB.
+
+A key **dialect difference** is that **DuckDB supports the `QUALIFY` clause**, which MySQL does not (even in MySQL 8.0+). The `QUALIFY` clause acts similarly to `HAVING` but for window functions, enabling filtering after window computations but before final output ordering.
+
+**Examples**:
+
+```sql
+-- Using QUALIFY to get top 2 functions per schema
+SELECT
+    schema_name,
+    function_name,
+    row_number() OVER (PARTITION BY schema_name ORDER BY function_name) AS function_rank
+FROM duckdb_functions()
+QUALIFY function_rank < 3;
+```
+
+```sql
+-- Equivalent without QUALIFY (requires CTE)
+WITH ranked AS (
+    SELECT
+        schema_name,
+        function_name,
+        row_number() OVER (PARTITION BY schema_name ORDER BY function_name) AS function_rank
+    FROM duckdb_functions()
+)
+SELECT * FROM ranked WHERE function_rank < 3;
+```
+
+**Critical Differences**:
+- **MySQL < 8.0**: No window function support → syntax error on `OVER`.
+- **MySQL ≥ 8.0**: Supports window functions but **does not support `QUALIFY`**.
+- **DuckDB**: Fully supports window functions **and** the `QUALIFY` clause, enabling more expressive and compact queries.
+
+Thus, while both modern MySQL and DuckDB support core window functions, **DuckDB offers additional syntactic power via `QUALIFY`**, which is absent in MySQL.
+@dialect2sql@
+
+@dialect2sql@
+**Title**: SQL Syntax - Reserved Keywords
+
+**Content**:  
+In DuckDB, reserved keywords cannot be used as unquoted identifiers (e.g., column or table names). If a keyword such as `SELECT`, `ORDER`, or `RANK` is used as an identifier, it must be enclosed in double quotes (`"..."`) to avoid parsing errors. This aligns with standard SQL practices but differs from MySQL’s use of backticks.
+
+Unlike MySQL, which uses backticks (`` `keyword` ``) to escape reserved words, **DuckDB requires double quotes** (`"keyword"`) for quoting identifiers. Additionally, DuckDB treats quoted identifiers as **case-insensitive** (by default), whereas many other databases (like PostgreSQL) treat quoted identifiers as case-sensitive. This is a notable dialect difference.
+
+DuckDB provides the built-in function `duckdb_keywords()` to list all reserved keywords, aiding developers in identifying problematic identifiers.
+
+**CRITICAL Differences**:
+- **Quoting syntax**: DuckDB uses double quotes (`"rank"`), not backticks (`` `rank` ``).
+- **Case sensitivity**: Even quoted identifiers are case-insensitive in DuckDB by default (e.g., `"Rank"` and `"rank"` refer to the same column), unlike MySQL where backticked identifiers preserve case but matching is typically case-insensitive depending on OS/file system.
+- **Keyword enforcement**: Both systems disallow unquoted reserved words as identifiers, but the escaping mechanism and case behavior differ.
+
+**DuckDB Syntax Examples**:
+```sql
+-- Correct: using double quotes to escape reserved keyword 'rank'
+SELECT concept_id, english, language, number_incorrect, "rank"
+FROM concepts
+WHERE language IS NOT NULL
+ORDER BY "rank";
+
+-- Incorrect: unquoted 'rank' causes error if 'rank' is a reserved keyword
+SELECT concept_id, english, language, number_incorrect, rank
+FROM concepts
+WHERE language IS NOT NULL
+ORDER BY rank;
+
+-- Listing reserved keywords in DuckDB
+SELECT * FROM duckdb_keywords() WHERE keyword = 'RANK';
+```
+@dialect2sql@
+
+@dialect2sql@
+<Aggregate Functions & Grouping>
+
+DuckDB enforces a strict separation between aggregation levels similar to standard SQL, and **does not allow nesting aggregate functions (e.g., MAX(SUM(...))) in the same query block that contains a GROUP BY clause**. Like MySQL, DuckDB requires such operations to be expressed using subqueries or derived tables: first compute group-level aggregates (e.g., SUM per group), then apply an outer aggregate (e.g., MAX) on those results in a separate query layer.
+
+**CRITICAL DIFFERENCE**: Unlike MySQL in non-strict modes (e.g., without ONLY_FULL_GROUP_BY), DuckDB **always enforces standard SQL grouping semantics**—every non-aggregate expression in SELECT must appear in GROUP BY. However, regarding nested aggregates specifically, both systems behave similarly: **neither allows direct nesting of aggregates over aggregates in the same scope with GROUP BY**.
+
+DuckDB provides rich aggregate functionality—including advanced features like FILTER clauses, ORDER BY within aggregates (e.g., string_agg(x ORDER BY y)), and specialized functions like arg_max, list, and histogram—but these do not override the fundamental rule against nested aggregation in a single query level.
+
+**DuckDB Syntax Examples**:
+
+✅ Correct (using subquery):
+```sql
+SELECT MAX(combined_average) AS highest_combined_average
+FROM (
+    SELECT 
+        tc.team_id,
+        (SUM(pmr.batting_score) / COUNT(pmr.batting_score)) + 
+        (SUM(pmr.bowling_runs) / NULLIF(SUM(pmr.bowling_wickets), 0)) AS combined_average
+    FROM player_match_records pmr
+    JOIN team_compositions tc
+        ON pmr.match_id = tc.match_id AND pmr.player_id = tc.player_id
+    WHERE pmr.match_id = 1
+    GROUP BY tc.team_id
+) AS team_averages;
+```
+
+❌ Incorrect (nested aggregates in same scope with GROUP BY):
+```sql
+-- This will fail in DuckDB with an error like:
+-- "Aggregate function calls cannot be nested"
+SELECT MAX(
+    (SUM(pmr.batting_score) / COUNT(pmr.batting_score)) + 
+    (SUM(pmr.bowling_runs) / NULLIF(SUM(pmr.bowling_wickets), 0))
+) AS highest_combined_average
+FROM player_match_records pmr
+JOIN team_compositions tc
+    ON pmr.match_id = tc.match_id AND pmr.player_id = tc.player_id
+WHERE pmr.match_id = 1
+GROUP BY tc.team_id;
+```
+
+Thus, while DuckDB offers more expressive aggregate capabilities than MySQL, it **shares the same restriction** on nested aggregate functions within a grouped query block.
+@dialect2sql@
+
+@dialect2sql@
+<SQL Syntax - Reserved Keywords and Identifiers>
+
+In DuckDB, identifiers (such as table or column names) that conflict with reserved keywords must be quoted using double quotes ("), not backticks. Unlike MySQL—which uses backticks (`) for escaping reserved words—DuckDB follows the SQL standard by using double quotes. Additionally, DuckDB treats all identifiers as case-insensitive, including quoted ones (which differs from PostgreSQL and the SQL standard where quoted identifiers are typically case-sensitive). This means that "OF", "of", and Of all refer to the same identifier.
+
+DuckDB provides the built-in function duckdb_keywords() to list all reserved keywords. Any unquoted identifier matching a keyword will cause a parsing error. However, quoting allows any string—including keywords, special characters, or whitespace—to be used as an identifier.
+
+**Critical Differences vs. MySQL**:
+- **Quoting character**: DuckDB uses double quotes ("), whereas MySQL uses backticks (`).
+- **Case sensitivity**: DuckDB treats even quoted identifiers as case-insensitive (unlike most SQL databases), which can affect how aliases or column names are resolved.
+- **No context-dependent keywords**: In MySQL, some words (like OF) are only reserved in specific contexts (e.g., INTERVAL ... OF), but in DuckDB, if a word appears in duckdb_keywords(), it is fully reserved and cannot be used unquoted.
+
+**DuckDB Syntax Examples**:
+
+-- Correct: escaping a reserved-word alias with double quotes
+SELECT u.user_name,
+       COUNT(o.order_id) AS total_orders,
+       AVG("of".days_since_prior_order) AS avg_days_between_orders
+FROM users u
+JOIN orders o ON u.user_id = o.user_id
+JOIN order_frequency "of" ON u.user_id = "of".user_id
+GROUP BY u.user_id, u.user_name
+HAVING COUNT(o.order_id) > 1
+ORDER BY total_orders DESC, avg_days_between_orders ASC;
+
+-- Incorrect (will fail if "of" is a reserved keyword):
+-- JOIN order_frequency of ON ...  -- 'of' may be parsed as keyword
+
+-- Checking reserved keywords:
+SELECT * FROM duckdb_keywords() WHERE keyword = 'OF';  -- returns row if reserved
+
+-- Quoted identifiers with spaces or special chars:
+SELECT 1 AS "SELECT";  -- valid
+SELECT 1 AS "column with spaces";  -- valid
+@dialect2sql@
+
+@dialect2sql@
+**Title**: Window Functions – Usage in Filtering Clauses
+
+**Content**:  
+DuckDB supports filtering window function results directly within the same query level using the **`QUALIFY`** clause, which is evaluated after window functions are computed but before the final `ORDER BY`. This eliminates the need for subqueries or CTEs when filtering on window function outputs.
+
+Unlike MySQL—which prohibits referencing window functions in `WHERE` or `HAVING` clauses at the same query level because they are computed after those clauses—DuckDB introduces `QUALIFY` as a dedicated filtering clause for window expressions. This aligns DuckDB more closely with standards like Snowflake or BigQuery than with MySQL.
+
+The `QUALIFY` clause can reference:
+- Window functions defined inline in the `SELECT` list (by alias),
+- Window functions written directly in the `QUALIFY` condition,
+- Named windows defined via the optional `WINDOW` clause.
+
+**CRITICAL Differences / Dialect Features**:
+- **MySQL does not support `QUALIFY`**; filtering window results requires wrapping the query in a derived table or CTE.
+- **DuckDB allows direct filtering of window functions** via `QUALIFY`, making queries more concise and readable.
+- In DuckDB, `QUALIFY` appears after the (optional) `WINDOW` clause and before `ORDER BY`.
+
+**DuckDB Syntax Examples**:
+
+```sql
+-- Filter using window function alias
+SELECT
+    schema_name,
+    function_name,
+    row_number() OVER (PARTITION BY schema_name ORDER BY function_name) AS function_rank
+FROM duckdb_functions()
+QUALIFY function_rank < 3;
+
+-- Filter using inline window function in QUALIFY
+SELECT
+    schema_name,
+    function_name
+FROM duckdb_functions()
+QUALIFY row_number() OVER (PARTITION BY schema_name ORDER BY function_name) < 3;
+
+-- Using named window with QUALIFY
+SELECT
+    schema_name,
+    function_name,
+    row_number() OVER my_window AS function_rank
+FROM duckdb_functions()
+WINDOW my_window AS (PARTITION BY schema_name ORDER BY function_name)
+QUALIFY function_rank < 3;
+```
+@dialect2sql@
+
+@dialect2sql@
+**Title**: Reserved Words as Identifiers
+
+**Content**:  
+In DuckDB, identifiers that conflict with reserved keywords must be quoted using **double quotes (`"`)** to be used as column or table names. Unlike MySQL—which uses backticks (`` ` ``)—DuckDB follows the SQL standard by using double quotes for quoted identifiers. Unquoted identifiers cannot be reserved keywords, start with a digit, or contain whitespace.
+
+**CRITICAL Differences / Dialect Notes**:  
+- **Quoting Style**: Unlike MySQL, which uses backticks (`` `rank` ``), DuckDB requires double quotes (`"rank"`) to escape reserved words.
+- **Case Sensitivity**: DuckDB treats **both quoted and unquoted identifiers as case-insensitive** (using ASCII-based comparison), which differs from many SQL dialects (like PostgreSQL) where quoted identifiers are case-sensitive.
+- **Reserved Keywords**: DuckDB provides a built-in function `duckdb_keywords()` to list all reserved keywords.
+
+**DuckDB Syntax Examples**:
+```sql
+-- Correct: quoting a reserved word as an identifier
+SELECT year_id, AVG("rank") AS annual_average_score 
+FROM ranks 
+GROUP BY year_id 
+ORDER BY year_id;
+
+-- Incorrect: unquoted reserved word causes error
+-- SELECT year_id, AVG(rank) ...  -- Fails if 'rank' is a keyword
+
+-- Quoted identifiers can include spaces or special characters
+SELECT "column with spaces", "SELECT" FROM my_table;
+
+-- Escaping double quotes within identifiers
+SELECT "name ""with"" quotes" FROM t;
+```
+@dialect2sql@
+
+@dialect2sql@
+<Recursive Query Limitation in MySQL>
+
+DuckDB supports recursive common table expressions (CTEs) via WITH RECURSIVE, but unlike MySQL, it does **not enforce a fixed recursion depth limit** by default. Instead, DuckDB relies entirely on the query author to include proper termination conditions (e.g., WHERE clauses that bound recursion depth or prevent cycles). If such safeguards are missing, a recursive CTE may run indefinitely or until system resources are exhausted—there is no built-in safety valve like MySQL’s @@cte_max_recursion_depth.
+
+A key dialect difference is that DuckDB provides advanced features for managing recursion, including:
+- Built-in support for cycle detection using list operations (e.g., list_position, list_contains).
+- The USING KEY extension, which enables update-in-place semantics during recursion—unavailable in MySQL.
+- No hard-coded recursion limit; execution continues until the logical termination condition is met.
+
+Thus, while both systems support recursive CTEs syntactically, DuckDB places full responsibility for termination on the user and offers more expressive tools for graph and tree traversal, without artificial depth constraints.
+
+-- DuckDB syntax example with explicit depth control (analogous to safe MySQL usage):
+WITH RECURSIVE ZoneHierarchy AS (
+    SELECT 
+        zone_id,
+        zone_name,
+        building_id,
+        0 AS level,
+        [zone_name] AS path
+    FROM zones
+    WHERE parent_id IS NULL  -- assuming proper root condition
+
+    UNION ALL
+
+    SELECT 
+        z.zone_id,
+        z.zone_name,
+        z.building_id,
+        zh.level + 1,
+        list_append(zh.path, z.zone_name)
+    FROM zones z
+    JOIN ZoneHierarchy zh ON z.parent_id = zh.zone_id
+    WHERE zh.level < 100  -- user-defined termination
+)
+SELECT * FROM ZoneHierarchy;
+
+-- DuckDB cycle-safe graph traversal (no equivalent in MySQL):
+WITH RECURSIVE paths(node, visited) AS (
+    SELECT 1, [1]
+    UNION ALL
+    SELECT e.node2id, list_append(p.visited, e.node2id)
+    FROM paths p
+    JOIN edge e ON p.node = e.node1id
+    WHERE NOT list_contains(p.visited, e.node2id)  -- prevents cycles
+)
+SELECT * FROM paths;
+@dialect2sql@
+
+@dialect2sql@
+**Title**: Column Reference and Join Condition Validity
+
+**Content**:  
+DuckDB enforces strict validity checks on column references in JOIN conditions, similar to MySQL: every column used in a JOIN clause must exist in the corresponding table or subquery. If a referenced column does not exist, DuckDB raises a **Binder Error** (e.g., "Binder Error: Referenced column 'feature_name' not found in table 'statistical_values'"), which is functionally equivalent to MySQL’s error 1054 ("Unknown column").
+
+However, there are notable **dialect differences**:
+
+- **Unlike MySQL**, DuckDB provides more detailed and immediate feedback during query binding, often specifying the exact table and column that caused the failure.
+- DuckDB supports advanced join types (e.g., `SEMI`, `ANTI`, `ASOF`, `POSITIONAL`, `LATERAL`) that may introduce additional scoping rules, but the core requirement—that all columns in JOIN conditions must be resolvable—remains consistent.
+- In DuckDB, **natural joins** and **USING clauses** rely on exact column name matches across tables, and referencing a non-existent column in such contexts also triggers a binding error.
+
+**Example of Invalid Join (mirroring MySQL error scenario)**:
+```sql
+-- This will fail in DuckDB if 'statistical_values' has no 'feature_name' column
+SELECT *
+FROM genomic_features gf
+JOIN statistical_values sv ON gf.feature_name = sv.feature_name;
+```
+→ **Error**: `Binder Error: Referenced column "feature_name" not found in table "sv"`
+
+**Corrected Example (valid join condition)**:
+```sql
+-- Assuming 'statistical_values' links via 'feature_id', not 'feature_name'
+SELECT *
+FROM genomic_features gf
+JOIN statistical_values sv ON gf.feature_id = sv.feature_id;
+```
+
+Thus, while the **syntactic category (join condition column validity)** matches between MySQL and DuckDB, DuckDB’s error reporting is more explicit, and its richer join syntax does not relax the fundamental requirement that all referenced columns must exist.
+@dialect2sql@
+
+@dialect2sql@
+<SQL Syntax Rule: GROUP BY Compliance in MySQL with ONLY_FULL_GROUP_BY Mode>
+
+DuckDB implements strict SQL-compliant GROUP BY semantics by default—similar in spirit to MySQL’s ONLY_FULL_GROUP_BY mode—but with key dialect differences and enhanced ergonomics.
+
+**Title**: GROUP BY Compliance in MySQL with ONLY_FULL_GROUP_BY Mode
+
+**Content**:  
+DuckDB enforces that any column in the SELECT list not wrapped in an aggregate function must be part of the GROUP BY clause. This aligns with standard SQL and mirrors the behavior of MySQL when ONLY_FULL_GROUP_BY is enabled. However, **unlike MySQL**, DuckDB provides the **GROUP BY ALL** extension, which automatically groups by all non-aggregate columns in the SELECT clause, reducing verbosity and preventing common errors.
+
+In DuckDB, if a query includes a GROUP BY clause, it is always treated as an aggregate query—even if no explicit aggregate functions are used. This means selecting non-grouped, non-aggregated columns without GROUP BY ALL will result in an error, just as MySQL would under ONLY_FULL_GROUP_BY.
+
+**CRITICAL Differences**:
+- **DuckDB does not have a configurable sql_mode like MySQL**; its GROUP BY behavior is always standards-compliant and cannot be relaxed (i.e., there is no equivalent to disabling ONLY_FULL_GROUP_BY).
+- **DuckDB supports GROUP BY ALL**, a convenience feature absent in MySQL, which infers grouping columns from the SELECT list.
+- **Functional dependency analysis** (as optionally used in newer MySQL versions to allow non-GROUP BY columns if they’re functionally dependent on grouped keys) is **not implemented in DuckDB**. Thus, even if a column is functionally dependent (e.g., via a primary key), it must still appear in GROUP BY or be aggregated.
+
+**DuckDB Syntax Examples**:
+
+✅ Valid (explicit GROUP BY):
+```sql
+SELECT city, street_name, AVG(income)
+FROM addresses
+GROUP BY city, street_name;
+```
+
+✅ Valid (using GROUP BY ALL):
+```sql
+SELECT city, street_name, AVG(income)
+FROM addresses
+GROUP BY ALL;
+-- Equivalent to GROUP BY city, street_name
+```
+
+✅ Valid (deduplication via GROUP BY ALL):
+```sql
+SELECT city, street_name
+FROM addresses
+GROUP BY ALL;
+```
+
+❌ Invalid (non-aggregated column not in GROUP BY):
+```sql
+SELECT city, street_name, income
+FROM addresses
+GROUP BY city;
+-- Error: "street_name" and "income" must be either aggregated or in GROUP BY
+```
+
+Thus, while both systems enforce similar correctness rules under strict mode, **DuckDB’s approach is more rigid (no mode switching) but more ergonomic via GROUP BY ALL**.
+@dialect2sql@
+
+@dialect2sql@
+**Title**: GROUP BY Compliance in MySQL with ONLY_FULL_GROUP_BY Mode
+
+**Content**:  
+DuckDB enforces a stricter and more explicit interpretation of the SQL standard regarding `GROUP BY` compared to MySQL’s `ONLY_FULL_GROUP_BY` mode. In DuckDB, **every column referenced in the `SELECT` clause that is not inside an aggregate function must either be included in the `GROUP BY` clause or be part of a functional dependency that DuckDB can statically verify**—though unlike MySQL, DuckDB does **not** automatically infer functional dependencies from primary keys or unique constraints.
+
+However, DuckDB introduces a powerful convenience feature: **`GROUP BY ALL`**. This clause automatically groups by all non-aggregated columns in the `SELECT` list, eliminating the need to manually enumerate them. This directly addresses the verbosity and error-proneness seen in the MySQL example, where columns like `T1.tp`, `T1.fp`, and `T1.fn` must be explicitly listed in `GROUP BY` because they appear in expressions (`precision`, `recall`, etc.).
+
+**CRITICAL Differences / Dialect Features**:  
+- **Unlike MySQL**, DuckDB **does not support implicit functional dependency resolution** based on primary keys. Even if a column is functionally dependent via a primary key, it must still appear in `GROUP BY` unless using `GROUP BY ALL`.
+- **DuckDB allows `GROUP BY ALL`**, which has no equivalent in MySQL. This simplifies queries with many non-aggregated columns by automatically aligning the `GROUP BY` list with the `SELECT` projection.
+- In DuckDB, any expression in the `SELECT` that references non-grouped, non-aggregated columns (e.g., `CASE WHEN T1.tp > 0 THEN ... END`) will cause an error **unless** the underlying columns (`T1.tp`, etc.) are either in `GROUP BY` or covered by `GROUP BY ALL`.
+
+**DuckDB Syntax Examples**:
+
+✅ Valid with `GROUP BY ALL` (avoids listing all columns manually):
+```sql
+SELECT 
+    T2.study_name,
+    T1.study_id,
+    T1.test_id,
+    CASE 
+        WHEN (T1.tp + T1.fp) > 0 
+        THEN CAST(T1.tp AS DECIMAL(10,4)) / (T1.tp + T1.fp)
+        ELSE NULL
+    END AS precision,
+    COUNT(T3.access_id) AS access_count
+FROM performance_metrics AS T1
+JOIN studies AS T2 ON T1.study_id = T2.study_id
+JOIN access_logs AS T3 ON T1.study_id = T3.study_id
+WHERE T2.study_status = 'completed'
+GROUP BY ALL;
+```
+
+✅ Equivalent explicit form (matches MySQL’s required style but without functional dependency assumptions):
+```sql
+SELECT 
+    T2.study_name,
+    T1.study_id,
+    T1.test_id,
+    T1.tp,
+    T1.fp,
+    T1.fn,
+    CASE 
+        WHEN (T1.tp + T1.fp) > 0 
+        THEN CAST(T1.tp AS DECIMAL(10,4)) / (T1.tp + T1.fp)
+        ELSE NULL
+    END AS precision,
+    COUNT(T3.access_id) AS access_count
+FROM performance_metrics AS T1
+JOIN studies AS T2 ON T1.study_id = T2.study_id
+JOIN access_logs AS T3 ON T1.study_id = T3.study_id
+WHERE T2.study_status = 'completed'
+GROUP BY 
+    T2.study_name,
+    T1.study_id,
+    T1.test_id,
+    T1.tp,
+    T1.fp,
+    T1.fn;
+```
+
+❌ Invalid in DuckDB (would fail even if `T1.study_id` were a primary key):
+```sql
+SELECT T1.study_id, T1.tp, COUNT(*)
+FROM performance_metrics AS T1
+GROUP BY T1.study_id;  -- Error: T1.tp is not in GROUP BY and not aggregated
+```
+
+In summary, while both systems reject ambiguous `GROUP BY` queries, **DuckDB provides `GROUP BY ALL` as a modern, ergonomic alternative to MySQL’s verbose and dependency-aware (but inconsistent) `ONLY_FULL_GROUP_BY` behavior**.
+@dialect2sql@
+
+@dialect2sql@
+**Title**: Filtering on Window Function Aliases
+
+**Content**:  
+DuckDB provides native support for filtering results of window functions using the **`QUALIFY`** clause, which directly addresses the limitation described in the MySQL rule. Unlike MySQL—which requires wrapping a query in a CTE or subquery to filter on window function aliases—DuckDB allows filtering on window function results **in the same query block** via `QUALIFY`.
+
+The `QUALIFY` clause behaves analogously to `HAVING` for aggregate functions but is specifically designed for window functions. It can reference:
+- Window function expressions directly,
+- Aliases defined in the `SELECT` clause that correspond to window functions.
+
+This eliminates the need for nested CTEs or subqueries solely for the purpose of filtering ranked or numbered results.
+
+**CRITICAL Differences / Dialect Features**:  
+- **Unlike MySQL**, DuckDB **does allow** filtering on window function aliases **without requiring a subquery or CTE**, thanks to the `QUALIFY` clause.
+- The `QUALIFY` clause is **not part of standard SQL** and is **not supported in MySQL**; it is a dialect feature found in systems like Snowflake, BigQuery, and now DuckDB.
+- In DuckDB, `QUALIFY` appears **after** any optional `WINDOW` clause and **before** `ORDER BY`.
+
+**DuckDB Syntax Examples**:
+
+```sql
+-- Filter using alias defined in SELECT
+SELECT
+    region,
+    model_id,
+    SUM(quantity) AS total_units_sold,
+    RANK() OVER (PARTITION BY region ORDER BY SUM(quantity) DESC) AS sales_rank
+FROM sales_data
+GROUP BY region, model_id
+QUALIFY sales_rank <= 5;
+```
+
+```sql
+-- Filter using window function expression directly in QUALIFY
+SELECT
+    dealer_name,
+    region,
+    model_id,
+    ROW_NUMBER() OVER (PARTITION BY region, model_id ORDER BY SUM(quantity) DESC) AS dealer_rank
+FROM sales_data
+JOIN dealers USING (dealer_id)
+GROUP BY region, model_id, dealer_name
+QUALIFY ROW_NUMBER() OVER (PARTITION BY region, model_id ORDER BY SUM(quantity) DESC) = 1;
+```
+
+These examples achieve in a single query what requires multi-level CTEs in MySQL, demonstrating a significant ergonomic and expressive advantage in DuckDB for window-based filtering.
+@dialect2sql@
+
+@dialect2sql@
+**Title**: Filtering on Window Function Aliases
+
+**Content**:  
+DuckDB, like MySQL, does not allow filtering on window function aliases directly in the `WHERE` or `HAVING` clauses of the same query block because window functions are computed after those phases. However, **DuckDB provides the `QUALIFY` clause**, a SQL standard extension that enables direct filtering on window function results without requiring subqueries or CTEs.
+
+Unlike MySQL, which forces users to wrap windowed queries in an outer query or CTE to apply filters (e.g., `WHERE sales_rank <= 5`), DuckDB supports `QUALIFY` to simplify this pattern. The `QUALIFY` clause is evaluated after window functions are computed, making it the natural place to filter based on their results.
+
+**CRITICAL Differences / Dialect Features**:  
+- **DuckDB supports `QUALIFY`**, while **MySQL does not**. This is a major ergonomic and syntactic difference.
+- In DuckDB, using `HAVING` or `WHERE` to reference a window function alias in the same scope will fail—just like in MySQL—but `QUALIFY` offers a clean alternative.
+- The `QUALIFY` clause is part of the ANSI SQL:2022 standard and is also supported in databases like Snowflake and BigQuery, but not in MySQL.
+
+**DuckDB Syntax Examples**:
+
+✅ **Using `QUALIFY` (DuckDB-preferred approach)**:
+```sql
+SELECT 
+    region,
+    model_id,
+    SUM(quantity) AS total_units_sold,
+    RANK() OVER (PARTITION BY region ORDER BY SUM(quantity) DESC) AS sales_rank
+FROM sales_data
+GROUP BY region, model_id
+QUALIFY sales_rank <= 5;
+```
+
+❌ **Invalid in DuckDB (same as MySQL)**:
+```sql
+-- This will error in DuckDB:
+SELECT 
+    region,
+    model_id,
+    SUM(quantity) AS total_units_sold,
+    RANK() OVER (PARTITION BY region ORDER BY SUM(quantity) DESC) AS sales_rank
+FROM sales_data
+GROUP BY region, model_id
+HAVING sales_rank <= 5;  -- ❌ 'sales_rank' not available in HAVING
+```
+
+✅ **Fallback using CTE (compatible with both, but verbose)**:
+```sql
+WITH ranked_models AS (
+    SELECT 
+        region,
+        model_id,
+        SUM(quantity) AS total_units_sold,
+        RANK() OVER (PARTITION BY region ORDER BY SUM(quantity) DESC) AS sales_rank
+    FROM sales_data
+    GROUP BY region, model_id
+)
+SELECT * FROM ranked_models WHERE sales_rank <= 5;
+```
+
+In summary, while both systems share the same evaluation order (window functions after `WHERE`/`HAVING`), **DuckDB’s support for `QUALIFY` provides a more concise and expressive way to filter window function results**, distinguishing it from MySQL’s stricter and more verbose requirement for nested queries.
+@dialect2sql@
+
+@dialect2sql@
+**Title**: Window Function & Analytic Calculation
+
+**Content**:  
+DuckDB fully supports standard SQL window functions, including advanced analytic capabilities that go beyond MySQL’s limited implementation. Crucially, **DuckDB supports `PERCENTILE_CONT()` and `QUANTILE_CONT()` as window functions**, which MySQL does not. This allows direct computation of medians and other percentiles using windowed expressions like `PERCENTILE_CONT(0.5) OVER (ORDER BY col)`—a pattern that fails in MySQL.
+
+Unlike MySQL, DuckDB provides built-in continuous percentile functions that can operate in a windowing context. For example, to compute a rolling median over a time series, DuckDB allows:
+
+```sql
+-- DuckDB: Direct median via percentile_cont in a window
+SELECT
+  suburb_code,
+  PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY median_age) 
+    OVER (PARTITION BY suburb_code) AS median_age
+FROM demographic_statistics;
+```
+
+However, note that DuckDB’s syntax for percentile window functions typically uses the **aggregate-within-group** form (`PERCENTILE_CONT(q) WITHIN GROUP (ORDER BY expr)`) rather than the pure window function form (`PERCENTILE_CONT(q) OVER (...)`). But importantly, this aggregate form **can be used as a window function** when combined with an `OVER` clause, enabling partitioned or ordered percentile calculations.
+
+Additionally, DuckDB offers the `quantile_cont()` function, which supports array inputs for multiple quantiles and works seamlessly in window contexts:
+
+```sql
+-- DuckDB: Multi-quantile window function
+SELECT
+  date,
+  quantile_cont(median_age, [0.25, 0.5, 0.75]) 
+    OVER (ORDER BY date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) AS iqr_7day
+FROM base;
+```
+
+**CRITICAL DIFFERENCES**:
+- **Unlike MySQL, DuckDB supports continuous percentile functions (`PERCENTILE_CONT`, `QUANTILE_CONT`) in windowed contexts**, eliminating the need for complex workarounds using `ROW_NUMBER()` and `COUNT()` to approximate medians.
+- DuckDB allows **framing clauses** (`ROWS`, `RANGE`, `GROUPS`) with percentile and aggregate window functions, enabling moving-window statistics (e.g., 7-day rolling medians).
+- DuckDB supports **`IGNORE NULLS`** in many window functions (e.g., `LAG`, `FIRST_VALUE`), a feature absent in MySQL.
+- DuckDB permits **`ORDER BY` within aggregate arguments** (e.g., `mode(x ORDER BY time)`) and **`DISTINCT` in windowed aggregates**, offering finer control than MySQL.
+
+Thus, while MySQL requires manual median calculation via CTEs and ranking, DuckDB enables concise, standard-compliant analytic percentile computations directly in window expressions.
+@dialect2sql@
+
+@dialect2sql@
+Window Function & Analytic Calculation
+
+DuckDB fully supports continuous percentile window/aggregate functions such as PERCENTILE_CONT() (aliased as QUANTILE_CONT()), which MySQL lacks. Unlike MySQL, DuckDB allows direct computation of medians and other percentiles using analytic syntax like PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY col) or its equivalent quantile_cont(col, 0.5). These can be used both as ordered-set aggregate functions and—when combined with OVER clauses—as true window functions. DuckDB also provides discrete variants (PERCENTILE_DISC / QUANTILE_DISC), approximate quantiles (approx_quantile), and a dedicated MEDIAN() aggregate function that internally uses quantile_cont(x, 0.5).
+
+DuckDB syntax examples:
+-- Using ordered-set aggregate (standard SQL syntax)
+SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY median_age) AS global_median_age
+FROM base;
+
+-- Equivalent using DuckDB's native quantile_cont
+SELECT quantile_cont(median_age, 0.5 ORDER BY median_age) AS global_median_age
+FROM base;
+
+-- As a window function (not possible in MySQL for percentiles)
+SELECT 
+    suburb_name,
+    median_age,
+    quantile_cont(median_age, 0.5) OVER () AS global_median_age
+FROM base;
+
+-- Dedicated median function
+SELECT median(median_age) AS global_median_age
+FROM base;
+
+CRITICAL: Unlike MySQL, DuckDB natively supports PERCENTILE_CONT(), PERCENTILE_DISC(), and MEDIAN() as both aggregate and window functions, eliminating the need for manual median calculation via ROW_NUMBER() and COUNT(). This represents a major dialect difference in analytic capabilities.
+@dialect2sql@
+
+@dialect2sql@
+**Title**: MySQL Query Parameterization & Prepared Statement Placeholders
+
+**Content**:  
+DuckDB supports prepared statements with three distinct parameter placeholder syntaxes: auto-incremented (`?`), positional (`$1`, `$2`, ...), and named (`$param_name`). Unlike MySQL, **DuckDB allows the use of `?` placeholders only within explicitly prepared statements**—just like MySQL—but goes further by supporting multiple parameter styles in a single system. However, a key difference is that **DuckDB does not permit `?` (or any parameter marker) in ad-hoc, non-prepared queries**, consistent with MySQL’s restriction.
+
+**CRITICAL Differences / Dialect Notes**:  
+- **Unlike MySQL**, which only supports `?` as a parameter marker (and only in prepared statements via client APIs or `PREPARE`/`EXECUTE`), **DuckDB offers richer parameter syntax**, including positional (`$1`) and named (`$name`) parameters, enhancing flexibility and readability.
+- In both systems, using `?` in a plain query (not wrapped in `PREPARE`/`EXECUTE`) results in a syntax error—but **DuckDB’s CLI and many clients enforce this strictly**, whereas some MySQL clients may misleadingly suggest `?` works inline.
+- DuckDB’s `EXECUTE` syntax for passing arguments differs: it uses function-like calls (e.g., `EXECUTE stmt('B', 40)`) or named assignments (e.g., `EXECUTE stmt(name := 'B')`), while MySQL uses `EXECUTE ... USING @var`.
+
+**DuckDB Syntax Examples**:
+```sql
+-- Auto-incremented (?)
+PREPARE get_players AS SELECT * FROM person WHERE age >= ? AND starts_with(name, ?);
+EXECUTE get_players(30, 'A');
+
+-- Positional ($1, $2)
+PREPARE get_players AS SELECT * FROM person WHERE age >= $1 AND starts_with(name, $2);
+EXECUTE get_players(30, 'A');
+
+-- Named ($min_age, $prefix)
+PREPARE get_players AS SELECT * FROM person WHERE age >= $min_age AND starts_with(name, $prefix);
+EXECUTE get_players(min_age := 30, prefix := 'A');
+```
+
+In summary, while both MySQL and DuckDB restrict `?` to prepared statements, **DuckDB provides more expressive and flexible parameterization options**, aligning more closely with PostgreSQL-style prepared statement syntax than MySQL’s limited approach.
+@dialect2sql@
+
+@dialect2sql@
+SYN-CAST-001 & CAST/CONVERT 类型转换语法
+
+DuckDB supports explicit type casting using the standard SQL syntax CAST(expr AS type), aligning with the syntactic category of MySQL’s CAST/CONVERT rule. However, there are notable dialect differences:
+
+- **Syntax Support**: Like MySQL, DuckDB requires CAST(expr AS type). The incorrect MySQL form CAST(expr) AS type is also invalid in DuckDB and will cause a parse error.
+- **Shorthand Casting**: Unlike MySQL, DuckDB supports PostgreSQL-style shorthand casting using ::, e.g., expr::INTEGER.
+- **CONVERT Function**: DuckDB does not support MySQL’s CONVERT(expr, type) syntax. Attempting to use CONVERT as a type-conversion function (e.g., CONVERT(x, UNSIGNED)) will result in an error unless CONVERT is defined as a user function or refers to a built-in with different semantics (e.g., character set conversion, which DuckDB does not emphasize).
+- **Unsigned Integers**: DuckDB has no UNSIGNED integer types. All integer types (TINYINT, SMALLINT, INTEGER, BIGINT) are signed. Thus, CAST(... AS UNSIGNED) — valid in MySQL — is not supported in DuckDB. Users must cast to a signed integer type instead.
+- **Error Handling**: DuckDB provides TRY_CAST(expr AS type), which returns NULL on failure instead of throwing an error—unlike MySQL, which lacks a direct equivalent (though CAST in non-strict mode may behave more permissively).
+- **Type Names**: DuckDB uses standard type names like INTEGER, VARCHAR, DOUBLE, etc. It does not recognize MySQL-specific type aliases such as UNSIGNED, SIGNED, or DECIMAL(M,D) with optional precision in all contexts (though DECIMAL is supported).
+
+**Examples in DuckDB**:
+```sql
+-- Standard CAST (matches MySQL syntax)
+SELECT CAST(123 AS VARCHAR);
+
+-- Shorthand casting (MySQL does NOT support this)
+SELECT 123::DOUBLE;
+
+-- TRY_CAST for safe conversion
+SELECT TRY_CAST('abc' AS INTEGER);  -- Returns NULL
+
+-- No UNSIGNED type: this fails
+-- SELECT CAST(100 AS UNSIGNED);  -- Error: unrecognized type
+
+-- Use INTEGER instead
+SELECT CAST(100 AS INTEGER);
+```
+
+**Critical Differences**:
+- ❌ DuckDB does **not support** `CONVERT(expr, type)` for type conversion.
+- ❌ DuckDB has **no UNSIGNED integer types**, so `CAST(... AS UNSIGNED)` is invalid.
+- ✅ DuckDB accepts standard `CAST(expr AS type)` — same as MySQL’s correct form.
+- ✅ DuckDB adds `expr::type` and `TRY_CAST`, which MySQL lacks.
+
+Thus, while the core CAST syntax overlaps, key MySQL-specific features (UNSIGNED, CONVERT) are absent in DuckDB, requiring query rewrites when porting.
+@dialect2sql@
+
+@dialect2sql@
+**Title**: SYN-CAST-001 & CAST/CONVERT 类型转换语法
+
+**Content**:  
+DuckDB supports explicit type casting using the standard SQL `CAST(expr AS type)` syntax, as well as the PostgreSQL-style shorthand `expr::type`. Unlike MySQL, DuckDB **does not support** the `CONVERT(expr, type)` function for general type conversion—`CONVERT` in DuckDB is reserved for character set encoding (and rarely used). Therefore, the MySQL-recommended alternative `CONVERT(expr, UNSIGNED)` has **no direct equivalent** in DuckDB.
+
+DuckDB allows casting to integral types like `INTEGER`, `BIGINT`, etc., and performs **rounding** (not truncation) when converting from fractional numeric types (e.g., `CAST(3.5 AS INTEGER)` yields `4`). This differs from some MySQL behaviors where `UNSIGNED` casting may truncate or behave differently depending on context.
+
+Crucially, **DuckDB does not have an `UNSIGNED` integer type**. All integer types (`TINYINT`, `SMALLINT`, `INTEGER`, `BIGINT`) are signed. Thus, attempts to cast to `UNSIGNED` (as in MySQL examples) will result in a syntax or type error in DuckDB. Instead, users should cast to appropriate signed integer types (e.g., `BIGINT`) and ensure non-negative values through logic or constraints.
+
+Additionally, DuckDB enforces **strict runtime checks** for overflows: casting a value too large for the target type (e.g., `CAST(999 AS TINYINT)`) throws a conversion error, whereas MySQL might silently wrap or clip values depending on SQL mode. DuckDB provides `TRY_CAST` to safely handle such cases by returning `NULL` instead of failing.
+
+DuckDB also supports **implicit casting** in limited, safe scenarios (e.g., `INTEGER` → `DOUBLE`), but **not implicitly to `VARCHAR`** as older MySQL versions sometimes did. Since v0.10.0, implicit casts to `VARCHAR` are disabled by default.
+
+**CRITICAL DIFFERENCES**:
+- ❌ **No `UNSIGNED` types** in DuckDB — use `INTEGER`/`BIGINT` instead.
+- ❌ **No `CONVERT(expr, type)`** for type casting — only `CAST` or `::`.
+- ✅ **Rounding on numeric-to-integer casts**, not truncation.
+- ✅ **Overflow errors by default** (use `TRY_CAST` for safe conversion).
+- ✅ Supports **shorthand `::type`** syntax (MySQL does not).
+
+**DuckDB Syntax Examples**:
+```sql
+-- Standard CAST
+SELECT CAST(3.6 AS INTEGER);        -- Returns 4
+
+-- Shorthand casting
+SELECT (3.6)::INTEGER;              -- Also returns 4
+
+-- Casting string to number
+SELECT CAST('123' AS BIGINT);       -- Returns 123
+
+-- Safe casting with TRY_CAST
+SELECT TRY_CAST('abc' AS INTEGER);  -- Returns NULL
+
+-- No UNSIGNED — use BIGINT for large non-negative ints
+SELECT CAST(1234567890123 AS BIGINT) AS avg_ms_int;
+
+-- Formatting example (equivalent to MySQL LPAD/CONCAT logic)
+SELECT
+  CONCAT(
+    FLOOR(avg_seconds / 60)::VARCHAR,
+    ':',
+    LPAD((FLOOR(avg_seconds) % 60)::VARCHAR, 2, '0'),
+    '.',
+    LPAD((ROUND((avg_seconds - FLOOR(avg_seconds)) * 1000))::VARCHAR, 3, '0')
+  ) AS AvgTimeDisplay
+FROM (SELECT 125.678 AS avg_seconds);
+```
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: Fixed-Length ARRAY Type vs. PostgreSQL's Variable-Length Arrays
+
+DuckDB’s ARRAY type is **fixed-length**, meaning all arrays in a column must have the same number of elements and the same underlying type. This contrasts with **PostgreSQL**, where the ARRAY type allows **variable-length** arrays (i.e., arrays of different lengths can coexist in the same column).
+
+This is a clear dialect difference:  
+> “The ARRAY type in PostgreSQL allows variable-length fields. DuckDB's ARRAY type is fixed-length.”
+
+Syntax and behavior in DuckDB:
+- Array type declaration uses `TYPE[LENGTH]` syntax:
+  ```sql
+  CREATE TABLE array_table (id INTEGER, arr INTEGER[3]);
+  ```
+- Attempting to insert an array with a different length will fail.
+- Arrays can be constructed with `array_value(1, 2, 3)` or cast from a LIST if dimensions match:
+  ```sql
+  SELECT [3, 2, 1]::INTEGER[3];
+  ```
+
+Additionally, while slicing (e.g., `arr[1:2]`) returns a LIST, element access (e.g., `arr[1]`) uses 1-based indexing—consistent with PostgreSQL—but the fixed-size constraint is unique to DuckDB among systems that support SQL-standard arrays.
+
+This fixed-size requirement enables optimizations for vector/embedding workloads but diverges from the more flexible array model in PostgreSQL and standard SQL expectations.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: DuckDB Enum Type with Implicit String Coercion and Custom Ordering
+
+DuckDB implements ENUM types with behavior that differs significantly from standard SQL and other databases like PostgreSQL or MySQL:
+
+1. **Implicit Casting to VARCHAR**: Unlike PostgreSQL—where comparing an ENUM to a VARCHAR raises an error—DuckDB automatically casts ENUMs to VARCHAR for comparisons, function calls, or cross-type operations. This allows expressions like WHERE enum_col = 'string_literal' or using VARCHAR functions (e.g., regexp_matches) directly on ENUM columns. While convenient, this sacrifices type safety: invalid string literals silently return false instead of throwing an error.
+
+   Example:
+   ```sql
+   -- In DuckDB: returns no rows (silent false)
+   SELECT * FROM person WHERE current_mood = 'bogus';
+
+   -- In PostgreSQL: ERROR – operator does not exist between mood and unknown
+   ```
+
+2. **ENUM-Specific Ordering**: DuckDB orders ENUM values by their declaration order (e.g., 'low' < 'medium' < 'high'), not lexicographically. However, if an ENUM is compared to a VARCHAR or a different ENUM type, it falls back to string comparison—potentially yielding unexpected results.
+
+   Example:
+   ```sql
+   CREATE TYPE priority AS ENUM ('low', 'medium', 'high');
+   SELECT 'low'::priority < 'high'::priority; -- true (by definition order)
+
+   -- But:
+   SELECT * FROM tasks WHERE priority_level >= 'medium'; 
+   -- Compares as strings → misses 'high' because 'high' < 'medium' lexicographically!
+   ```
+
+3. **Dynamic ENUM Creation**: DuckDB allows creating ENUM types from query results (e.g., CREATE TYPE region AS ENUM (SELECT region FROM sales_data)), including from external files. This is not supported in PostgreSQL or MySQL, which require explicit, static value lists at type creation.
+
+4. **Anonymous ENUM Casting**: DuckDB supports inline anonymous ENUM casting (e.g., 'clubs'::ENUM('spades', 'hearts', 'diamonds', 'clubs')), a syntax extension absent in standard SQL and other major databases.
+
+These behaviors represent dialect differences: DuckDB prioritizes performance and flexibility (via implicit coercion and dictionary encoding) over strict type safety, diverging from the more rigid ENUM implementations in PostgreSQL and the absence of user-defined ENUM types in MySQL (which only supports ENUM at column level, not as reusable types).
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: Interval Representation and Arithmetic with Three Basis Units
+
+DuckDB represents INTERVALs using three independent basis units—months, days, and microseconds—to correctly handle calendar irregularities (e.g., variable month lengths and DST-induced day lengths). This differs from many other databases (like PostgreSQL or MySQL), which often use a simpler two-component model (e.g., months + microseconds or just total seconds) or normalize intervals differently.
+
+Key differences:
+
+1. **Three-component internal storage**: Unlike systems that store intervals as a single scalar (e.g., total seconds) or only two components, DuckDB preserves months, days, and microseconds separately. This affects both arithmetic and comparison semantics.
+
+2. **Interval comparisons use fixed conversions**: For equality and ordering, DuckDB converts months to 30 days and days to 24 hours (i.e., assumes all months = 30 days, all days = 24 hours). This leads to non-intuitive results:
+   ```sql
+   INTERVAL 30 DAYS = INTERVAL 1 MONTH  -- TRUE in DuckDB
+   ```
+   But when added to dates:
+   ```sql
+   DATE '2020-01-01' + INTERVAL 30 DAYS  -- → '2020-01-31'
+   DATE '2020-01-01' + INTERVAL 1 MONTH  -- → '2020-02-01'
+   ```
+   These are not equal—highlighting that comparison ≠ functional equivalence.
+
+3. **Subtracting DATEs returns INTEGER, not INTERVAL**: 
+   ```sql
+   DATE '2020-02-01' - DATE '2020-01-01'  -- Returns 31 (INTEGER)
+   ```
+   In contrast, PostgreSQL returns an INTERVAL for the same operation.
+
+4. **Adding INTERVAL to DATE yields TIMESTAMP**: Even if the interval has no time component, DuckDB promotes DATE + INTERVAL to TIMESTAMP:
+   ```sql
+   DATE '2000-01-01' + INTERVAL 1 YEAR  -- Returns TIMESTAMP '2001-01-01 00:00:00'
+   ```
+   Other databases (e.g., PostgreSQL) return a DATE in such cases.
+
+5. **datepart() splits microseconds into hour/minute/microsecond—but not seconds**: The omission of a dedicated "second" component in the core decomposition is unusual; seconds must be derived from microseconds.
+
+These behaviors reflect DuckDB’s design choice to prioritize calendar-aware date arithmetic over simple linear time models, diverging from standard SQL and common implementations in PostgreSQL, MySQL, and others.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: LIST Type and 1-Based Indexing with Negative Index Support
+
+DuckDB uses a LIST type (functionally equivalent to arrays) but differs from standard SQL and other databases in key syntactic and semantic ways:
+
+- **Terminology & Type System**: While PostgreSQL uses the ARRAY type, DuckDB calls it LIST, though it accepts INTEGER[] syntax for compatibility. This is primarily a naming difference, but DuckDB also has a separate fixed-length ARRAY type—unlike PostgreSQL, which only has variable-length arrays.
+
+- **1-Based Indexing with Negative Indexes**: DuckDB uses 1-based indexing (like PostgreSQL), but unlike many programming languages or systems like SQLite or BigQuery (which are 0-based). However, DuckDB uniquely supports negative indexing (e.g., ['a','b','c'][-1] → 'c'), which PostgreSQL does not allow in its native array subscripting (negative indexes in PostgreSQL raise an error).
+
+- **Slicing Syntax**: DuckDB supports Python-like slicing (e.g., [1:2], [:2], [-2:]), which is not part of standard SQL and differs from PostgreSQL’s array slicing (which uses lower:upper bounds but without negative indices or open-ended shorthand like [:2]).
+
+- **Comparison Semantics**: LIST comparison follows PostgreSQL’s ordering rules (including NULL handling), but the explicit support for nested list comparisons with positional tie-breaking and NULL propagation aligns more closely with analytical engines than traditional RDBMSs.
+
+Syntax Examples:
+```sql
+SELECT ['a', 'b', 'c'][3];      -- 'c' (1-based)
+SELECT ['a', 'b', 'c'][-1];     -- 'c' (negative index: DuckDB-specific extension)
+SELECT ['a', 'b', 'c'][1:2];    -- ['a', 'b'] (slicing with inclusive start, exclusive end)
+```
+
+This combination of 1-based indexing, negative index support, and flexible slicing constitutes a dialect difference from both standard SQL and major databases like PostgreSQL and MySQL (which lack native array types altogether).
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: Struct Type with Fixed Schema and Enhanced Syntax
+
+DuckDB’s STRUCT type differs significantly from similar constructs in other databases—most notably PostgreSQL’s ROW type—in that **every row in a STRUCT column must have the exact same set of keys (field names)**. This contrasts with PostgreSQL, where ROW types can vary per row in terms of field presence or order, leading to less predictable schema enforcement. DuckDB enforces a fixed schema for STRUCTs, enabling better performance through its vectorized engine and stronger type safety.
+
+Additionally, DuckDB provides **multiple syntaxes for struct creation and manipulation** not commonly found together in other systems:
+
+- `struct_pack(key := value, ...)` uses named parameters with `:=` (no quotes on keys).
+- Literal syntax: `{'key': value, ...}` (similar to JSON but integrated as a native type).
+- Dot notation (`s.key`) and bracket notation (`s['key']`) for access, with support for quoted identifiers like `s."key with space"`.
+- The `row(...)` function creates unnamed structs, but unlike PostgreSQL, DuckDB does **not** have a first-class `ROW` data type—only `STRUCT`.
+- Unique operations like `struct_update()` and `struct_insert()` allow field-level mutation.
+- Projection via `s.* EXCLUDE ('field')` or `unnest(s)` expands struct fields into columns—a feature not standard in SQL.
+
+Furthermore, DuckDB allows **schema evolution of nested STRUCT fields** using `ALTER TABLE ... ADD/DROP/RENAME COLUMN s.field`, which is highly unusual; most databases do not permit altering nested field definitions after table creation.
+
+These behaviors collectively represent dialect differences: they either deviate from standard SQL expectations or extend functionality beyond what PostgreSQL, MySQL, or other major databases offer for composite/nested types.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: UNION Type as a Tagged Sum Type
+
+DuckDB introduces a UNION *type* (distinct from the SQL UNION operator) that functions as a tagged sum type—similar to Rust enums or C++ std::variant—which is **not present in standard SQL or mainstream databases like PostgreSQL or MySQL**. This is a **unique feature**, not merely a dialect variation, because:
+
+- Standard SQL and other major relational databases **do not support union types as column data types**. PostgreSQL has composite types and enums, but no native tagged union type that can hold one of several alternative values with an explicit discriminator.
+- DuckDB’s UNION type carries a runtime “tag” indicating which variant is active, even when the value is NULL—enabling safe, discriminated unions.
+- It supports implicit casting from member types into the UNION (e.g., inserting 1 directly into a UNION(num INTEGER, str VARCHAR)), which is non-standard behavior.
+- It allows dot-syntax access (e.g., u.str) and extraction via union_extract(), blending struct-like access with union semantics—an extension beyond SQL norms.
+- UNION-to-UNION implicit casting follows subset and covariance rules (e.g., UNION(a A, b B) → UNION(a A, b B, c C) is allowed), a sophisticated type system feature absent in other SQL databases.
+
+Syntax Examples:
+```sql
+-- Creating a table with a UNION column (DuckDB-specific)
+CREATE TABLE tbl1 (u UNION(num INTEGER, str VARCHAR));
+
+-- Implicit casting from literals
+INSERT INTO tbl1 VALUES (1), ('two');
+
+-- Explicit tagged construction
+INSERT INTO tbl1 VALUES (union_value(str := 'three'));
+
+-- Accessing union members via dot notation (non-standard)
+SELECT u.str FROM tbl1;
+
+-- Extracting active tag
+SELECT union_tag(u) FROM tbl1;
+```
+
+This UNION type represents a **unique feature** of DuckDB’s type system, extending SQL with functional-programming-inspired sum types not found in MySQL, PostgreSQL, or the SQL standard.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: Friendly SQL Extensions in DuckDB
+
+DuckDB introduces numerous syntactic extensions and conveniences—collectively called “Friendly SQL”—that deviate from standard SQL and differ from traditional databases like PostgreSQL or MySQL. Many of these features either simplify common tasks or introduce entirely new syntax not found elsewhere (or only recently adopted by others after DuckDB pioneered them).
+
+Key dialect differences include:
+
+1. **FROM-first shorthand**:  
+   `FROM tbl` is equivalent to `SELECT * FROM tbl`.  
+   → Standard SQL requires an explicit `SELECT *`.
+
+2. **GROUP BY ALL / ORDER BY ALL**:  
+   `SELECT a, b, sum(c) FROM t GROUP BY ALL` automatically groups by non-aggregate columns (`a`, `b`).  
+   → Standard SQL requires listing all non-aggregate columns explicitly in `GROUP BY`. PostgreSQL and MySQL do not support `GROUP BY ALL`.
+
+3. **SELECT * EXCLUDE / REPLACE**:  
+   `SELECT * EXCLUDE(col)` or `SELECT * REPLACE(col + 1 AS col)` modifies star expansion.  
+   → Not part of standard SQL; supported only in newer engines (e.g., BigQuery, Snowflake), but not in MySQL or PostgreSQL.
+
+4. **INSERT ... BY NAME**:  
+   Matches columns by name rather than position during insertion.  
+   → Standard SQL and most databases (including PostgreSQL and MySQL) rely on positional matching.
+
+5. **UNION BY NAME**:  
+   Aligns columns by name instead of position in `UNION`.  
+   → Standard SQL uses positional alignment; PostgreSQL and MySQL lack this feature.
+
+6. **Prefix aliases**:  
+   `x: 42` instead of `42 AS x`.  
+   → Non-standard syntax; not supported in other major databases.
+
+7. **Percentage-based LIMIT**:  
+   `LIMIT 10%` returns 10% of rows.  
+   → Not valid in standard SQL or in PostgreSQL/MySQL.
+
+8. **Column aliases usable in WHERE/GROUP BY/HAVING**:  
+   `SELECT x + 1 AS y FROM t WHERE y > 5` is allowed.  
+   → Standard SQL and PostgreSQL forbid referencing SELECT aliases in WHERE (only in HAVING for aggregates); MySQL allows it in some contexts but inconsistently.
+
+9. **Trailing commas**:  
+   Allowed in SELECT lists and array literals: `SELECT a, b, FROM t` or `[1, 2,]`.  
+   → Standard SQL and most databases reject trailing commas.
+
+10. **Top-N aggregate functions**:  
+    `SELECT max(val, 3) FROM t GROUP BY grp` returns top-3 values per group as an array.  
+    → No equivalent in standard SQL or in PostgreSQL/MySQL without window functions.
+
+These features collectively make DuckDB’s SQL dialect significantly more expressive and concise than standard SQL or traditional RDBMS implementations, representing clear dialect differences rather than mere standard functionality.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: Mixed Indexing Behavior for JSON vs Other Types
+
+Unlike most SQL databases (such as PostgreSQL and MySQL), which consistently use 1-based indexing for arrays and similar structures, DuckDB uses **1-based indexing for native lists and strings**, but **0-based indexing specifically for JSON arrays**. This hybrid approach diverges from both standard SQL conventions and the uniform behavior found in other systems.
+
+- For native DuckDB lists:
+  ```sql
+  SELECT list[1] AS element
+  FROM (SELECT ['first', 'second', 'third'] AS list);
+  -- Returns 'first' (1-based)
+  ```
+
+- For JSON arrays:
+  ```sql
+  SELECT json[1] AS element
+  FROM (SELECT '["first", "second", "third"]'::JSON AS json);
+  -- Returns '"second"' (0-based)
+  ```
+
+This inconsistency within DuckDB itself—and its deviation from the typical 1-based indexing in PostgreSQL or the consistent handling in MySQL—constitutes a dialect difference.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: Order Preservation in Row Output
+
+Unlike most traditional SQL databases (such as PostgreSQL, MySQL, or SQL Server), which treat tables as unordered sets and do not guarantee any output row order unless explicitly specified with ORDER BY, DuckDB **preserves the physical insertion or scan order of rows** through many query operations by default.
+
+This behavior aligns DuckDB more closely with data frame libraries like Pandas than with standard SQL engines. Specifically:
+
+- In DuckDB, a simple SELECT * FROM tbl or a WHERE-filtered query maintains the original row order from the source.
+- Clauses like WHERE, LIMIT, OFFSET, SELECT, UNION ALL, and single-table FROM preserve input order.
+- This contrasts with standard SQL, where without an ORDER BY clause, result order is considered arbitrary and implementation-dependent.
+
+Example:
+```sql
+CREATE TABLE tbl AS
+    SELECT * FROM (VALUES (1, 'a'), (2, 'b'), (3, 'c')) t(x, y);
+
+SELECT * FROM tbl WHERE x % 2 = 1;
+-- DuckDB guarantees output: (1, 'a') then (3, 'c')
+-- Standard SQL: order is not guaranteed without ORDER BY
+```
+
+Additionally, DuckDB provides the `preserve_insertion_order` configuration (enabled by default) that ensures file readers (CSV, JSON, Parquet) retain input row order—another deviation from typical SQL systems that make no such guarantees.
+
+This order-preserving behavior is a **dialect difference**, as it changes expectations around result stability and eliminates the need for ORDER BY in scenarios where logical order matches insertion order—a pattern not portable to other SQL databases.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: Floating-Point Division by Zero and IEEE 754 Compliance  
+DuckDB fully conforms to the IEEE 754 standard for floating-point arithmetic, returning Infinity or NaN for operations like 1.0 / 0.0 or 0.0 / 0.0. In contrast, PostgreSQL throws an error for division-by-zero operations (e.g., 1.0 / 0.0), even though it otherwise follows IEEE 754 for infinity-related computations.
+
+Examples:
+```sql
+SELECT 1.0 / 0.0;  -- DuckDB: Infinity; PostgreSQL: ERROR
+SELECT 0.0 / 0.0;  -- DuckDB: NaN; PostgreSQL: ERROR
+```
+
+Dialect Feature: Integer Division Behavior  
+In DuckDB, the `/` operator always performs floating-point division, so 1 / 2 returns 0.5. PostgreSQL, however, performs integer division when both operands are integers, returning 0 for 1 / 2. DuckDB provides the `//` operator for explicit integer division.
+
+Examples:
+```sql
+SELECT 1 / 2;   -- DuckDB: 0.5; PostgreSQL: 0
+SELECT 1 // 2;  -- DuckDB: 0 (integer division)
+```
+
+Dialect Feature: UNION of Boolean and Integer Types  
+DuckDB allows UNION between boolean and integer values by implicitly casting boolean to integer (true → 1, false → 0). PostgreSQL rejects such unions with a type mismatch error.
+
+Example:
+```sql
+SELECT true AS x
+UNION
+SELECT 2;
+-- DuckDB: returns [1, 2]; PostgreSQL: ERROR
+```
+
+Dialect Feature: Implicit Casting in Equality Comparisons  
+DuckDB performs aggressive implicit casting during equality checks (e.g., string to numeric or boolean), allowing comparisons like '1.1' = 1 or true = 1 to succeed. PostgreSQL throws errors for such cross-type comparisons unless explicitly cast.
+
+Examples:
+```sql
+SELECT '1.1' = 1;    -- DuckDB: true; PostgreSQL: ERROR
+SELECT true = 1;     -- DuckDB: true; PostgreSQL: ERROR
+SELECT 'true' = 1;   -- Both return error (not all casts allowed)
+```
+
+Dialect Feature: Case Sensitivity of Identifiers  
+DuckDB treats all identifiers as case-insensitive but preserves original casing in metadata. Quoted and unquoted identifiers match regardless of case. PostgreSQL lowercases unquoted identifiers and treats quoted identifiers as strictly case-sensitive, leading to mismatches if case varies.
+
+Examples:
+```sql
+CREATE TABLE MyTaBLe (x INT);
+SELECT * FROM "MyTaBLe";        -- Works in DuckDB; fails in PostgreSQL
+CREATE TABLE "PreservedCase" (x INT);
+SELECT * FROM PreservedCase;    -- Works in DuckDB; fails in PostgreSQL
+```
+
+Dialect Feature: Double Equality Operator (==)  
+DuckDB supports both `=` and `==` for equality comparison, while PostgreSQL only supports `=`. Using `==` in PostgreSQL results in an operator-not-found error.
+
+Example:
+```sql
+SELECT 1 == 1;  -- DuckDB: true; PostgreSQL: ERROR
+```
+
+Dialect Feature: VACUUM Statement Semantics  
+In PostgreSQL, VACUUM reclaims storage and updates statistics. In DuckDB, VACUUM only rebuilds statistics and does not reclaim space—requiring alternative methods for storage optimization.
+
+Dialect Feature: String Escaping in Nested Structures  
+Since v1.3.0, DuckDB escapes special characters (like `'`) in strings within nested data structures (e.g., arrays), whereas PostgreSQL does not.
+
+Example:
+```sql
+SELECT ARRAY[''''];
+-- DuckDB: ['\'']; PostgreSQL: {'}
+```
+
+Dialect Feature: regexp_extract vs regexp_substr Behavior  
+DuckDB’s `regexp_extract` returns an empty string on no match, while PostgreSQL’s `regexp_substr` returns NULL.
+
+Dialect Feature: Absence of to_date Function  
+DuckDB does not support PostgreSQL’s `to_date` function; users must use `strptime` instead for parsing date strings.
+
+Dialect Feature: Type Name Resolution in Schemas  
+DuckDB resolves user-defined types (e.g., enums) within the same schema during CREATE TABLE, while PostgreSQL requires fully qualified type names or fails with “type does not exist.”
+
+Example:
+```sql
+CREATE SCHEMA myschema;
+CREATE TYPE myschema.mytype AS ENUM ('a', 'b');
+CREATE TABLE myschema.mytable (v mytype);  -- Works in DuckDB; fails in PostgreSQL
+```
+
+Dialect Feature: GROUP BY and Functional Dependencies  
+PostgreSQL allows selecting non-GROUP BY columns if they are functionally dependent on the grouped key (e.g., via primary key). DuckDB requires all selected non-aggregate columns to be in the GROUP BY clause or wrapped in an aggregate like ANY_VALUE.
+
+Example:
+```sql
+CREATE TABLE tbl (i INT PRIMARY KEY, j INT);
+SELECT j FROM tbl GROUP BY i;
+-- PostgreSQL: OK; DuckDB: ERROR
+```
+
+Dialect Feature: Regular Expression Match Operators (~, ~*)  
+DuckDB redefines `~` to mean full-string regex match (`regexp_full_match`), unlike PostgreSQL’s partial match behavior. DuckDB does not support `~*`, `!~*`, and behaves differently for `!~`.
+
+Examples:
+```sql
+SELECT 'aaa' ~ '(a|b)';   -- PostgreSQL: true (partial match); DuckDB: false (full match required)
+SELECT 'AAA' ~* '(a|b)';  -- PostgreSQL: true; DuckDB: ERROR (operator not supported)
+```
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: Ambiguous Interpretation of INT8/UINT8 Type Aliases
+
+DuckDB interprets the numeric suffix in integer type aliases inconsistently compared to standard conventions and other databases. Specifically:
+- UINT8 is treated as an 8-bit unsigned integer (alias for UTINYINT)
+- INT8 is treated as an 8-byte signed integer (alias for BIGINT)
+
+This creates a dialect difference because the same suffix "8" refers to bits for unsigned types but bytes for signed types—a quirk not found in PostgreSQL, MySQL, or standard SQL, where such ambiguity is typically avoided or resolved uniformly (e.g., always by bytes or always by bits). This inconsistent interpretation can confuse users expecting uniform semantics across signed and unsigned integer aliases.
+
+Syntax/examples:
+- UINT8 → UTINYINT (0 to 255)
+- INT8 → BIGINT (-9,223,372,036,854,775,808 to 9,223,372,036,854,775,807)
+
+Dialect Feature: Non-Standard Equality Comparisons with Mixed Types
+
+DuckDB allows several equality comparisons between mismatched types that either fail or return false in other databases—particularly PostgreSQL, which it otherwise aims to emulate. Notable deviations include:
+- 1 = true → true (PostgreSQL returns false/error)
+- 1 = '1.1' → true (PostgreSQL returns false)
+
+While DuckDB aligns with PostgreSQL on many implicit casts (e.g., 1 = '1'), these specific cases violate PostgreSQL compatibility and standard SQL strict typing expectations, representing dialect-specific leniency in type coercion.
+
+Examples:
+- SELECT 1 = true;        -- DuckDB: true; PostgreSQL: false
+- SELECT 1 = '1.1';       -- DuckDB: true; PostgreSQL: false
+
+Dialect Feature: Inconsistent NULL Handling in Array vs. List Membership Tests
+
+DuckDB treats array-like literals differently in IN predicates depending on syntax:
+- 1 IN (0, NULL) → NULL (standard SQL three-valued logic)
+- 1 IN [0, NULL] → false (non-standard behavior)
+
+The bracket notation [0, NULL] is DuckDB-specific (not standard SQL), and its evaluation to false—rather than NULL—deviates from conventional NULL propagation rules used by PostgreSQL and others, creating a dialect-specific semantic difference.
+
+Dialect Feature: Automatic Column Name Deduplication in SELECT Clauses
+
+When duplicate column names appear in a SELECT * subquery, DuckDB automatically deduplicates them by keeping only the first occurrence and silently shadowing later ones. For example:
+
+CREATE TABLE tbl AS SELECT 1 AS a;
+SELECT a FROM (SELECT *, 2 AS a FROM tbl);  -- Returns 1, not 2
+
+This differs from PostgreSQL and standard SQL behavior, where such ambiguity typically results in an error or requires explicit disambiguation. DuckDB’s silent shadowing is a non-standard resolution strategy that can lead to unexpected results.
+
+Dialect Feature: Semantic Placement of USING SAMPLE Clause
+
+DuckDB’s USING SAMPLE clause is syntactically placed after WHERE and GROUP BY (like LIMIT) but is semantically applied before them—unlike LIMIT, which applies after. This execution order differs from intuitive expectations and from sampling approaches in other systems (e.g., BigQuery’s TABLESAMPLE or PostgreSQL’s extensions), where sampling often occurs early but syntax and semantics are more aligned. DuckDB’s design creates a dialect-specific gotcha in query planning.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: Combination Casting in Comparison Operators
+
+DuckDB allows implicit "Combination Casting" during comparisons between values of different types—such as comparing integers to booleans or strings—which is not permitted in many other SQL databases like PostgreSQL. This behavior aligns more closely with dynamic programming languages but diverges from strict SQL type-checking norms.
+
+For example, the following expressions are valid and return true in DuckDB:
+
+```sql
+SELECT 1 = true;      -- true (1 is cast to boolean true)
+SELECT 1 = '1.1';     -- true (string '1.1' is cast to numeric 1.1, then compared loosely)
+```
+
+In contrast, PostgreSQL would reject these comparisons with a type mismatch error, requiring explicit casting.
+
+Additionally, DuckDB supports non-standard NULL-check aliases ISNULL and NOTNULL (without spaces), which are not part of the SQL standard and differ from PostgreSQL’s use of IS NULL / IS NOT NULL only.
+
+This lenient, auto-casting comparison behavior is a deliberate dialect difference aimed at interactive analytics convenience, but it breaks compatibility with stricter SQL engines.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: DuckDB's Extended `IN` Operator with List, Map, and String Semantics
+
+DuckDB significantly extends the standard SQL `IN` operator by supporting not only tuples (as in standard SQL) but also lists, maps, and even strings—with semantics that differ from traditional databases like PostgreSQL or MySQL.
+
+Key differences:
+
+1. **List Support with Python-like NULL Handling**:  
+   DuckDB allows `IN` with bracketed lists `[val1, val2, ...]`, which follow Python-style containment rules. Crucially, unlike standard SQL’s tuple-based `IN`, the presence of `NULL` in a list does **not** cause the result to become `NULL` when the value is absent:
+   ```sql
+   SELECT 'English' IN ['CS', 'Math', NULL];  -- Returns false (not NULL)
+   ```
+   In contrast, standard SQL (and DuckDB’s own tuple syntax) returns `NULL` if the RHS contains `NULL` and the value is not found:
+   ```sql
+   SELECT 'English' IN ('CS', 'Math', NULL);  -- Returns NULL (standard SQL behavior)
+   ```
+
+2. **Map Support (Key Containment)**:  
+   DuckDB allows `IN` on `MAP` types, checking for key existence (like Python), which is not supported in standard SQL or most other databases:
+   ```sql
+   SELECT 'key1' IN MAP {'key1': 50, 'key2': 75};  -- true
+   ```
+   PostgreSQL and MySQL have no equivalent `IN`-on-map syntax.
+
+3. **String Containment as `IN`**:  
+   DuckDB treats `x IN y` where `y` is a string as a shorthand for substring search (`contains(y, x)`):
+   ```sql
+   SELECT 'Hello' IN 'Hello World';  -- true
+   ```
+   This is non-standard; in PostgreSQL or MySQL, this would either error or require explicit use of `LIKE` or `POSITION`.
+
+These extensions make DuckDB’s `IN` operator far more flexible than standard SQL, but introduce dialect-specific behavior that does not port directly to other databases.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: Extended Star (`*`) and `COLUMNS` Expressions with EXCLUDE, REPLACE, RENAME, Pattern Matching, and Unpacking
+
+DuckDB significantly extends the standard SQL `SELECT *` syntax with powerful column-selection features that are not available in most other databases like PostgreSQL, MySQL, or standard SQL. These include:
+
+- **`EXCLUDE`, `REPLACE`, and `RENAME` clauses** directly on `*`:
+  ```sql
+  SELECT * EXCLUDE (col) FROM tbl;
+  SELECT * REPLACE (col1 / 1000 AS col1) FROM tbl;
+  SELECT * RENAME (col1 AS height) FROM tbl;
+  ```
+  Standard SQL does not support these modifiers; other databases require explicit column listing or complex workarounds.
+
+- **Pattern-based column selection** using `LIKE`, `GLOB`, or `SIMILAR TO`:
+  ```sql
+  SELECT * LIKE 'col%' FROM tbl;
+  ```
+  This is absent in PostgreSQL and MySQL, which lack built-in syntax to select columns by name patterns.
+
+- **`COLUMNS` expression**, which generalizes star expansion and allows:
+  - Applying functions across all matching columns:
+    ```sql
+    SELECT min(COLUMNS(*)) FROM numbers;
+    ```
+  - Using regular expressions to select and rename columns:
+    ```sql
+    SELECT COLUMNS('(\w{3}).*') AS '\1' FROM numbers;
+    ```
+  - Lambda-based filtering:
+    ```sql
+    SELECT COLUMNS(c -> c LIKE '%num%') FROM numbers;
+    ```
+  No mainstream database offers an equivalent to DuckDB’s `COLUMNS` construct.
+
+- **`UNPACK` (or `*` prefix)** to expand column lists into function arguments, mimicking Python-style unpacking:
+  ```sql
+  SELECT coalesce(UNPACK(COLUMNS(['a','b','c']))) AS result;
+  -- or
+  SELECT coalesce(*COLUMNS(*)) AS result;
+  ```
+  This behavior has no direct analog in standard SQL or other major databases.
+
+- **Struct unpacking via `STRUCT.*`**:
+  ```sql
+  SELECT st.* FROM (SELECT {'x':1, 'y':2} AS st);
+  ```
+  While some databases (e.g., BigQuery, Snowflake) support struct flattening, PostgreSQL and MySQL do not allow `struct.*` in standard `SELECT` clauses without explicit lateral joins or JSON functions.
+
+These features collectively represent a **dialect difference**: DuckDB redefines and greatly expands the semantics of the star projection beyond standard SQL, enabling dynamic, expressive column manipulation that is either impossible or verbose in other systems.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: Function Chaining via Dot Operator
+
+DuckDB supports a non-standard syntax for scalar function calls using the dot operator, allowing functions to be invoked as method-like expressions (e.g., arg.fn(...)). This differs from standard SQL and most other databases (such as PostgreSQL, MySQL, and SQLite), which require traditional prefix notation (e.g., fn(arg, ...)).
+
+Syntax Examples:
+- Standard DuckDB:  
+  SELECT replace(goose_name, 'goose', 'duck') ...
+- Equivalent chained form:  
+  SELECT goose_name.replace('goose', 'duck') ...
+
+For literals or array elements, parentheses are required to disambiguate parsing:
+- ('hello world').replace(' ', '_')
+- (2).sqrt()
+- (m[1]).map_entries()
+
+This chaining syntax is not part of standard SQL and is not supported in PostgreSQL, MySQL, or other major relational databases, making it a DuckDB-specific dialect extension. Notably, it only works with scalar functions—table functions (e.g., read_parquet()) and certain built-ins like coalesce() cannot use this syntax.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: DuckDB’s Pattern Matching Operators and PostgreSQL Compatibility Differences
+
+DuckDB supports multiple pattern matching operators—LIKE, ILIKE, SIMILAR TO, GLOB, and POSIX-style regular expressions—but implements them with notable differences from standard SQL and other databases like PostgreSQL:
+
+1. **PostgreSQL-style symbolic operators**:
+   - DuckDB supports `~~` (LIKE), `!~~` (NOT LIKE), `~~*` (ILIKE), and `!~~*` (NOT ILIKE) for PostgreSQL compatibility.
+   - However, unlike PostgreSQL, DuckDB does **not** treat `~` as equivalent to `SIMILAR TO`. In PostgreSQL, `~` means POSIX regex match (not SIMILAR TO), but the documentation explicitly notes that in DuckDB, `~` maps to `regexp_full_match`, and `~*` (case-insensitive regex) is **not supported**.
+
+2. **GLOB operator**:
+   - DuckDB includes a non-standard `GLOB` operator (also usable as `~~~`) using shell-like wildcards (`*`, `?`, `[...]`), which is **not part of standard SQL** and absent in MySQL/PostgreSQL.
+   - Its globbing semantics follow Python’s `glob`, not Unix shells: notably, `**/file` does **not** match top-level files (unlike Bash/Zsh), which is a key behavioral difference from shell globbing and some other systems.
+
+3. **SIMILAR TO behavior**:
+   - While `SIMILAR TO` is part of SQL:1999, its support varies. DuckDB implements it with full-string matching (like LIKE), but explicitly diverges from PostgreSQL by **not equating `~` to `SIMILAR TO`**—in fact, PostgreSQL doesn’t use `SIMILAR TO` with `~` at all; `~` is for POSIX regex.
+
+4. **Case-insensitive matching**:
+   - DuckDB supports `ILIKE` (standard in PostgreSQL but **not in MySQL or standard SQL**), and extends it with `ESCAPE` clauses and symbolic forms (`~~*`), enhancing PostgreSQL compatibility while differing from MySQL (which uses `LIKE` with collations or `REGEXP` for case control).
+
+Examples highlighting differences:
+```sql
+-- PostgreSQL-compatible symbols (DuckDB-only among many DBs)
+SELECT 'abc' ~~ 'a%';      -- true (same as LIKE)
+SELECT 'ABC' ~~* '%c';     -- true (ILIKE)
+
+-- GLOB is DuckDB-specific
+SELECT 'best.txt' GLOB '*.txt';        -- true
+SELECT 'best.txt' ~~~ '*.txt';         -- same as above
+
+-- DuckDB's ~ means regexp_full_match, NOT SIMILAR TO
+SELECT 'abc' ~ '.*(b|d).*';            -- true (full regex match)
+
+-- But ~* is unsupported (PostgreSQL supports it for case-insensitive regex)
+-- This would fail in DuckDB but work in PostgreSQL
+```
+
+These features show DuckDB extending SQL with PostgreSQL-inspired syntax while introducing unique behaviors (like GLOB and Python-style glob semantics) not found in standard SQL, MySQL, or even PostgreSQL in the same form.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: SAMPLE Clause Placement and Syntax
+
+DuckDB supports a USING SAMPLE clause that appears immediately after the FROM clause (including after joins) but before WHERE or aggregation—unlike standard SQL, which does not define a SAMPLE clause at all, and unlike databases like PostgreSQL or SQL Server that either lack native sampling or implement it via TABLESAMPLE in a different syntactic position.
+
+Key differences:
+- **Syntax**: DuckDB uses USING SAMPLE after FROM, whereas PostgreSQL (and SQL Standard) uses TABLESAMPLE directly after the table name (e.g., FROM addresses TABLESAMPLE BERNOULLI (1)).
+- **Placement**: In DuckDB, sampling applies to the entire FROM expression (including subqueries and joins), while in PostgreSQL, TABLESAMPLE applies per table and cannot easily sample the result of a join.
+- **Flexibility**: DuckDB allows sampling by percentage or fixed row count (e.g., USING SAMPLE 10 ROWS), and supports sampling methods like bernoulli inline.
+
+Examples:
+```sql
+-- DuckDB: sample after FROM, even on subqueries
+SELECT * FROM addresses USING SAMPLE 1%;
+
+SELECT * FROM (SELECT * FROM addresses) USING SAMPLE 10 ROWS;
+
+-- Contrast with PostgreSQL (not valid in DuckDB):
+-- SELECT * FROM addresses TABLESAMPLE BERNOULLI (1);
+```
+
+This represents a dialect difference in both syntax and scoping of sampling operations compared to other SQL databases.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: DuckDB's `unnest` as a Scalar Function in SELECT with Recursive and max_depth Options
+
+Unlike standard SQL and most other databases (e.g., PostgreSQL, which requires `UNNEST()` in the FROM clause as a table function), DuckDB allows unnest to be used directly as a scalar-like function in the SELECT clause. This enables concise syntax like SELECT unnest([1,2,3]) without needing a FROM or LATERAL join.
+
+Key differences from other systems:
+
+- **Placement**: In PostgreSQL and BigQuery, UNNEST must appear in FROM (often with CROSS JOIN LATERAL). DuckDB permits it inline in SELECT.
+- **Recursive unnesting**: DuckDB supports recursive := true and max_depth parameters to control deep flattening of nested lists/structs—features absent in PostgreSQL’s UNNEST.
+- **Struct unnesting**: DuckDB can unnest structs into columns via SELECT unnest({'a': 42, 'b': 84}), producing two columns—a capability not natively supported in PostgreSQL’s UNNEST, which only handles arrays.
+- **Side-by-side unnesting with NULL padding**: When multiple unnest calls appear in one SELECT (e.g., SELECT unnest([1,2,3]), unnest([10,11])), DuckDB aligns them row-wise and pads shorter lists with NULL—behavior that differs from explicit JOIN-based approaches in other DBs.
+
+Example syntax unique to DuckDB:
+```sql
+SELECT unnest([1, 2, 3]);  -- valid in DuckDB SELECT clause
+SELECT unnest([{'a': 42, 'b': 84}]);  -- emits two columns
+SELECT unnest([[1,2],[3]], recursive := true);  -- flattens recursively
+SELECT unnest([[[1]]], max_depth := 2);  -- controls nesting depth
+```
+
+This represents a significant dialect divergence in both syntax placement and functional capabilities compared to standard SQL and mainstream databases.
+@dialect2sql@
+
+@dialect2sql@
+KEEP
+
+Dialect Feature: CREATE MACRO (Scalar and Table Macros with Overloading and Default Parameters)
+
+DuckDB introduces a non-standard SQL extension called CREATE MACRO, which allows users to define both scalar and table-valued macros that are expanded at query planning time. This differs significantly from standard SQL and most other databases (like PostgreSQL or MySQL), which rely on user-defined functions (UDFs) written in procedural languages or external code, rather than textual macro substitution.
+
+Key differences from other databases:
+
+1. **Macro Expansion vs. Function Execution**: Unlike traditional SQL functions, DuckDB macros are not executed as runtime routines but are textually expanded before query execution. This enables powerful compile-time expression composition without the overhead of function calls.
+
+2. **Table Macros**: DuckDB supports table macros using AS TABLE syntax, allowing parameterized queries that return tables—similar in spirit to PostgreSQL’s set-returning functions or SQL Server’s table-valued functions—but implemented via macro expansion rather than procedural logic.
+
+3. **Overloading by Arity and Type**: DuckDB allows overloading macros based on the number or types of parameters in a single CREATE MACRO statement (e.g., defining both add(a, b) and add(a, b, c) together). Most SQL databases do not support function overloading in pure SQL without procedural extensions (e.g., PostgreSQL allows it in PL/pgSQL, but not via simple SQL definitions).
+
+4. **Default Parameters with := Syntax**: DuckDB macros support default values using := (e.g., b := 5), and allow out-of-order named arguments (e.g., triple_add(40, c := 1, b := 1)). While PostgreSQL supports default parameters in functions, it uses =, not :=, and MySQL does not support default parameters in SQL-level functions at all.
+
+5. **Schema-bound and Aliased as FUNCTION**: DuckDB allows CREATE FUNCTION as an alias for CREATE MACRO, blurring the line between macros and functions—a design choice not found in standard SQL or other major databases.
+
+Example syntax unique to DuckDB:
+```sql
+-- Scalar macro with default parameter
+CREATE MACRO add_default(a, b := 5) AS a + b;
+
+-- Table macro
+CREATE MACRO dynamic_table(col1_value, col2_value) AS TABLE
+    SELECT col1_value AS column1, col2_value AS column2;
+
+-- Overloaded macro in one statement
+CREATE MACRO add_x
+    (a, b) AS a + b,
+    (a, b, c) AS a + b + c;
+```
+
+This feature is a DuckDB-specific dialect extension that changes how reusable logic is defined and optimized, diverging from standard SQL and the UDF models of PostgreSQL, MySQL, and others.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: INSERT ... BY NAME and Conflict Handling Syntax
+
+DuckDB introduces non-standard extensions to the INSERT statement that differ from common SQL dialects like PostgreSQL, MySQL, and standard SQL:
+
+1. **INSERT ... BY NAME**:  
+   DuckDB supports an explicit `BY NAME` clause that matches columns by name rather than position when inserting from a SELECT. This is not part of standard SQL and is not supported in PostgreSQL or MySQL. For example:
+   ```sql
+   INSERT INTO tbl BY NAME (SELECT 42 AS b, 32 AS a);
+   ```
+   Here, values are inserted into columns `a` and `b` based on column aliases in the SELECT, regardless of their order. Standard SQL requires either positional matching or explicit column lists without the `BY NAME` modifier.
+
+2. **SQLite-style conflict resolution syntax (`INSERT OR IGNORE` / `INSERT OR REPLACE`)**:  
+   DuckDB adopts SQLite’s shorthand syntax for handling constraint violations:
+   - `INSERT OR IGNORE INTO ...` ≡ `INSERT INTO ... ON CONFLICT DO NOTHING`
+   - `INSERT OR REPLACE INTO ...` ≡ `INSERT INTO ... ON CONFLICT DO UPDATE SET col = EXCLUDED.col` for all columns  
+   While PostgreSQL supports `ON CONFLICT DO NOTHING/UPDATE` (UPSERT), it does **not** support the `INSERT OR IGNORE/REPLACE` syntax—this is specific to SQLite and now DuckDB. MySQL uses `INSERT IGNORE` and `ON DUPLICATE KEY UPDATE`, which are syntactically different.
+
+3. **RETURNING clause with arbitrary expressions**:  
+   Although PostgreSQL also supports `RETURNING`, DuckDB extends it to allow arbitrary non-aggregate expressions alongside `*`, such as:
+   ```sql
+   INSERT INTO t2 SELECT 2, 3 RETURNING *, i * j AS i_times_j;
+   ```
+   While PostgreSQL allows expressions in `RETURNING`, the combination with `*` and computed columns in this flexible way aligns more closely with DuckDB’s analytical orientation and is not universally portable.
+
+These features represent **dialect differences**, as they either adopt SQLite-specific syntax (`OR IGNORE`, `OR REPLACE`) or introduce novel extensions (`BY NAME`) not found in standard SQL or major databases like PostgreSQL or MySQL.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: DuckDB's Simplified PIVOT Syntax and Dual PIVOT Support
+
+DuckDB implements both the SQL Standard PIVOT syntax and a proprietary simplified PIVOT syntax that is not found in most other major databases like PostgreSQL or MySQL (which lack native PIVOT support entirely). While SQL Server and Oracle support standard PIVOT, they do not offer DuckDB’s spreadsheet-style simplified syntax with ON/USING/GROUP BY clauses.
+
+Key differences:
+
+1. **Simplified Syntax**: DuckDB allows a top-level PIVOT statement using intuitive clauses:
+   ```sql
+   PIVOT dataset
+   ON columns
+   USING aggregates
+   GROUP BY rows;
+   ```
+   This is not valid in standard SQL or other RDBMSs. In contrast, standard PIVOT must appear as a clause within a SELECT FROM block.
+
+2. **Standalone PIVOT Statement**: Unlike SQL Server or Oracle—where PIVOT is a relational operator inside a FROM clause—DuckDB permits PIVOT as a standalone statement (like SELECT), usable directly or in CTEs/subqueries without wrapping in SELECT * FROM (...).
+
+3. **Automatic Column Detection**: The simplified syntax dynamically generates pivot columns from distinct values without requiring an explicit IN list (unless filtering is desired), enabling dynamic pivoting—a feature absent in static PIVOT implementations elsewhere.
+
+4. **PIVOT_WIDER Alias**: DuckDB accepts PIVOT_WIDER as a synonym for PIVOT, aligning with tidy data terminology (e.g., from R’s tidyr), which is unique among SQL engines.
+
+5. **Cartesian Product Handling**: When multiple columns are listed in ON, DuckDB automatically creates columns for all combinations (e.g., NL_Amsterdam, US_Seattle), including NULL-filled columns for missing combos—behavior that differs from manual CASE-based pivots typically used in PostgreSQL or MySQL.
+
+These extensions make DuckDB’s PIVOT significantly more flexible and user-friendly than traditional implementations, constituting a clear dialect difference.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: SQL-Level User-Defined Variables with `SET VARIABLE` and `getvariable()`
+
+Unlike standard SQL and most mainstream databases (such as PostgreSQL, MySQL, or SQLite), DuckDB provides native support for user-defined SQL-level variables using the SET VARIABLE and RESET VARIABLE statements, along with the getvariable() function to retrieve their values.
+
+Key differences:
+- **Standard SQL** does not define a portable way to declare and use scalar variables within pure SQL scripts. While some databases offer session variables (e.g., MySQL’s @var syntax or PostgreSQL’s GUCs), these are either non-standard, limited to configuration, or not usable in general expressions.
+- **PostgreSQL** allows custom GUCs (via SET) but only for predefined configuration parameters—not arbitrary user variables—and they cannot store complex types like maps or query results.
+- **MySQL** supports user-defined variables (e.g., SET @my_var = 30), but they are loosely typed, session-scoped, and cannot be used in all contexts (e.g., inside COLUMNS expressions).
+- **DuckDB**, by contrast, allows:
+  - Assignment of arbitrary SQL expressions (including subqueries and complex types like MAP or LIST) to named variables.
+  - Use of getvariable('name') anywhere an expression is allowed—including in COLUMNS(), file paths (e.g., read_csv()), and dynamic queries.
+  - Explicit SESSION scope (default) and integration with GLOBAL config variables.
+
+Example syntax unique to DuckDB:
+```sql
+SET VARIABLE my_map = MAP {'k1': 10, 'k2': 20};
+SELECT getvariable('my_map')['k1']; -- returns 10
+
+SET VARIABLE files = (SELECT list(file) FROM csv_files);
+SELECT * FROM read_csv(getvariable('files'));
+```
+
+This capability enables dynamic, scriptable SQL workflows not possible in standard SQL or other databases without procedural extensions (e.g., PL/pgSQL).
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: SUMMARIZE Statement
+
+Unlike standard SQL and most other databases (including PostgreSQL, MySQL, and SQLite), which do not provide a built-in `SUMMARIZE` statement for generating summary statistics (e.g., count, min, max, avg, std) across all columns of a table or query result, DuckDB introduces this as a convenience extension. The `SUMMARIZE` command in DuckDB allows users to quickly obtain descriptive statistics by simply prefixing it to a table name or a full SELECT query:
+
+-- DuckDB Syntax Example
+SUMMARIZE tbl;
+
+-- DuckDB Syntax Example
+SUMMARIZE SELECT * FROM tbl;
+
+This functionality is not part of the SQL standard and is not natively supported in other major relational databases without manually writing aggregate queries or using external tools. Thus, `SUMMARIZE` represents a DuckDB-specific dialect extension that alters typical SQL workflow expectations.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: DuckDB's Simplified UNPIVOT Syntax and COLUMNS Expression Support
+
+DuckDB extends the SQL standard UNPIVOT functionality with a simplified, more intuitive syntax and powerful dynamic column selection using the COLUMNS expression—features not found in most other SQL databases like PostgreSQL or MySQL (which often lack native UNPIVOT support entirely).
+
+Key differences from standard SQL and other databases:
+
+1. **Simplified UNPIVOT Syntax**:  
+   DuckDB allows a spreadsheet-style UNPIVOT syntax that is not part of the SQL standard:
+   ```sql
+   UNPIVOT dataset
+   ON columns
+   INTO
+       NAME name_col
+       VALUE value_col;
+   ```
+   This contrasts with the SQL Standard syntax used by Oracle or SQL Server:
+   ```sql
+   SELECT ...
+   FROM table
+   UNPIVOT (value_col FOR name_col IN (col1, col2, ...));
+   ```
+   Notably, DuckDB permits UNPIVOT as a top-level statement (not just within FROM), which deviates from standard usage.
+
+2. **COLUMNS Expression for Dynamic Unpivoting**:  
+   DuckDB supports the COLUMNS(* EXCLUDE (...)) construct inside UNPIVOT to dynamically select columns:
+   ```sql
+   UNPIVOT monthly_sales
+   ON COLUMNS(* EXCLUDE (empid, dept))
+   INTO NAME month VALUE sales;
+   ```
+   This capability—automatically excluding or including columns via pattern matching—is unique to DuckDB and not available in PostgreSQL, MySQL, or even most commercial databases that implement UNPIVOT.
+
+3. **UNPIVOT as Standalone Statement or in Subqueries Without SELECT**:  
+   DuckDB allows UNPIVOT to be used directly in a CTE or subquery without wrapping it in a SELECT:
+   ```sql
+   WITH t AS (UNPIVOT ...)
+   SELECT * FROM t;
+   ```
+   In standard SQL, table-valued operations like UNPIVOT must appear in the FROM clause of a SELECT. DuckDB’s flexibility here is non-standard.
+
+4. **Support for Expressions in UNPIVOT Columns**:  
+   DuckDB permits expressions (e.g., casts, arithmetic) on individual columns within the ON clause:
+   ```sql
+   UNPIVOT (SELECT 42 AS col1, 'woot' AS col2)
+   ON (col1 * 2)::VARCHAR, col2;
+   ```
+   Most databases restrict UNPIVOT to raw column names only.
+
+These extensions make DuckDB’s UNPIVOT significantly more flexible and user-friendly than implementations in other systems, constituting clear dialect differences from both standard SQL and common database engines.
+@dialect2sql@
+
+@dialect2sql@
+Dialect Feature: DuckDB's Limited and Non-Standard VACUUM Statement
+
+Unlike PostgreSQL—where VACUUM is a core maintenance command that reclaims storage and optionally updates table statistics—DuckDB’s VACUUM statement is only partially implemented and behaves differently:
+
+- In DuckDB, VACUUM and VACUUM ANALYZE with no arguments are no-ops.
+- DuckDB uniquely allows VACUUM my_table(my_column) or VACUUM ANALYZE my_table(my_column) to recompute distinct-value statistics for a specific column—a syntax not found in PostgreSQL or standard SQL.
+- Crucially, DuckDB does not support VACUUM FULL (which in PostgreSQL rewrites the table and reclaims disk space), and explicitly throws a "Not implemented Error" for it.
+- DuckDB’s VACUUM does not reclaim disk space at all, contrary to the primary purpose of VACUUM in PostgreSQL.
+
+This partial, non-standard implementation is explicitly acknowledged in DuckDB’s documentation as being “mostly provided for PostgreSQL-compatibility” but “not consistent with PostgreSQL semantics.”
+@dialect2sql@

@@ -1,0 +1,415 @@
+@dialect2sql@
+1.1 Alias Definition and Reference
+-- Oracle:Method: Standard usage: Define alias using AS keyword (recommended); Use double quotes " to wrap aliases containing spaces/special characters; Single quotes for aliases are invalid; Constraint: Double quotes enable case sensitivity, single quotes are only for strings; eg: Error example (single quote error): SELECT salary 'Annual Salary' FROM employees; Correct example (AS keyword): SELECT first_name AS fn FROM employees; Special alias example (double quotes): SELECT salary AS "Annual Salary" FROM employees;
+@dialect2sql@
+
+@dialect2sql@
+1.2.1 String Literal
+-- Oracle:
+   Method:
+      Strict constraint: String literals use single quotes '; Double quotes are dedicated for identifiers;
+      Error scenario: Wrapping strings with double quotes (syntax error);
+  eg:
+      Error example (double quote error):
+      WHERE name = "John Doe";
+      Correct example (single quotes):
+      WHERE name = 'John Doe';
+
+@dialect2sql@
+
+@dialect2sql@
+1.2.2 Identifier Quoting (Object Names)
+-- Oracle: Method: Strict constraint: Identifiers wrapped in double quotes "" are literal and case-sensitive; without double quotes, Oracle defaults to uppercase; 
+Error scenario: - Using backticks `` (common in MySQL but unsupported in Oracle); 
+- Using reserved keywords (e.g., DATE, GROUP, USER) without quotes triggers ORA-00936: missing expression;
+ - Quoting identifiers with incorrect casing (e.g., "date" vs "DATE") triggers ORA-00904: invalid identifier. eg: Error example (keyword not escaped): 
+ -- Error: ORA-00936: missing expression (because 'date' is a reserved keyword) SELECT stock_id, date FROM STOCK_PRICES ORDER BY date DESC;
+
+  Error example (incorrect case sensitivity):
+  -- Error: ORA-00904: "date": invalid identifier (because "date" != "DATE")
+  SELECT stock_id, "date" FROM STOCK_PRICES;
+
+  Correct example (double quote quoting with uppercase):
+  SELECT "STOCK_ID", "DATE" FROM "STOCK_PRICES" ORDER BY "DATE" DESC;
+  
+  Note: Oracle stores most metadata in uppercase. Without double quotes, a reference to "users" is internally interpreted as "USERS".
+@dialect2sql@
+
+@dialect2sql@
+1.2.3 Explicit Escaping of Keywords as Table/Column Names
+-- Oracle:
+   Method:
+      Keywords used as identifiers must be wrapped in double quotes "" for escaping; Oracle defaults identifiers to uppercase, double-quoted identifiers are case-sensitive (if table was created with CREATE TABLE "Match", query must use "Match", otherwise it defaults to matching MATCH);
+      Common keywords requiring escaping: Match (not reserved but recommended to escape), Order, Group, User, Select, From, etc.; Directly using reserved words triggers "ORA-00904: invalid identifier" error.
+  eg:
+      Escaping keyword table name:
+      SELECT * FROM "Match" WHERE id = 1; ("Match" as table name, escaped with double quotes)
+      Escaping reserved word column names:
+      SELECT "Order", "User" FROM emp; ("Order"/"User" as column names)
+      Error example (not escaped):
+      SELECT * FROM Match; (Oracle recognizes it as uppercase MATCH, if table name is lowercase "match" it reports error)
+@dialect2sql@
+
+@dialect2sql@
+1.3.1 String Case Sensitivity
+-- Oracle:
+   Method:
+      Mandatory rule: Default case-sensitive; Requires explicit conversion for case-insensitive;
+      Example: 'apple' = 'APPLE' returns false;
+  eg:
+      Error example (not converted):
+      SELECT * FROM users WHERE name = 'John Smith'; -- Does not match name='john smith'
+      Correct example (explicit conversion):
+      SELECT * FROM users WHERE UPPER(name) = UPPER('John Smith'); -- Matches all case forms
+@dialect2sql@
+
+
+@dialect2sql@
+1.6.3 NULL Handling Details in LEFT JOIN
+-- Oracle:
+   Method:
+      NULL retention rule: Left table fully retained, unmatched fields from right table are NULL; Supports COALESCE/NVL for filling (NVL(right_table_field, default_value) is Oracle exclusive);
+      Difference from INNER JOIN: INNER JOIN only matches records, LEFT JOIN includes unmatched rows from left table;
+      Performance optimization: Join columns should have index, use MERGE JOIN for large tables, can use /*+ LEADING(s) */ hint to optimize join order, right table conditions in ON clause.
+  eg:
+      LEFT JOIN retaining left table:
+      SELECT s.school_id, s.school_name, ss.AvgScrWrite FROM schools s LEFT JOIN satscores ss ON s.school_id = ss.school_id;
+      NVL filling NULL values:
+      SELECT s.school_name, NVL(ss.AvgScrWrite, 0) AS avg_write_score FROM schools s LEFT JOIN satscores ss ON s.school_id = ss.school_id;
+      Optimization hint:
+      SELECT /*+ LEADING(s) USE_HASH(ss) */ s.name, ss.AvgScrWrite FROM schools s LEFT JOIN satscores ss ON s.school_id = ss.school_id;
+@dialect2sql@
+
+@dialect2sql@
+1.8.2 Division NULL Protection
+--Oracle: Use NULLIF(denominator, 0) to avoid division by zero, eg: SELECT t1.col1 / NULLIF(t1.col2, 0) AS res FROM table1 (When denominator is 0, the fraction returns NULL)
+@dialect2sql@
+
+@dialect2sql@
+2.4 Boolean Type: Representation of Abstract Logic
+2.4.1 BOOLEAN Type Support
+--Oracle: No native boolean type, commonly uses NUMBER(1) or CHAR(1) ('Y'/'N'), needs to return 1/0.
+@dialect2sql@
+
+@dialect2sql@
+2.4.2 BIT Type Handling Differences
+--Oracle: No dedicated BIT type, commonly uses NUMBER(1,0) or CHAR(1) to simulate (stores 0/1). Use WHERE flag = 1 directly in query conditions, need field constraints to ensure values are 0 or 1.
+@dialect2sql@
+
+@dialect2sql@
+4.3.1 Sequence or Auto-increment Mechanism
+-- Oracle:
+   Method:
+      Core rule: Use independent SEQUENCE object, called via NEXTVAL/CURRVAL; No AUTO_INCREMENT property;
+  eg:
+      Sequence creation example:
+      CREATE SEQUENCE order_id_seq;
+      Insert example:
+      INSERT INTO orders (id, name) VALUES (order_id_seq.NEXTVAL, 'Test Order');
+@dialect2sql@
+
+@dialect2sql@
+4.3.2 Semantic Difference Between Empty String ('') and NULL
+  --Oracle: Treats empty string ('') as equivalent to NULL. This often leads to unexpected behavior, e.g.: SELECT * FROM users WHERE name = ''; -- Returns 0 rows (equivalent to searching for NULL)
+@dialect2sql@
+
+@dialect2sql@
+5.8 Syntax Rules for GROUP BY Queries under sql_mode=only_full_group_by
+-- Oracle:
+   Method:
+      Enforces standard SQL GROUP BY rules. Columns in the SELECT list must be grouping columns in the GROUP BY clause or results of aggregate functions; Violation throws an error ("not a GROUP BY expression");
+      No mode switch like only_full_group_by. Syntax constraints are fixed and strict.
+   eg:
+      Error example: SELECT ename, deptno, COUNT(*) FROM emp GROUP BY deptno; (ename is not a GROUP BY / aggregated column, error)
+      Correct example: SELECT deptno, MAX(sal), COUNT(*) FROM emp GROUP BY deptno;
+@dialect2sql@
+
+
+@dialect2sql@
+5.9 Mandatory Rule: Derived Table (Table-level Subquery) Must Have an Alias
+-- Oracle:
+   Method:
+      Mandatory Constraint: Derived tables (called "inline views" in Oracle) must specify an alias, otherwise throws an error ("ORA-00942: table or view does not exist" or "ORA-00933: SQL command not properly ended");
+      Alias cannot be omitted, and supports using AS or direct writing (e.g., FROM (SELECT ...) t).
+   eg:
+      Error example: SELECT empno FROM (SELECT empno FROM emp WHERE deptno = 10); (Error)
+      Correct example: SELECT t.empno FROM (SELECT empno FROM emp WHERE deptno = 10) AS t;
+@dialect2sql@
+
+
+@dialect2sql@
+5.10 Basic Syntax Rules for UNION Statements
+-- Oracle:
+   Method:
+      Core Rules:
+      Subquery column counts must be consistent, data types need to be compatible (limited implicit conversion, e.g., DATE and VARCHAR date strings require explicit TO_DATE conversion);
+      UNION removes duplicates, UNION ALL retains duplicates;
+      UNION in derived tables requires an alias (inline view alias).
+   eg:
+      Date type compatibility handling:
+      SELECT TO_DATE(date_str, 'YYYY-MM-DD') FROM logs_2023 UNION SELECT log_date FROM logs_2024;
+      UNION ALL merging large table data:
+      SELECT order_id, order_date FROM orders_jan UNION ALL SELECT order_id, order_date FROM orders_feb;
+@dialect2sql@
+
+@dialect2sql@
+5.11 Cross-Database Function Compatibility Differences
+-- Oracle:
+   Method:
+      Compatibility Rule: Supports SQL standard functions. Does not support SQLite's IIF()/JULIANDAY(), MySQL's IF(). Non-compatible function calls prompt "invalid identifier" or "function not found";
+      Common Incompatible Functions and Alternatives:
+      IIF(condition, val1, val2) → Use CASE WHEN condition THEN val1 ELSE val2 END or DECODE(condition, TRUE, val1, val2);
+      JULIANDAY(date) → Use TO_DATE(date, 'YYYY-MM-DD') for conversion then calculate date difference (SYSDATE - TO_DATE(date, 'YYYY-MM-DD'));
+   eg:
+      Replacing IIF:
+      DECODE(salary > 5000, 'YES', 'High Salary', 'NO', 'Normal Salary') or CASE WHEN salary > 5000 THEN 'High Salary' ELSE 'Normal Salary' END
+      Replacing JULIANDAY date difference:
+      SELECT SYSDATE - TO_DATE(dob, 'YYYY-MM-DD') AS days FROM employees;
+@dialect2sql@
+
+@dialect2sql@
+5.12 Format Consistency and Boundary Handling for Date Field Filtering
+-- Oracle:
+   Method:
+      Format Specification: DATE type supports YYYY-MM-DD or DD-MON-YYYY (e.g., 05-JUL-1993). TEXT type needs conversion using TO_DATE(text_date, 'format_string') (e.g., TO_DATE('1993/7/5', 'YYYY/MM/DD'));
+      Type and Filter Syntax: DATE types can be compared directly. TEXT types must be converted (otherwise error or incorrect results);
+      Boundary Handling: DATE type includes time components. For range queries, pay attention to time boundaries (e.g., querying all data for 1993-07-05 requires date >= TO_DATE('1993-07-05', 'YYYY-MM-DD') AND date < TO_DATE('1993-07-06', 'YYYY-MM-DD'));
+      Sorting Compatibility: Sort directly by the DATE field. TEXT dates need conversion before sorting.
+   eg:
+      TEXT to DATE filtering:
+      SELECT * FROM financial WHERE TO_DATE(loan_date_text, 'YYYY/MM/DD') = TO_DATE('1993-07-05', 'YYYY-MM-DD');
+      Time boundary handling:
+      SELECT * FROM orders WHERE order_date >= TO_DATE('1993-07-01', 'YYYY-MM-DD') AND order_date < TO_DATE('1993-08-01', 'YYYY-MM-DD');
+      Direct sorting:
+      SELECT * FROM employees ORDER BY hire_date DESC;
+@dialect2sql@
+
+@dialect2sql@
+5.13 Oracle Reserved Keywords & Case-Sensitive Identifiers
+-- Oracle: Method: Strict constraint: - Keyword Escape: Reserved words (e.g., DATE, ORDER, USER) used as column names MUST be enclosed in double quotes "";
+- Case Sensitivity:Identifiers in double quotes are case-sensitive. Since Oracle stores object names in UPPERCASE by default, quoting them in lowercase (e.g., "date") will fail unless the column was specifically created with lowercase quotes.
+Error scenario: - Using date without quotes: Triggers ORA-01747 (invalid column specification) because the parser expects a date expression. - Using "date" instead of "DATE": Triggers ORA-00904 (invalid identifier) because of case mismatch with the data dictionary. eg: Error example (Reserved word as identifier): -- Error: ORA-01747: invalid user.table.column, table.column... SELECT client_id, date FROM communication_logs;
+
+  Error example (Case mismatch in quoting):
+  -- Error: ORA-00904: "date": invalid identifier (stored as "DATE")
+  SELECT "date" FROM communication_logs;
+
+  Correct example (Standard escape):
+  -- Use uppercase within quotes to match Oracle's default storage
+  SELECT "DATE", communication_type FROM communication_logs ORDER BY "DATE" DESC;
+
+  Best Practice: Avoid naming columns with reserved words like DATE, TIMESTAMP, or GROUP to prevent complex escaping requirements.
+@dialect2sql@
+
+@dialect2sql@ Oracle SQL String Handling Recursive Subquery 1. Scenarios where splitting a comma-separated string into rows using CONNECT BY requires deterministic ordering and avoidance of ORA-01780 2. Function -- Oracle - Correct/Incorrect/Reason: The error ORA-01780 occurs when a string literal is expected but not provided—often in contexts like LISTAGG or string functions expecting explicit literals. In recursive splitting via CONNECT BY, using PRIOR SYS_GUID() IS NOT NULL ensures the recursion is non-cyclic and satisfies Oracle’s requirement for a unique row identifier in hierarchical queries, preventing ambiguous joins that could trigger string-literal-related errors indirectly. This pattern correctly combines REGEXP_SUBSTR with LEVEL and REGEXP_COUNT to split strings safely. @dialect2sql@
+
+@dialect2sql@ SQL Syntax Column Reference 1. Scenarios where column names are reserved words or contain special characters (e.g., "DATE") 2. Function -- Oracle - Correct: Use double quotes to delimit such column identifiers; Incorrect: Using unquoted reserved words as column names; Reason: Oracle treats unquoted identifiers case-insensitively and reserves certain words (like DATE), causing ORA-01747 when used without proper quoting @dialect2sql@
+
+@dialect2sql@ SQL Syntax Error Missing Expression 1. Scenarios where a required expression (e.g., column, value, or subquery result) is omitted in SELECT, WHERE, GROUP BY, or other clauses 2. Function -- Oracle - Correct: Ensure every clause has valid expressions; avoid empty parentheses or incomplete constructs like SELECT , col2 or WHERE =. Incorrect: Omitting an expression after operators or commas. Reason: ORA-00936 occurs when Oracle parser expects a valid expression but finds none—common in malformed SELECT lists, missing operands, or incomplete subqueries. @dialect2sql@
+
+@dialect2sql@ SQL Syntax Reserved Keywords 1. Scenarios where a column name matches an Oracle reserved keyword (e.g., DATE, ORDER, GROUP) and is used without proper quoting. 2. Function -- Oracle - Incorrect: Using reserved keywords as unquoted column aliases or identifiers; Correct: Enclose reserved keywords in double quotes (e.g., "DATE"); Reason: Oracle treats unquoted reserved words as syntax tokens, causing ORA-01747 when used as identifiers. @dialect2sql@
+
+@dialect2sql@ SQL Syntax Error Handling Common Table Expressions (CTEs) 1. Scenarios where a CTE is used with window functions and subsequent joins, but an expression is missing due to incorrect aliasing, column reference, or malformed SELECT clause. 2. Function -- Oracle - Correct: The query properly defines CTEs with complete SELECT clauses, uses valid column aliases, and ensures all referenced columns exist; Incorrect: Omitting a column alias for a window function, referencing a non-existent column, or leaving an incomplete expression in SELECT/GROUP BY/ORDER BY; Reason: ORA-00936 occurs when Oracle encounters a syntactic gap where an expression is expected—commonly from missing column names, unaliased computed columns in CTEs, or incomplete clauses. @dialect2sql@
+
+@dialect2sql@ SQL Syntax Column Reference 1. Scenarios where a column is referenced using an incorrect or non-existent alias/column name in SELECT, WHERE, GROUP BY, or ORDER BY clauses. 2. Function -- Oracle - Incorrect/Reason: The error ORA-00904 occurs when an invalid identifier (e.g., "D"."DIRECTOR_NAME") is used—typically because the actual column name in the table differs from the one referenced (e.g., the column is named "name", not "director_name"). Always verify the exact column names in the schema and use the correct aliases that match the SELECT clause definitions. @dialect2sql@
+
+@dialect2sql@ SQL Syntax Column Identifier 1. Scenarios where a column name is a reserved keyword or contains special characters in Oracle 2. Function -- Oracle - Correct: Use double quotes to delimit such column identifiers (e.g., "DATE"); Incorrect: Using unquoted reserved words as column names (e.g., date); Reason: Oracle treats unquoted identifiers as uppercase and rejects reserved words like DATE unless quoted @dialect2sql@
+
+@dialect2sql@ SQL Syntax Reserved Keywords 1. Scenarios where a column name conflicts with an Oracle reserved keyword (e.g., using "date" as a column identifier without proper quoting) 2. Function -- Oracle - Incorrect/Correct/Reason: Using unquoted reserved words like date as identifiers causes ORA-00904 because Oracle treats them as invalid identifiers; the correct approach is to quote such identifiers with double quotes (e.g., "DATE") to preserve case and override reserved word interpretation. @dialect2sql@
+
+@dialect2sql@ SQL Syntax Identifier Quoting 1. Scenarios where column names are reserved keywords or case-sensitive identifiers in Oracle 2. Function -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ SQL Syntax Column Reference 1. Scenarios where a column is referenced in SELECT, WHERE, GROUP BY, or ORDER BY but is not available in the current scope due to missing JOIN, incorrect table alias, or aggregation context 2. Function -- Oracle - Correct: Ensure all referenced columns are from tables properly joined and use correct aliases; avoid referencing non-grouped/non-aggregated columns outside of GROUP BY in aggregate queries. Incorrect: Referencing a column with an alias that does not exist or from a table not included in the FROM/JOIN clause. Reason: ORA-00904 occurs when Oracle cannot resolve a column identifier, often due to typo, missing table join, or misuse in grouped queries. @dialect2sql@
+
+@dialect2sql@ SQL Syntax Column Reference 1. Scenarios where a column name is used in a SELECT, WHERE, ORDER BY, or other clause but is not recognized by Oracle. 2. Function -- Oracle - Correct: Use column names exactly as defined in the table schema (case-insensitive unless quoted); Incorrect: Using a column alias in the WHERE clause or referencing a non-existent or misspelled column; Reason: Oracle throws ORA-00904 when an invalid or undefined column identifier is used. Column aliases cannot be used in WHERE clauses because WHERE is evaluated before SELECT. @dialect2sql@
+
+@dialect2sql@ Identifier Quoting Column Name with Spaces 1. When a column name contains spaces, special characters, or is a reserved word, it must be enclosed in double quotes in Oracle SQL. 2. Function -- Oracle - Correct: Using double quotes around "DATE RECEIVED" treats it as a case-sensitive identifier; Incorrect: Omitting quotes (e.g., DATE RECEIVED) causes ORA-00904 because Oracle interprets it as separate tokens or invalid syntax; Reason: Unquoted identifiers must follow naming rules (start with letter, contain only alphanumeric/underscore/dollar/hash, no spaces), while quoted identifiers preserve exact spelling and casing but require strict matching. @dialect2sql@
+
+@dialect2sql@ SQL Syntax SELECT Clause 1. Scenarios where column aliases or expressions in the SELECT clause are followed by a comma but lack a subsequent column or expression, or when a reserved keyword is used as an alias without proper quoting. 2. Function -- Oracle - Correct: Always ensure every item in the SELECT list is a valid expression, column, or properly quoted alias; avoid trailing commas; use double quotes for case-sensitive or reserved-word aliases. @dialect2sql@
+
+@dialect2sql@ SQL Syntax Column/Identifier Naming 1. Scenarios where column names conflict with Oracle reserved keywords or contain special characters (e.g., "COMMENT") 2. Function -- Oracle - Correct: Use double quotes to delimit identifiers that are reserved words or non-standard; Incorrect: Using reserved words as unquoted column aliases or names; Reason: Oracle treats unquoted identifiers as uppercase and rejects reserved keywords (like COMMENT) unless quoted @dialect2sql@
+
+@dialect2sql@ SQL Syntax ORDER BY with DISTINCT 1. Scenarios where SELECT uses DISTINCT and ORDER BY includes columns not in the SELECT list 2. Function -- Oracle - Incorrect/Correct/Reason: In Oracle, when using SELECT DISTINCT, every column in the ORDER BY clause must appear in the SELECT list; otherwise, ORA-01791 is raised. The correct query ensures that p.ratings (used in ORDER BY) is included in the SELECT clause, satisfying Oracle's requirement. @dialect2sql@
+
+@dialect2sql@ Date Handling Literal-to-Date Conversion 1. Scenarios where a string column is compared against a date literal or range using TO_DATE with an explicit format mask that must match the string's actual format. 2. Function -- Oracle - Correct: Using TO_DATE(column, 'format') with a format mask that exactly matches the stored string representation; Incorrect: Applying TO_DATE with a mismatched format mask or comparing a string directly to a DATE without conversion; Reason: ORA-01861 occurs when the literal (string value) does not conform to the specified format model in TO_DATE, so the format mask must precisely reflect the data's structure (e.g., 'YYYY-MM-DD' for '2023-01-15'). @dialect2sql@
+
+@dialect2sql@ SQL Syntax Column Reference 1. Scenarios where a column is referenced using an alias that does not exist or is misspelled in the SELECT, JOIN, or WHERE clauses. 2. Function -- Oracle - Incorrect/Reason: The error ORA-00904 occurs when an invalid or non-existent column identifier is used (e.g., "GR"."DATE" when the actual column name is different or the table alias GR does not expose that column). Always verify that column names and table aliases match the schema and are correctly referenced in the query scope. @dialect2sql@
+
+@dialect2sql@ SQL Syntax ORDER BY Clause 1. Scenarios where ORDER BY references expressions involving aggregate functions or columns not in the SELECT list but derived from grouped data 2. Function -- Oracle - Correct/Incorrect/Reason @dialect2sql@  
+In Oracle, when using GROUP BY, any expression in the ORDER BY clause must either be:  
+(a) a column that appears in the GROUP BY clause,  
+(b) an aggregate function, or  
+(c) an expression composed solely of grouped columns and/or aggregates.  
+The error ORA-01791 occurs if ORDER BY includes a non-aggregated, non-GROUPed column not in the SELECT list—or more precisely, not in the GROUP BY list—even if it seems logically derivable.  
+However, in the correct SQL, all ORDER BY expressions are valid:  
+- SUM(oi.quantity * oi.price_per_unit) is an aggregate,  
+- r.avg_rating is part of GROUP BY (via the joined subquery result),  
+- The CASE expression uses only aggregates (SUM(oi.quantity)) and a grouped column (ret.return_count, which is included in GROUP BY).  
+Thus, the rule: **In Oracle, every expression in ORDER BY of a grouped query must be functionally dependent on the GROUP BY list—typically by being either a grouped column, an aggregate, or a combination thereof. Avoid referencing non-grouped, non-aggregated columns or complex expressions not fully covered by the GROUP BY.**
+
+@dialect2sql@ Data Type Handling Implicit Conversion 1. Scenarios involving comparisons or arithmetic operations between numeric columns and string literals, or when non-numeric strings are implicitly converted to numbers in numeric contexts. 2. Function -- Oracle - Correct: Ensure all operands in numeric expressions are of numeric data type; avoid relying on implicit conversion from strings that may contain non-numeric values. Explicitly validate or cast only when data integrity is guaranteed. Incorrect: Using string-typed columns or values in numeric expressions without validation. Reason: ORA-01722 occurs when Oracle attempts to implicitly convert a non-numeric string to a number during evaluation (e.g., in WHERE, SELECT, or CASE expressions). The corrected query avoids this by operating only on numeric columns (e.g., dividend_received, current_value, amount_invested) without mixing in unvalidated string data. @dialect2sql@
+
+@dialect2sql@ SQL Syntax Column Reference 1. Scenarios where a column name is a reserved keyword or contains special characters (e.g., uppercase, spaces, symbols) 2. Function -- Oracle - Correct: Use double quotes around such column identifiers (e.g., "COMMENT"); Incorrect: Using unquoted reserved/special column names; Reason: Oracle treats unquoted identifiers as uppercase by default and rejects reserved words unless properly quoted @dialect2sql@
+
+@dialect2sql@ Oracle SQL Date/Time Handling Literal Format Mismatch 1. Scenarios where a date/time literal (e.g., in TO_DATE, TO_TIMESTAMP, or implicit conversion) does not conform to the expected format string, often due to hardcoded strings without explicit format masks or mismatched NLS settings. 2. Function -- Oracle - Correct: Always use explicit format masks with TO_DATE/TO_TIMESTAMP or rely on ANSI date literals (e.g., DATE 'YYYY-MM-DD'); avoid implicit string-to-date conversions. Incorrect: Using unformatted string literals in date contexts (e.g., WHERE date_col = '01-JAN-2023' without TO_DATE or proper NLS alignment). Reason: ORA-01861 occurs when the literal’s structure doesn’t match the format model—explicit formatting ensures portability and correctness across sessions. @dialect2sql@
+
+@dialect2sql@ 
+Oracle SQL Bind Variable Placeholder Execution Constraint 
+1. Scenarios where a bind variable placeholder (indicated by a colon prefix, e.g., :USER_ID) is used in a SQL statement, but the execution environment or database driver (such as python-oracledb) is not provided with a corresponding mapping value for that variable. 
+2. Function -- Oracle - Correct: Use literal values directly for filtering (e.g., WHERE user_id = 1) or reference column names without the colon prefix (e.g., WHERE user_id = USER_ID) when executing in automated testing or non-interactive scripts. Incorrect: Using placeholders like WHERE user_id = :USER_ID or WHERE user_id = :user_id without providing a bind variable dictionary or tuple to the cursor execution. Reason: DPY-4010 or ORA-01008 occurs because the driver treats strings starting with : as mandatory variables that must be replaced before execution. If the replacement value is not provided, the query cannot be processed. Removing the colon or using a literal ensures the SQL is a self-contained, valid statement. 
+@dialect2sql@
+
+@dialect2sql@ SQL Execution Bind Variables 1. Scenarios where a SQL query references a bind variable (e.g., :USER_ID) but no corresponding value is supplied at execution time. 2. Function -- Oracle - Incorrect/Reason: The original query likely used a bind variable placeholder (e.g., WHERE cal.user_id = :USER_ID) without providing a replacement value, causing Oracle to raise DPY-4010. The corrected version hardcodes the user ID (123), avoiding the need for a bind variable. To prevent this error, either supply all required bind values during execution or use literal values if parameters are static. @dialect2sql@
+
+@dialect2sql@ Oracle SQL Quoted Identifier and Reserved Keyword Handling 
+1. Scenarios where table or column names contain spaces, special characters (e.g., [ ], ( ), -), or are Oracle reserved keywords (e.g., YEAR, DATE, USER, GROUP), necessitating the use of double quotes for valid identification. 2. Function -- Oracle - Correct: Wrap identifiers containing special characters or keywords in double quotes and ensure the string inside is ALL UPPERCASE to match Oracle's default metadata storage.
+Example 1: SELECT "YEAR" FROM "REVENUE" WHERE "YEAR" = 2010 ORDER BY "STUDIO ENTERTAINMENT[NI 1]" DESC
+Example 2: SELECT r."YEAR" FROM revenue r ORDER BY r."STUDIO ENTERTAINMENT[NI 1]"
+Incorrect: Using backticks (`) to wrap identifiers (MySQL style), or using mixed-case/lowercase strings inside double quotes (e.g., r."Year" or r."Studio Entertainment[NI 1]") when the underlying database stores them in the default uppercase format.
+Reason: ORA-00904 occurs because double quotes in Oracle make identifiers case-sensitive. Since Oracle typically stores metadata in uppercase by default, a quoted mixed-case identifier will fail to match. Backticks are invalid syntax in Oracle and will trigger immediate parsing errors.
+@dialect2sql@
+
+@dialect2sql@ Date Handling TO_DATE Usage 1. Scenarios where string-to-date conversion is performed using TO_DATE with a format mask that must exactly match the input string literal or column value format. 2. Function -- Oracle - Incorrect: Using TO_DATE on a column already of DATE type (redundant and risks ORA-01861 if NLS settings cause implicit conversion to string); Correct: Avoid TO_DATE on DATE columns—compare directly with DATE literals (e.g., DATE 'YYYY-MM-DD') or use proper date ranges; Reason: TO_DATE expects a character/string input—if applied to a DATE, Oracle implicitly converts it to a string using session NLS_DATE_FORMAT, which may not match the format mask in TO_DATE, causing ORA-01861. @dialect2sql@
+
+@dialect2sql@ Oracle SQL Inconsistent Datatypes in Aggregation and Comparison (ORA-00932) 
+1. Scenarios where generic storage tables (like case_data_history) store various values as strings, but are later compared or coalesced with typed columns (NUMBER or DATE) from primary tables without explicit casting. 2. Function -- Oracle - Correct: Use explicit type conversion functions like TO_NUMBER() or TO_DATE() when interacting with string-based history/audit logs.
+Example: COALESCE(TO_NUMBER(history_val), original_num_val)
+Example: TO_DATE(history_date_str, 'YYYY-MM-DD HH24:MI:SS')
+Incorrect: Mixing VARCHAR2 and NUMBER inside COALESCE, NVL, GREATEST, or CASE expressions (e.g., COALESCE(string_col, numeric_col)). Reason: ORA-00932 occurs because Oracle's typed functions require all internal expressions to return a consistent data type. Unlike MySQL, Oracle does not perform aggressive implicit casting in multi-argument functions, leading to failures when a numeric column is passed where a character-based result was inferred (or vice versa). 
+@dialect2sql@
+
+@dialect2sql@ Date/Time Handling Literal Format Mismatch 1. Scenarios where date literals are compared or used with functions expecting a specific format (e.g., GREATEST with string dates) 2. Function -- Oracle - Incorrect/Reason: Using string literals like '0001-01-01' in date context without explicit conversion causes ORA-01861 if session NLS_DATE_FORMAT doesn't match; Correct: Always use TO_DATE('0001-01-01', 'YYYY-MM-DD') or DATE '0001-01-01' for ANSI compliance. @dialect2sql@
+
+@dialect2sql@ Date Handling Literal-to-Date Conversion 1. Scenarios where string literals representing dates are compared or converted without consistent format specification 2. Function -- Oracle - Correct: Use TO_DATE with explicit, matching format mask (e.g., TO_DATE(report_date, 'YYYY-MM-DD') when report_date is a string in 'YYYY-MM-DD' form) / Incorrect: Implicit date conversion or mismatched format masks / Reason: ORA-01861 occurs when a literal string does not match the expected date format; explicit TO_DATE with correct format ensures safe and predictable conversion @dialect2sql@
+
+@dialect2sql@ Date Handling Implicit Conversion 1. Scenarios where a string is compared or assigned to a DATE column without explicit conversion using TO_DATE or proper NLS settings. 2. Function -- Oracle - Incorrect/Reason: Relying on implicit date conversion can cause ORA-01830 if the input string format does not match the session's NLS_DATE_FORMAT; always use explicit TO_DATE with a format mask or ensure data types align. @dialect2sql@
+
+@dialect2sql@ Oracle SQL VARCHAR2 Date Comparison and Implicit Conversion (ORA-01861) 
+1. Scenarios where columns representing dates are stored as VARCHAR2 (strings) and are compared with ANSI DATE literals (e.g., DATE '2023-01-01') or DATE objects, forcing Oracle to attempt an implicit TO_DATE conversion of the string column. 2. Function -- Oracle - Correct:
+Method A (String Comparison): If the column format is ISO-compliant (e.g., YYYY-MM-DD), compare it directly with a string literal to maintain type consistency: WHERE "A"."UPLOADED_AT" > '2023-01-01'
+Method B (Explicit Conversion): If a date-level comparison is required, use TO_DATE on both sides with explicit format masks: WHERE TO_DATE("A"."UPLOADED_AT", 'YYYY-MM-DD') > TO_DATE('2023-01-01', 'YYYY-MM-DD')
+Incorrect: Using the DATE keyword against a VARCHAR2 column, e.g., WHERE "A"."UPLOADED_AT" > DATE '2023-01-01'. This triggers an implicit TO_DATE on the column using the session's default NLS_DATE_FORMAT.
+Reason: ORA-01861 occurs because the string data in the column (which may contain timestamps or different delimiters) does not match the session's default date format model when Oracle tries to promote the string to a DATE type for comparison. Keeping both sides as strings (as shown in the correct SQL) avoids this conversion entirely. 
+@dialect2sql@
+
+@dialect2sql@ Date Handling Implicit Conversion 1. Comparing string-stored dates with DATE literals or date columns without explicit conversion 2. TO_DATE -- Oracle - Incorrect/Correct/Reason: Implicitly comparing a string column (e.g., 'YYYY-MM-DD') to a DATE literal causes ORA-01861 if NLS settings don't match; using TO_DATE with an explicit format mask ensures safe, deterministic conversion. @dialect2sql@
+
+@dialect2sql@ Date Handling Literal-to-Date Conversion 1. When comparing a string column that stores dates against a DATE literal or another date value in Oracle, and the string format is known. 2. TO_DATE -- Oracle - Correct/Incorrect/Reason: Use TO_DATE with an explicit format mask matching the string's actual format to safely convert it to a DATE for comparison; omitting this causes ORA-01861 if the session’s NLS_DATE_FORMAT doesn’t match the literal. @dialect2sql@
+
+@dialect2sql@ Date Handling Implicit Conversion 1. Comparing string-stored dates with date literals or date columns without explicit conversion 2. TO_DATE -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Date Handling Literal Format Mismatch 1. When comparing a string column containing dates to a date literal in Oracle, explicitly convert the string to a DATE using TO_DATE with a format mask that matches the string's structure. 2. TO_DATE -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Data Type Conversion String-to-Number 1. Converting string columns that may contain non-numeric characters (e.g., commas, spaces, symbols) to numbers for comparison or calculation 2. TO_NUMBER with REGEXP_REPLACE and REGEXP_LIKE guard -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ SQL Syntax Reserved Keywords 1. Using reserved or context-sensitive keywords as table/column aliases in Oracle can cause ORA-00936 or other parsing errors. 2. Avoid using Oracle reserved words (e.g., 'current', 'prior', 'level', 'order') as identifiers; rename them to non-reserved alternatives like 'curr', 'prev', etc. -- Oracle - Incorrect/Correct/Using reserved words as aliases leads to syntax errors; renaming resolves parsing ambiguity. @dialect2sql@
+
+@dialect2sql@ Date Handling Implicit Conversion 1. Scenarios where a string column is compared or ordered as a date without explicit conversion, leading to ORA-01861 due to mismatch between literal format and session NLS settings. 2. Function -- Oracle - Correct: Always explicitly convert string date columns using TO_DATE(column, 'format') when used in date comparisons, arithmetic, or window functions; avoid relying on implicit conversion or NLS-dependent literals. @dialect2sql@
+
+@dialect2sql@ SQL Syntax Multi-Statement Execution 1. Scenarios where multiple SELECT statements are submitted in a single execution request in Oracle. 2. Function -- Oracle - Incorrect: Combining multiple SELECT statements in one execution (e.g., "SELECT ...; SELECT ...;") causes ORA-00933 because Oracle does not support multiple top-level SELECT statements in a single SQL execution unit. Correct: Execute each SELECT statement separately. Reason: Oracle SQL parser expects a single statement per execution context for SELECT queries; multi-statement batches are only allowed in PL/SQL blocks (e.g., using BEGIN ... END), not in standalone SQL. @dialect2sql@
+
+@dialect2sql@ Date/Time Handling Format Mask Mismatch 1. When using TO_DATE on a string column containing datetime values with time components (e.g., '2023-10-05 14:30:00'), but the format mask omits time elements (e.g., 'YYYY-MM-DD') 2. TO_DATE -- Oracle - Incorrect/Correct/Reason: Using an incomplete format mask (e.g., 'YYYY-MM-DD') for input strings that include time causes ORA-01830 because Oracle cannot parse the full string. The fix is to align the format mask exactly with the data (e.g., 'YYYY-MM-DD HH24:MI:SS') or use TO_TIMESTAMP for higher precision. @dialect2sql@
+
+@dialect2sql@ Data Type & Join Integrity Implicit Conversion 1. When joining columns, ensure they share compatible data types and represent a valid foreign key relationship; mismatched or non-numeric columns used in joins can trigger ORA-01722 if Oracle attempts implicit conversion to number. 2. TO_NUMBER / Implicit Conversion -- Oracle - Incorrect/Correct/Reason: Using a join condition that implicitly converts a non-numeric string to a number (e.g., JOIN ... ON varchar_col = numeric_col) is Incorrect and causes ORA-01722; using the proper foreign key relationship with matching data types is Correct because it avoids unsafe implicit conversions. @dialect2sql@
+
+@dialect2sql@ SQL Structure JOIN Placement 1. Scenarios where a LEFT JOIN is incorrectly placed outside the FROM clause (e.g., in WHERE or after ORDER BY) leading to ORA-00933 2. Function -- Oracle - Correct: Place LEFT JOIN in the FROM clause, directly after the main table and before WHERE; Incorrect: Using LEFT JOIN syntax outside standard FROM ... JOIN structure; Reason: Oracle requires all JOINs to be specified within the FROM clause using proper ANSI syntax to avoid parsing errors like ORA-00933 @dialect2sql@
+
+@dialect2sql@ Date Handling Literal-to-Date Conversion 1. When comparing string-formatted date columns to DATE literals or performing date arithmetic in Oracle 2. TO_DATE -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Identifier Quoting Column Names with Special Characters 1. When a column name contains spaces, mixed case, or special characters and is referenced in a query 2. Use double quotes around the exact column name as stored in the data dictionary (case-sensitive) -- Oracle - Correct: SELECT "SER_START" FROM callcenterlogs WHERE "DATE RECEIVED" = '2017-03-22' ORDER BY "SER_START" ASC FETCH FIRST 1 ROWS ONLY; / Incorrect: SELECT SER_START FROM callcenterlogs WHERE Date received = '2017-03-22' ... / Reason: Unquoted identifiers are automatically uppercased in Oracle; if the actual column name has spaces or was created with quoted mixed/lowercase, it must be referenced with matching double-quoted identifiers to avoid ORA-00904. @dialect2sql@
+
+@dialect2sql@ Identifier Quoting Column Name Case Sensitivity 1. When referencing column names that were created with double quotes (especially those containing spaces or mixed-case identifiers) in Oracle, the reference must exactly match the quoted definition, including case and spacing. 2. Use ALL_TAB_COLUMNS to verify the exact column name as stored in the data dictionary; if the column was defined with quotes (e.g., "COMPLAINT ID"), always reference it with the same quoted form—unquoted references are automatically uppercased by Oracle and will cause ORA-00904 if they don’t match. -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Data Type Handling Date/Time Conversion 1. When using EXTRACT on a column that is stored as a string (e.g., VARCHAR2) representing a date, the column must first be explicitly converted to a DATE or TIMESTAMP using TO_DATE with a correct format mask. 2. EXTRACT -- Oracle - Incorrect if applied directly on a non-DATE/TIMESTAMP column; Correct when preceded by proper TO_DATE conversion; Reason: EXTRACT requires a DATE, TIMESTAMP, INTERVAL, or similar datetime data type and cannot operate on strings, causing ORA-30076. @dialect2sql@
+
+@dialect2sql@ Date Handling Format Ambiguity 1. Scenarios where date strings in a column follow multiple inconsistent formats, causing ORA-01858 when using a single TO_DATE mask. 2. Function -- Oracle - Correct: Use conditional logic (e.g., CASE with REGEXP_LIKE) to apply different TO_DATE format masks based on the detected pattern, or extract year via string functions if full conversion is unsafe; Incorrect: Applying a single TO_DATE format mask to heterogeneous date strings; Reason: Oracle’s TO_DATE requires strict adherence to the specified format—non-matching strings trigger ORA-01858. @dialect2sql@
+
+@dialect2sql@ Data Type Handling Date/Time Conversion 1. When comparing or filtering date/time values stored as strings (e.g., VARCHAR2) in Oracle, explicit conversion using TO_DATE with a matching format mask is required. 2. TO_DATE -- Oracle - Correct/Incorrect/Reason: Correct when the string format exactly matches the specified format model; Incorrect if formats mismatch, causing ORA-01861; Reason: Oracle requires strict literal-to-format alignment for implicit or explicit date conversions. @dialect2sql@
+
+@dialect2sql@ Date Handling Format Validation 1. Scenarios where string-to-date conversion fails due to inconsistent or malformed date literals 2. TO_DATE / TO_TIMESTAMP -- Oracle - Correct: Use REGEXP_LIKE to validate date string format before conversion; Incorrect: Directly applying TO_DATE on unvalidated strings; Reason: Prevents ORA-01861 by ensuring input matches expected format, falling back to a default date when invalid @dialect2sql@
+
+@dialect2sql@ Data Type Conversion Date/Time Parsing 1. When converting string columns to DATE or TIMESTAMP in Oracle, source strings must strictly match the specified format mask; otherwise, ORA-01858 (or similar) errors occur if non-numeric or malformed characters are encountered. 2. TO_DATE / TO_TIMESTAMP -- Oracle - Correct: Use conditional validation (e.g., REGEXP_LIKE) to verify string format before conversion; Incorrect: Directly applying TO_DATE/TO_TIMESTAMP on unvalidated string columns; Reason: Prevents runtime errors from inconsistent or malformed date strings by ensuring only properly formatted values are converted. @dialect2sql@
+
+@dialect2sql@ SQL Syntax Statement Structure 1. Multiple statements submitted as one batch 2. COUNT – Oracle - Incorrect/Correct/Reason: Submitting multiple SQL statements in a single execution block without proper separation (e.g., using PL/SQL blocks or client-side batching) causes ORA-00933. In Oracle, only one top-level SQL statement is allowed per execution context unless wrapped in a PL/SQL block. Use a single query with window functions like COUNT(*) OVER() to achieve combined results instead of separate SELECT statements. @dialect2sql@
+
+@dialect2sql@ Date Handling Format Mismatch 1. When converting string-based date columns that may contain extra characters (e.g., time components) beyond the expected date format 2. TO_DATE -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Date Handling Date Conversion 1. When comparing or converting date strings that may include time components, ensure the format mask in TO_DATE matches the actual data format. 2. TO_DATE -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Aggregation GROUP BY Compliance 1. When aggregating data from multiple sources (e.g., UNION ALL of separate counts), ensure all non-aggregated columns in the outer query are included in the outer GROUP BY clause. 2. SUM() -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ SELECT Clause Consistency ORDER BY with DISTINCT 1. When using SELECT DISTINCT, any column referenced in the ORDER BY clause must also appear in the SELECT list. 2. DISTINCT -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Oracle SQL Syntax ORDER BY with Aggregation 1. When using GROUP BY, any column or expression in ORDER BY must either appear in the SELECT list or be functionally dependent on grouped columns. 2. DISTINCT is redundant with GROUP BY and may cause ORA-01791 if ORDER BY references non-SELECTed expressions -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Aggregation Grouping 1. Using aggregate functions (e.g., MAX, SUM) alongside non-grouped, non-aggregated columns without proper grouping 2. GROUP BY -- Oracle - Incorrect/Correct/Reason: In Oracle, all non-aggregate columns in the SELECT clause must be included in the GROUP BY clause; otherwise, ORA-00937 is raised. To compute aggregates over subsets (e.g., max per group after per-record normalization), use a subquery or CTE to first compute row-level values with full grouping, then apply outer aggregation with appropriate GROUP BY. @dialect2sql@
+
+@dialect2sql@ SQL Syntax GROUP BY Compliance 1. Scenarios where a SELECT list contains a computed expression not included in the GROUP BY clause and not wrapped in an aggregate function 2. AVG() -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Data Validation Timestamp 1. Scenarios where string-based timestamp columns may contain invalid or malformed values that cause conversion errors (e.g., ORA-01843, ORA-01861) or indirect grouping errors like ORA-00937 when used in analytic or aggregate contexts without proper filtering. 2. TO_DATE -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Window Functions Placement Restriction 1. Scenarios where window functions (e.g., LAG, LEAD, SUM() OVER) are used in contexts that do not allow them—such as inside aggregate functions, GROUP BY, HAVING, or certain nested expressions—trigger ORA-30483. 2. Function -- Oracle - Incorrect: Using LAG directly within a complex expression that is then passed into another window function without isolation. Correct: Isolate the window function (e.g., LAG) in a subquery or CTE to materialize intermediate results first, then apply subsequent window operations (e.g., cumulative EXP(SUM(LN(...))) over) in an outer query. Reason: Oracle does not permit window functions in all syntactic positions; they must be evaluated in a dedicated projection layer before being consumed by further aggregations or windowing logic. @dialect2sql@
+
+@dialect2sql@ Date Handling Quarter-Based Time Series 1. When performing window functions with RANGE intervals on quarter-formatted strings (e.g., '2023-Q1'), robustly convert the string to a valid DATE using conditional logic and TO_DATE, or map quarters to numeric values for safe ordering and interval calculations. 2. TO_DATE / CASE / REGEXP_LIKE -- Oracle - Correct/Incorrect/Reason: Correct — The fix ensures every quarter_ended value is safely converted to a real DATE (defaulting to a sentinel date like 1900-01-01 for invalid formats), enabling valid use of RANGE with INTERVAL. Without this, implicit or partial conversion can trigger ORA-01840 due to malformed or insufficient date strings. @dialect2sql@
+
+@dialect2sql@ Data Type Mismatch Implicit Conversion 1. Comparing a numeric column with a string literal or using non-numeric values in a numeric context 2. TO_NUMBER / Implicit conversion -- Oracle - Incorrect/Correct/Reason @dialect2sql@
+
+@dialect2sql@ Date Handling Implicit Conversion 1. Comparing a VARCHAR2 column containing date literals (e.g., '2008-01-01') with a DATE value or literal without explicit conversion 2. TO_DATE -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ SELECT Clause DISTINCT with ORDER BY 1. Scenarios where SELECT DISTINCT is used and ORDER BY references a column not in the SELECT list 2. Function -- Oracle - Incorrect: Using ORDER BY on a column not included in the SELECT DISTINCT list; Correct: Include the ORDER BY column in the SELECT clause or use a subquery to decouple sorting from distinct projection; Reason: Oracle requires all ORDER BY expressions in a SELECT DISTINCT query to be part of the SELECT list to ensure deterministic results @dialect2sql@
+
+@dialect2sql@ Data Type Handling Date/Time Conversion 1. Comparing or filtering date values stored as strings (e.g., VARCHAR2) against actual DATE literals or expressions in Oracle. 2. TO_DATE -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Date Handling Input Validation 1. When converting string columns to DATE in Oracle, ensure the input strings strictly conform to the expected format to avoid ORA-01830. 2. Use defensive parsing with REGEXP_LIKE to validate date string patterns before applying TO_DATE, or store dates in native DATE columns instead of strings -- Oracle - Correct @dialect2sql@
+
+@dialect2sql@ SQL Query Construction Column Reference 1. Scenarios where a column is referenced using an incorrect table alias after aggregating data in subqueries or CTEs 2. Function -- Oracle - Incorrect: Referencing an aggregated column (e.g., active_alerts_count) via an alias (e.g., "a") that does not include it in its SELECT list; Correct: Ensure the alias used to reference a computed/aggregated column actually defines that column, typically by consolidating related aggregations into one subquery or using the correct alias that contains the field; Reason: ORA-00904 occurs when a column identifier is not recognized—often because it doesn’t exist in the scope of the referenced alias. @dialect2sql@
+
+@dialect2sql@ Column Reference Aliasing 1. Scenarios where a subquery projects columns with aliases, and the outer query references those projected columns. 2. Function -- Oracle - Correct: Always reference columns in the outer query using the alias of the subquery (e.g., ar.column_name), not the original table alias from inside the subquery (e.g., al.column_name). Incorrect: Referencing inner-table aliases (like al.location_name) directly in the outer SELECT clause after the subquery has been aliased (as ar). Reason: In Oracle, once a subquery is given an alias (e.g., ar), only the columns exposed by that subquery—accessible via its alias—are visible to the outer query; internal table aliases (like al or c) are out of scope. @dialect2sql@
+
+@dialect2sql@ Date Handling Literal-to-Date Conversion 1. When comparing a string column containing date literals to DATE values or using it in date arithmetic 2. TO_DATE -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Data Type Conversion Date/Time 1. When comparing or converting string columns to DATE in Oracle, ensure the string strictly matches the specified format to avoid ORA-01861. 2. VALIDATE_CONVERSION -- Oracle - Correct @dialect2sql@
+
+@dialect2sql@ GROUP BY Clause Aliases in ORDER BY 1. Scenarios where a computed column alias (e.g., performance_score) is used in ORDER BY after a GROUP BY in the same query block. 2. Function -- Oracle - Incorrect: Using an alias defined in SELECT directly in ORDER BY when the query contains GROUP BY, because Oracle evaluates GROUP BY before SELECT alias resolution in the same scope; Correct: Wrap the grouped and computed result in a subquery or CTE, then reference the alias in ORDER BY in the outer query; Reason: Oracle’s logical query processing order requires that expressions in ORDER BY of a grouped query must either appear in GROUP BY or be aggregate functions—aliases from SELECT are not recognized in the same-level ORDER BY under GROUP BY. @dialect2sql@
+
+@dialect2sql@ SQL Structure Column Reference 1. Referencing a column from a table alias that is not in scope due to improper JOIN placement or subquery isolation 2. Ensure all column references (e.g., d.median_income) are used only within query blocks where the corresponding table alias (d) is defined and accessible — Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Date Handling Format Mismatch 1. When date strings in a VARCHAR2 column do not conform to the expected format used in TO_DATE, causing ORA-01830 2. Use VALIDATE_CONVERSION to filter valid dates before applying TO_DATE -- Oracle - Correct @dialect2sql@
+
+@dialect2sql@ SQL Structure Recursion & Row Generation 1. When needing to duplicate or interleave rows from a limited result set (e.g., 10 rows → 20 alternating values), avoid complex clauses like MODEL that may trigger syntax errors if misused. 2. Use a recursive row generator (CONNECT BY or recursive CTE) combined with arithmetic (e.g., CEIL, MOD) and CASE to alternate or expand data -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Formatting Number Conversion 1. Scenarios where numeric values are derived from formatted strings (e.g., with '$', 'M', 'B', 'K') and need to be displayed with proper thousands separators and fixed decimal places 2. TO_CHAR with format model -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Aggregation Nesting Avoidance Subquery/CTE Refactoring 1. When computing ratios or cumulative metrics that require both grouped aggregates and overall aggregates, avoid nesting aggregate functions directly in the same SELECT clause. 2. Use a subquery or Common Table Expression (CTE) to precompute grouped and overall aggregates separately, then combine them in an outer query—Oracle - Correct @dialect2sql@
+
+@dialect2sql@ GROUP BY Compliance Non-Aggregate Column Inclusion 1. When a SELECT list contains non-aggregate expressions alongside aggregate functions, Oracle requires all non-aggregate expressions to be explicitly included in the GROUP BY clause—even if they are functionally dependent on grouped columns (e.g., via a join on a primary key). 2. GROUP BY -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ GROUP BY Clause Aggregation 1. Scenarios where non-grouped columns from joined subqueries are referenced in the SELECT clause without aggregation 2. Function -- Oracle - Correct: Wrap each non-GROUP BY column from outer-joined subqueries (ww, al) in an aggregate function like MAX() because the join keys ensure at most one row per group; Incorrect: Directly selecting non-aggregated, non-GROUP BY columns from joined subqueries; Reason: Oracle requires all non-constant, non-aggregate expressions in SELECT to appear in GROUP BY, but when the join guarantees uniqueness per group, MAX() (or MIN()) safely extracts the single value without altering semantics @dialect2sql@
+
+@dialect2sql@ Data Type Mismatch Implicit Conversion 1. Comparing or assigning values between columns and expressions of incompatible data types (e.g., numeric column vs string context variable) 2. TO_NUMBER / TO_CHAR -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Data Type Conversion String-to-Number 1. When converting a string column that may contain non-numeric characters (e.g., commas, spaces, currency symbols) to a number for comparison in Oracle SQL. 2. TO_NUMBER with preprocessing using TRIM and TRANSLATE, guarded by REGEXP_LIKE validation -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Column Reference Reserved Words 1. Scenarios where a column name is a reserved word (e.g., DATE) or does not exist in the referenced table 2. Function -- Oracle - Incorrect: Using an unquoted reserved word as a column identifier without verifying its existence or quoting; Correct: Query data dictionary to confirm column name and quoting status, then reference unquoted if stored without quotes, quoted if stored with quotes, or use the correct column from the appropriate table; Reason: Oracle treats unquoted identifiers as uppercase and rejects reserved words unless properly quoted, and referencing non-existent columns causes ORA-00904 @dialect2sql@
+
+@dialect2sql@ SQL Reference Validity Column Scope 1. Referencing columns from a subquery or CTE in the outer query using an alias that is not exposed in the subquery's SELECT list or using a table alias from inside the subquery 2. Oracle requires that any column referenced in the outer query must be present in the projection of the inner subquery/CTE; referencing internal table aliases (e.g., 's') from outside their scope causes ORA-00904 -- Oracle - Incorrect/Correct/Reason @dialect2sql@
+
+@dialect2sql@ Data Type Consistency Date/Time Comparison 1. Comparing date strings with DATE values or mixing string and DATE types in conditions 2. TO_DATE / TO_CHAR -- Oracle - Incorrect/Correct/Reason: Using string literals or VARCHAR2 date representations directly in comparisons with DATE columns (or vice versa) without explicit conversion causes ORA-01861. Always ensure both sides of a date comparison are of the same type—either convert strings to DATE using TO_DATE with an explicit format, or convert DATEs to strings using TO_CHAR with a consistent format for safe comparison. @dialect2sql@
+
+@dialect2sql@ Date Handling Explicit Date Conversion 1. When converting string literals or string columns to dates in Oracle, the format must explicitly match the data using TO_DATE with a correct format mask. 2. TO_DATE -- Oracle - Correct/Incorrect/Reason: Using CAST for date conversion without matching NLS settings can cause ORA-01861; TO_DATE with an explicit format (e.g., 'YYYY-MM-DD') ensures reliable parsing and avoids locale-dependent errors. @dialect2sql@
+
+@dialect2sql@ Date Handling Year Extraction 1. When extracting a year from a string column that is guaranteed (or assumed) to contain only valid 4-digit year values, avoid using TO_DATE with 'YYYY' format if the data might include invalid years (e.g., '0000') or non-date strings. 2. CAST(column AS NUMBER) -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ ORDER BY Clause GROUP BY and SELECT Consistency 1. When using GROUP BY with aggregates, any column or expression referenced in ORDER BY must either be in the SELECT list or functionally dependent on the GROUP BY keys. 2. Oracle enforces that non-aggregate expressions in ORDER BY must appear in the SELECT clause if SELECT DISTINCT or GROUP BY is used—otherwise ORA-01791 occurs. -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ GROUP BY Compliance Functional Dependency 1. When using GROUP BY, any non-aggregated column or expression in the SELECT clause must either be included in the GROUP BY clause or be functionally dependent on a grouped key (e.g., primary key). In Oracle, functional dependency is not automatically inferred for expressions like CAST(f.file_size AS NUMBER), even if file_id is a primary key. 2. CAST / REGEXP_LIKE -- Oracle - Incorrect/Correct/Reason: Including a CAST expression derived from a grouped table in the SELECT without adding it to GROUP BY causes ORA-00979. The fix avoids this by moving the aggregated total into a scalar subquery, thereby decoupling it from the main GROUP BY context. This ensures compliance without bloating the GROUP BY clause with complex expressions. @dialect2sql@
+
+@dialect2sql@ Column Reference Subquery Alias 1. When selecting columns from a subquery in the outer query, always reference the column using the subquery's alias rather than the original table alias used inside the subquery. 2. COLUMN ALIASING -- Oracle - Incorrect: Referencing an inner subquery's table alias (e.g., 'al.access_date') directly in the outer SELECT clause; Correct: Using the subquery’s alias (e.g., 'ranked.access_date'); Reason: The outer query cannot see table aliases defined inside the subquery—only the subquery’s own alias and its exposed columns are accessible. @dialect2sql@
+
+@dialect2sql@ Data Type Handling Date/Time Conversion 1. When ordering or comparing date/time columns that are already of DATE or TIMESTAMP type, avoid unnecessary conversion functions like TO_TIMESTAMP or TO_DATE. 2. TO_TIMESTAMP -- Oracle - Incorrect/Correct/Using TO_TIMESTAMP on a column already of TIMESTAMP or DATE type causes ORA-01861 if the format mask doesn't match literal string expectations; direct reference is correct because Oracle handles native date/time types without explicit formatting in such contexts. @dialect2sql@
+
+@dialect2sql@ Column Reference Aliasing 1. Referencing columns from a subquery in the outer query 2. Use the subquery's alias to qualify column names, not the original table alias inside the subquery -- Oracle - Incorrect: Using inner table alias (e.g., 've.comment_count') in outer SELECT; Correct: Use subquery alias (e.g., 'v.comment_count'); Reason: Columns selected from a subquery are exposed under the subquery’s alias, not the internal table aliases which are out of scope in the outer query @dialect2sql@
+
+@dialect2sql@ Date Handling Literal-to-Date Conversion 1. When comparing string-formatted date literals (e.g., '2021-12-31') stored in VARCHAR2 columns against DATE values or ANSI date literals in Oracle, implicit conversion may fail if NLS settings don't match the string format. 2. TO_DATE -- Oracle - Correct/Incorrect/Reason @dialect2sql@
+
+@dialect2sql@ Date/Time Handling EXTRACT Function 1. When using EXTRACT on a string column that represents a date, Oracle raises ORA-30076 because EXTRACT requires a DATE, TIMESTAMP, or INTERVAL data type—not a string. 2. TO_DATE -- Oracle - Incorrect: EXTRACT(YEAR FROM al.access_date) when al.access_date is VARCHAR2; Correct: EXTRACT(YEAR FROM TO_DATE(al.access_date, 'YYYY-MM-DD')); Reason: EXTRACT operates only on datetime or interval types, so string-based date representations must first be explicitly converted to DATE using TO_DATE with a matching format mask. @dialect2sql@

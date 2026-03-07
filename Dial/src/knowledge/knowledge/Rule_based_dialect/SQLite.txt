@@ -1,0 +1,180 @@
+@dialect2sql@
+1.1 Alias Definition and Reference
+-- SQLite:Method: Standard usage: Define alias using AS keyword; Use double quotes " to wrap aliases containing spaces/special characters; Single quotes for aliases parsed as strings; Compatibility feature: AS can be omitted, but explicit writing is recommended; eg: Error example (single quotes unexpected): SELECT salary 'Annual Salary' FROM employees; Correct example (omit AS): SELECT first_name fn FROM employees; Special alias example (double quotes): SELECT salary AS "Annual Salary" FROM employees;
+@dialect2sql@
+
+@dialect2sql@
+1.2.1 String Literal
+
+-- SQLite:
+   Method:
+      Recommended usage: String literals use single quotes '; Double quotes are compatible but non-standard;
+      Error scenario: Relying on double quotes to wrap strings (poor cross-database compatibility);
+  eg:
+      Not recommended example (double quotes):
+      WHERE name = "John Doe";
+      Correct example (single quotes):
+      WHERE name = 'John Doe';
+@dialect2sql@
+
+@dialect2sql@
+1.2.2 Identifier Quoting (Object Names)
+-- SQLite:
+   Method:
+      Default usage: Identifiers wrapped in backticks ``; Compatible with double quotes "";
+      Error scenario: Using keywords as object names without quotes;
+  eg:
+      Error example (keyword not escaped):
+      SELECT name, group FROM users;
+      Correct example (backtick quoting):
+      SELECT `name`, `group` FROM `users`;
+@dialect2sql@
+
+@dialect2sql@
+1.2.3 Explicit Escaping of Keywords as Table/Column Names
+-- SQLite:
+   Method:
+      Supports double quotes "" or backticks `` for escaping keyword identifiers, also supports square brackets [] (compatible with SQL Server);
+      Common keywords requiring escaping: Match, Order, User, Index, Table, etc.; SQLite has lenient syntax checking for keywords, but lack of escaping may cause ambiguity.
+  eg:
+      Escaping keyword table name (multiple methods):
+      SELECT * FROM "Match" WHERE id = 1; (double quotes)
+      SELECT * FROM `Match` WHERE id = 1; (backticks)
+      SELECT * FROM [Match] WHERE id = 1; (square brackets)
+      Escaping keyword column names:
+      SELECT [Order], `User` FROM logs; (mixed escaping methods)
+@dialect2sql@
+
+@dialect2sql@
+1.3.1 String Case Sensitivity
+
+-- SQLite:
+   Method:
+      Default rule: String case-insensitive (LIKE operation also insensitive);
+      Example: 'apple' = 'APPLE' returns true;
+  eg:
+      SELECT * FROM fruits WHERE name = 'APPLE'; -- Matches name='apple'
+@dialect2sql@
+
+
+@dialect2sql@
+1.6.3 NULL Handling Details in LEFT JOIN
+-- SQLite:
+   Method:
+      NULL retention rule: All records from left table retained, unmatched fields from right table are NULL; Use COALESCE to fill NULLs;
+      Difference from INNER JOIN: INNER JOIN only returns matching rows, LEFT JOIN includes unmatched rows from left table;
+      Performance optimization: Right table join column needs index (CREATE INDEX idx_sat_school ON satscores(school_id)), SQLite has weak optimization for LEFT JOIN, complex joins suggest filtering left table first then joining.
+  eg:
+      Basic LEFT JOIN (issue 27 adaptation):
+      SELECT s.school_name, ss.AvgScrWrite FROM schools s LEFT JOIN satscores ss ON s.id = ss.school_id;
+      Filling NULL as 0:
+      SELECT s.school_name, COALESCE(ss.AvgScrWrite, 0) AS avg_score FROM schools s LEFT JOIN satscores ss ON s.id = ss.school_id;
+      Subquery filtering left table:
+      SELECT s.school_name, ss.AvgScrWrite FROM (SELECT * FROM schools WHERE state = 'CA') s LEFT JOIN satscores ss ON s.id = ss.school_id;
+@dialect2sql@
+
+@dialect2sql@
+1.8.2 Division NULL Protection
+-- SQLite: Use NULLIF(denominator, 0) to handle division by zero, eg: SELECT CAST(col1 AS REAL) / NULLIF(col2, 0) AS res FROM table1 (When denominator is 0, the fraction returns NULL).
+@dialect2sql@
+
+@dialect2sql@
+ --SQLite: SQLite does not have a separate Boolean storage class. Instead, Boolean values are stored as integers 0 (false) and 1 (true).
+@dialect2sql@
+
+@dialect2sql@
+2.4.2 BIT Type Handling Differences
+  --SQLite: No native BIT type, simulates boolean values via INTEGER (0 false, 1 true, supports NULL). Use WHERE flag = 1 directly in query conditions, dynamic type feature allows flexible storage.
+@dialect2sql@
+
+@dialect2sql@
+4.3.1 Sequence or Auto-increment Mechanism
+-- SQLite:
+   Method:
+      Core rule: Implicit Rowid auto-increment; INTEGER PRIMARY KEY acts as Rowid alias (auto-increment); AUTOINCREMENT keyword enforces strict increment (avoids ID reuse);
+  eg:
+      Rowid alias example:
+      CREATE TABLE orders (id INTEGER PRIMARY KEY, name TEXT);
+      INSERT INTO orders (name) VALUES ('Test Order'); -- id auto-increments
+      AUTOINCREMENT example:
+      CREATE TABLE orders (id INTEGER AUTOINCREMENT PRIMARY KEY, name TEXT);
+@dialect2sql@
+
+@dialect2sql@
+  --SQLite: '' is a distinct valid string value (not NULL).
+@dialect2sql@
+
+@dialect2sql@
+5.8 Syntax Rules for GROUP BY Queries under sql_mode=only_full_group_by
+-- SQLite:
+   Method:
+      Defaults to lax mode, allowing SELECT of columns not in GROUP BY and not aggregated (returns a value from an arbitrary row within the group); Can enable strict constraint similar to only_full_group_by by setting PRAGMA query_only_full_group_by = 1. Violation throws an error ("non-aggregate column ... is not in GROUP BY clause");
+      In strict mode, rules are consistent with MySQL only_full_group_by, requiring SELECT columns to be in GROUP BY or within aggregate functions.
+   eg:
+      Lax mode (default): SELECT name, COUNT(*) FROM orders GROUP BY user_id; (Returns arbitrary name per group)
+      Strict mode error example:
+      PRAGMA query_only_full_group_by = 1;
+      SELECT name, COUNT(*) FROM orders GROUP BY user_id; (Triggers error)
+      Strict mode correct example: SELECT user_id, ANY_VALUE(name), COUNT(*) FROM orders GROUP BY user_id;
+@dialect2sql@
+
+
+@dialect2sql@
+5.9 Mandatory Rule: Derived Table (Table-level Subquery) Must Have an Alias
+-- SQLite:
+   Method:
+      Mandatory Requirement: Derived tables must specify an alias, otherwise triggers a syntax error ("near ")": syntax error"); SQLite's check for derived table aliases is consistent with MySQL, parsing fails without an alias;
+      Alias can be short (e.g., t), no need for semantic naming, but must exist.
+   eg:
+      Error example: SELECT SUM(score) FROM (SELECT score FROM exams WHERE subject = 'Math'); (Error)
+      Correct example: SELECT SUM(score) FROM (SELECT score FROM exams WHERE subject = 'Math') AS math_scores;
+@dialect2sql@
+
+
+@dialect2sql@
+5.10 Basic Syntax Rules for UNION Statements
+-- SQLite:
+   Method:
+      Core Rules:
+      Subquery column counts must be consistent, data types should be compatible (supports loose implicit conversion);
+      UNION removes duplicates, UNION ALL retains duplicates;
+      UNION in derived tables requires an alias, otherwise triggers syntax error.
+   eg:
+      Basic UNION (merging results from different conditions):
+      SELECT name, age FROM students WHERE grade = 'A' UNION SELECT name, age FROM students WHERE age < 18;
+      UNION nested in FROM clause:
+      SELECT AVG(amount) FROM (SELECT amount FROM orders WHERE status = 'paid' UNION SELECT amount FROM refunds WHERE status = 'completed') AS all_amounts;
+@dialect2sql@
+
+@dialect2sql@
+5.11 Cross-Database Function Compatibility Differences
+-- SQLite:
+   Method:
+      Compatibility Rule: Has proprietary extension functions (IIF()/JULIANDAY()/STRFTIME()). These functions have no direct equivalent implementation in MySQL/Oracle; Calling SQLite-specific functions from other databases triggers "function does not exist" error;
+      Proprietary Function Description:
+      IIF(condition, val1, val2): Simplified conditional judgment, equivalent to CASE WHEN;
+      JULIANDAY(date): Returns the Julian day number of the date, used for date difference calculation or sorting;
+   eg:
+      SQLite-specific IIF usage (problem scenario 880):
+      SELECT IIF(STRFTIME('%Y', Date) = '2010', 1, 0) FROM records;
+      SQLite-specific JULIANDAY usage:
+      SELECT JULIANDAY('2023-10-01') - JULIANDAY('2023-09-01') AS day_diff;
+@dialect2sql@
+
+@dialect2sql@
+5.12 Format Consistency and Boundary Handling for Date Field Filtering
+
+-- SQLite:
+   Method:
+      Format Specification: Recommend storing dates in TEXT type as YYYY-MM-DD format for direct comparison; Non-standard formats (e.g., 1993/7/5) need conversion using date(text_date) (date('1993/7/5') automatically converts to 1993-07-05);
+      Type and Filter Syntax: TEXT type YYYY-MM-DD dates can be filtered directly using =/BETWEEN. Non-standard formats require conversion; DATE type (SQLite has no native DATE type, essentially TEXT/INTEGER) processing logic is the same as TEXT;
+      Boundary Handling: Range queries support BETWEEN, no need for extra functions;
+      Sorting Compatibility: Sort directly by the TEXT date field (YYYY-MM-DD format string order is consistent with date order), no need for JULIANDAY function (avoiding dependency on proprietary functions).
+   eg:
+      TEXT date direct filtering (loan.date is TEXT type):
+      SELECT * FROM financial WHERE loan_date = '1993-07-05';
+      Non-standard format conversion:
+      SELECT * FROM logs WHERE date(date_text) = '1993-07-05';
+      Sorting without JULIANDAY:
+      SELECT * FROM users ORDER BY dob DESC; (Replaces ORDER BY JULIANDAY(dob) DESC)
+@dialect2sql@

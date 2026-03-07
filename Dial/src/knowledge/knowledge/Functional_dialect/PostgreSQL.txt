@@ -1,0 +1,1265 @@
+@dialect2sql@
+1.4 Date and Time Functions: Frequent Operations with Significant Differences
+
+1.4.1 Getting Current Time:
+   1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+      Questions like "current time", "what time is it now", "today's date", "current timestamp" typically use this syntax.  
+   2. Relevant Function Description:  
+      This syntax is used to get the database server's current date, time, or timestamp. It is commonly used for recording operation times, calculating time intervals, filtering time ranges, etc.
+
+-- PostgreSQL
+
+ 	SELECT CURRENT\_TIMESTAMP; -- More precise timestamp
+
+ 	SELECT CURRENT\_DATE;
+
+ 	-- SQL Server
+
+ 	-SELECT GETDATE(); -- High-precision timestamp (ms level)
+   - SQL Server 2008 and above support CURRENT_DATE, returning the current date (format YYYY-MM-DD);
+   eg:
+      Get current date: SELECT CURRENT_DATE; (Result e.g., 2025-11-19)
+      Extract current year: SELECT YEAR(CURRENT_DATE); (Result: 2025)
+      Lower version compatibility: SELECT CAST(GETDATE() AS DATE);
+
+@dialect2sql@
+
+@dialect2sql@
+1.4.2 Extracting Date Components:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Situations requiring extraction of date components include: asking about "specific year/month/quarter", "day of the week", "day of the year", "hour/minute number", and other specific time unit questions.
+
+2. Relevant Function Description:
+   This syntax function includes: obtaining specified parts (like year, month, day, hour, minute, second) from a date or time value, supports extraction of components like week, quarter, and can be combined with conditional filtering or aggregation to achieve grouping statistics by time dimensions.
+
+
+
+ 	-- PostgreSQL
+
+ 	Method 1: EXTRACT(field FROM date_column), eg: SELECT EXTRACT(YEAR FROM order\_date), EXTRACT(MONTH FROM order\_date);
+
+ 	Method 2: DATE\_PART('field', date_column), eg: Extract year DATE\_PART('year', lastaccessdate); Extract month DATE\_PART('month', lastaccessdate)
+
+
+
+@dialect2sql@
+
+@dialect2sql@
+1.4.3 Date Calculation:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+   - Calculating the number of days to/from a specific date (e.g., "How many days until National Day from today?")  
+   - Calculating past or future dates (e.g., "What is the date 3 months from now?")  
+   - Calculating durations like age, length of service (e.g., "Someone's age")  
+   - Determining the period a date belongs to (e.g., "What day of the week is a specific date?")  
+
+2. Relevant Function Description:  
+   - Supports date addition and subtraction operations (e.g., adding/subtracting days/months/years)  
+   - Calculates the number of days/months/years between two dates  
+   - Extracts date components (e.g., year, month, weekday value)  
+   - Implements date truncation (e.g., truncating to the start of the month or year)  
+   - Timezone conversion and cross-timezone calculations
+
+
+
+ 	-- PostgreSQL
+
+ 	SELECT order\_date + INTERVAL '7 DAYS';
+
+ 	SELECT order\_date - INTERVAL '1 MONTH';
+
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.4.4 Date Truncation Functions:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+   - Calculating age (e.g., "Someone's age")  
+   - Statistical analysis of monthly/quarterly/annual data (e.g., "This month's sales", "This quarter's order volume")  
+   - Weekly grouping analysis (e.g., "Weekly active user count")  
+   - Comparing period-over-period data (e.g., "Profit for the same period last year")  
+
+2. Relevant Function Description:  
+   - Truncates date-time values to a specified precision (e.g., start of year, month, day, hour, etc.)  
+   - Used for date grouping statistics or time interval comparisons  
+   - Assists in calculating date differences (e.g., calculating day difference ignoring the time part)  
+   - Generates standardized time coordinates for correlated queries
+
+
+ 	  --PostgreSQL: Use DATE\_TRUNC('precision', date_column), "precision" supports year, month, day, etc.
+
+ 	eg:
+
+ 		Truncate to "year": DATE\_TRUNC('year', lastaccessdate) (Result: "First day of the current year").
+
+ 		Truncate to "month": DATE\_TRUNC('month', lastaccessdate) (Result: "First day of the current month").
+
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.4.5 Age Calculation:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:  
+   - Calculating age (e.g., "Someone's age")  
+   - Calculating birthday (e.g., "What is someone's birthday and how many days until it from today?")
+   - Calculating exact age in years (e.g., "What is someone's exact age in years this year?")
+   - Determining legal age (e.g., "Has someone reached the legal adult age / legal marriage age?")
+   - Age group statistics (e.g., "Purchase preferences of users aged 30-40")
+   - Retirement age calculation (e.g., "How many years until someone reaches the legal retirement age?")
+   - Birthday cycle calculation (e.g., "Which week of the month is someone's birthday, how many days until the next birthday?")
+
+2. Relevant Function Description:  
+   - Truncates date-time values to a specified precision (e.g., start of year, month, day, hour, etc.)
+   - Used for date grouping statistics or time interval comparisons
+   - Assists in calculating date differences (e.g., calculating day difference ignoring the time part)
+   - Generates standardized time coordinates for correlated queries
+   - Truncates birth date to year dimension, calculates difference from current year for exact age in years
+   - Truncates date to month-day dimension, compares birthday with current date to determine if birthday has passed
+   - Calculates age difference at year granularity, assists in legal age threshold determination
+   - Standardizes birth date (truncate to year/month) for age group analysis
+
+
+-- PostgreSQL:
+   Method 1: Use AGE(end_date, start_date) to get the time interval, then extract the year; Method 2: Directly AGE(birth_date) (defaults to comparing with current date)
+   eg:
+      Calculate current age: EXTRACT(YEAR FROM AGE(CURRENT_DATE, birthdate))
+      Calculate age up to 2025-11-19: EXTRACT(YEAR FROM AGE('2025-11-19', '1985-08-10'))
+
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.5 Pagination Queries
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Viewing data lists for a specified page (e.g., "Show the user list for page 3")
+   - Retrieving the top N records (e.g., "Query the top 10 products with the highest sales")
+   - Fetching data after skipping some records (e.g., "Display 10 records starting from the 21st record")
+   - Loading large amounts of data in batches (e.g., "Load the next batch of 20 order records")
+
+2. Relevant Function Description
+   - Supports specifying the limit on the number of records returned
+   - Supports skipping a specified number of records (offset setting)
+   - Supports pagination queries combined with sorting conditions
+   - Supports efficient pagination implementation via window functions
+
+
+* PostgreSQL
+     -- LIMIT/OFFSET: Clear and intuitive
+     SELECT * FROM products ORDER BY price DESC LIMIT 10 OFFSET 20; -- Page 3 (10 items per page)
+     -- Window function ROW_NUMBER() + FETCH FIRST: Modern standard
+     SELECT * FROM products
+     ORDER BY price DESC
+     OFFSET 20 ROWS FETCH NEXT 10 ROWS ONLY; -- Standard, clear, and high potential for performance optimization
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.6 Join Syntax
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Querying associated information involving multiple entities (e.g., "List all employees and their department names" where "and their" implies association)
+   - Summarizing aggregated data across joined tables (e.g., "Count the number of employees per department" where "per department" implies grouping)
+   - Filtering records that require data from other tables (e.g., "Find employees not assigned to any department" where "not assigned to any department" implies a check for non-existence in another table)
+   - Comparing relationships between multiple entities (e.g., "Query common customers of the Sales and Marketing departments" where "common customers" implies an intersection)
+
+2. Relevant Function Description
+   - Supports multi-table join queries (including INNER JOIN, LEFT/RIGHT/FULL OUTER JOIN)
+   - Implements record filtering and matching based on join conditions
+   - Provides cross-table data aggregation and grouped statistical capabilities
+   - Supports existence checks for relationships (e.g., checking if a record in one table has a corresponding entry in another table)
+
+1.6.1 Two-Table Joins
+* INNER JOIN: Recommended standard form
+     SELECT e.name, d.department_name
+     FROM employees e
+     INNER JOIN departments d ON e.dept_id = d.id; -- Clearly expresses the join condition
+
+* Old-style comma list + WHERE: Legacy style (not recommended, poor readability, error-prone)
+     SELECT e.name, d.department_name
+     FROM employees e, departments d
+     WHERE e.dept_id = d.id; -- Implicit inner join, easy to forget conditions leading to Cartesian products
+
+
+Important: All modern versions recommend using explicit LEFT/RIGHT/FULL OUTER JOIN syntax.
+@dialect2sql@
+
+@dialect2sql@
+1.6.2 Multi-Table Joins (Three Tables or More)
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   Multi-entity association queries (e.g., "Query competition scores, athlete information, and associated profile data", "Get four-table association results for loans, accounts, authorization records, and customer information", "Match test records, patient information, and test item data across three tables")
+   Multi-table joins with filter conditions (e.g., "Filter athletes with competition scores greater than 80 and their profile information", "Query test records after 2023 and their corresponding patients and test items", "Get competition results for athletes born before 1985")
+   Association queries with multi-column composite conditions (e.g., "Associate orders with store information based on store ID and region dual conditions", "Associate order and product data via foreign key + status condition")
+   LEFT JOIN requirements preserving primary table data (e.g., "Query all customers and their order and product information, display NULL if no orders exist")
+   Custom requirements for specific join order (e.g., "Force join order by specified table sequence to optimize query efficiency")
+
+2. Relevant Function Description
+   Supports chained multi-table associations (three tables or more), adapting to multi-level entity relationships in business (e.g., competition→athlete→profile, loan→account→customer)
+   Flexible control over join order (MySQL/SQLite execute in written order; PostgreSQL/Oracle/SQL Server auto-adjust via optimizer; supports LEADING hint or OPTION (FORCE ORDER) to force order)
+   Diverse ON condition support (foreign key association, multi-column composite association, nested conditions / subquery association, ensuring accuracy of association logic)
+   Adaptation of different join types (INNER JOIN for matching data filtering, LEFT JOIN for preserving full primary table data, avoiding Cartesian products)
+   Performance optimization mechanisms (relying on indexes for join columns, prioritizing HASH JOIN / MERGE JOIN for large tables, NESTED LOOP for small tables, filtering data early to reduce intermediate result sets)
+   Cross-data type association adaptation (requires matching data types for join columns, avoiding implicit conversion, unifying text field formats before association)
+   Support for complex business scenario associations (deep associations of four tables or more, covering entity association needs in finance, healthcare, sports events, and other fields)
+
+
+-- PostgreSQL:
+   Method:
+   Join Order: Automatically optimizes join order based on statistics (CBO optimizer), A JOIN B JOIN C might be adjusted to A JOIN (B JOIN C) to reduce intermediate result sets;
+   ON Condition Logic: Supports complex join conditions (e.g., multi-column composite association ON a.id = b.a_id AND a.type = b.type), non-foreign key associations require explicit matching rules;
+   Performance Optimization: Prioritizes HASH JOIN for large table associations, NESTED LOOP for small tables, requires building B-tree indexes on join columns, avoid SELECT * (reduces data transfer).
+   eg:
+   Three-table association:
+   SELECT r.record_id, p.patient_name, t.test_name FROM records r JOIN patients p ON r.patient_id = p.id JOIN tests t ON r.test_id = t.id WHERE r.test_date > '2023-01-01';
+   Multi-column composite association:
+   SELECT o.order_id, s.store_name, p.product_name FROM orders o JOIN stores s ON o.store_id = s.id AND o.region = s.region JOIN products p ON o.product_id = p.id;
+
+@dialect2sql@
+
+@dialect2sql@
+1.7 Grouping Queries
+
+1.7.1 GROUP BY
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Counting quantities per category (e.g., "What is the sales quantity per product category?")
+   - Calculating averages per department (e.g., "What is the average salary per department?")
+   - Summarizing data per time period (e.g., "Monthly sales statistics")
+   - Analyzing maximum values per region (e.g., "What is the maximum temperature per province?")
+
+2. Relevant Function Description
+   - Supports grouping data statistics by specified columns
+   - Works with aggregate functions to calculate summary values per group (e.g., COUNT, SUM, AVG)
+   - Implements multi-column composite grouping (e.g., grouping simultaneously by department and position)
+   - Provides result filtering capability after grouping (using the HAVING clause)
+
+    (1) PostgreSQL: Must include all non-aggregated columns, follows SQL standard, eg: GROUP BY "t2"."name", "t2"."nationality"
+@dialect2sql@
+
+@dialect2sql@
+1.8 NULL Usage
+
+1.8.1 NULL Sorting
+1. Common Scenarios for Using This Syntax in Natural Language Queries
+   - Querying the highest score and placing NULLs last (e.g., "Find the highest score, place NULL scores last")
+   - Getting the latest records and placing missing dates first (e.g., "Show the latest orders, prioritize orders without dates")
+   - Ranking sales figures and handling NULL sales (e.g., "Rank sales, place NULLs at the bottom")
+   - Filtering for the lowest price and placing unpriced items last (e.g., "Lowest priced product, place unpriced items last")
+
+2. Relevant Function Description
+   - Supports explicit control over NULL position during sorting (NULLS FIRST/NULLS LAST)
+   - Manually implements NULL sorting via conditional expressions (CASE WHEN handling)
+   - Simulates NULL sorting using value replacement (e.g., ISNULL replacement)
+   - Combines type conversion and NULL handling for sorting (using CAST with NULLIF)
+
+     (1) PostgreSQL: Supports NULLS FIRST and NULLS LAST, eg: ORDER BY CAST(...) / NULLIF(...) ASC NULLS FIRST LIMIT 1
+@dialect2sql@
+
+@dialect2sql@
+1.8.3 NULL Value Checking:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Filter records with valid information (e.g., "List all users who have filled in their email" where "have filled in" implies non-null)
+   - Exclude entries with missing data (e.g., "Query customers whose phone number is not empty" where "not empty" implies IS NOT NULL)
+   - Count the number of valid data entries (e.g., "Count the number of users who have completed real-name authentication" where "have completed" implies the field is not NULL)
+   - Verify the completeness of required fields (e.g., "Check if all orders have a shipping address" where "have" implies the field is not NULL)
+
+2. Relevant Function Description:
+   - Supports IS NOT NULL syntax to check for non-null values in a field
+   - Supports IS NULL syntax to check for null value status in a field
+   - Provides the `columnname notnull` shorthand syntax (supported by some databases)
+   - Implements record filtering and statistics based on null value conditions
+
+- General Cases
+  (1)PostgreSQL: Supports the `columnname notnull` shorthand, and also supports IS NOT NULL, e.g.: `WHERE "t1"."dob" notnull` or `WHERE "t1"."dob" IS NOT NULL`
+
+- Aggregate Function (MAX()/AVG() etc.) Handling of NULL Values
+-- PostgreSQL:
+   Method:
+   MAX()/MIN()/AVG()/SUM() ignore NULL values by default; COUNT(column) ignores NULLs, COUNT(*) includes rows with NULLs;
+   Performance difference when explicitly excluding NULLs: When the column has a partial index (only non-NULL values), `WHERE column IS NOT NULL` is more efficient; performance is similar without an index;
+   In conditional aggregation, `SUM(CASE WHEN condition THEN column ELSE NULL END)` only accumulates non-NULL values meeting the condition, NULLs do not participate in the calculation.
+   eg:
+   MAX() ignores NULL: `SELECT MAX(salary) FROM employees;` (employees with NULL salary are excluded)
+   Explicitly filters NULL (corresponding to scenario 1175): `SELECT MAX(hgb) FROM medical WHERE hgb IS NOT NULL;`
+   Conditional aggregation: `SELECT SUM(CASE WHEN type = 'sales' THEN amount ELSE NULL END) FROM transactions;` (only sums amounts of type 'sales')
+@dialect2sql@
+
+@dialect2sql@
+1.9 Functions for Calculating Age Difference:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Calculate a person's age (e.g., "What is someone's age?")
+   - Determine if an age condition is met (e.g., "Is he/she 18 years or older?")
+   - Calculate service years (e.g., "How long is the employee's length of service?")
+   - Compare age differences (e.g., "What is the age difference between two people?")
+
+2. Relevant Function Description:
+   - Calculates the year difference between two dates
+   - Handles age correction for birthdays not yet passed in the current year
+   - Supports precise age calculation down to year, month, and day
+   - Provides multiple date difference calculation methods (year difference, month difference, etc.)
+
+(1)PostgreSQL: Built-in AGE function calculates date difference, then use EXTRACT to get the year difference, e.g.: `EXTRACT(YEAR FROM AGE(CURRENT_DATE, "birthday"))`
+
+@dialect2sql@
+
+@dialect2sql@
+1.10 Splitting Strings:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Extract a substring at a specific position (e.g., "Get the username part from the email address" where "username part" implies a specific segment)
+   - Analyze structured text data (e.g., "Extract the third column data from CSV format" where "extract the third column" implies splitting)
+   - Process path or hierarchical information (e.g., "Get the filename from the file path" where "filename" implies the last segment)
+   - Parse composite identifiers (e.g., "Extract the specification code from the product code" where "specification code" implies a specific segment)
+
+2. Relevant Function Description:
+   - Splits a string by a specified delimiter and returns the substring at the specified position
+   - Supports counting and extracting segments from the beginning or end of the string
+   - Provides regular expression pattern matching for extracting complex format string segments
+   - Implements substring extraction based on delimiter position
+
+(1)PostgreSQL: Built-in SPLIT_PART, syntax: `SPLIT_PART(string, delimiter, field)`, Parameters: string: source string to split (e.g., 'a:b:c'), delimiter: delimiter character/substring (e.g., ':', the character/substring used to split the string), field: the "part number" to extract (counting starts from 1). Example: `SPLIT_PART('a:b:c', ':', 2)` → returns 'b' (after splitting by :, take the 2nd part).
+
+@dialect2sql@
+
+
+@dialect2sql@
+1.11 Usage of Virtual Tables:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query system information or constant values (e.g., "What is the current system time?" where "current system time" implies a function call)
+   - Execute simple calculation expressions (e.g., "Calculate what is 1 plus 1" where "calculate...equals" implies an expression)
+   - Get database function results (e.g., "What is the database version number?" where "version number" implies a system function)
+   - Test database connection status (e.g., "Is the database connection normal?" where "connection normal" might involve a simple query)
+
+2. Relevant Function Description:
+   - Supports table-less queries returning constant values and expression results
+   - Provides system function call interface (e.g., time functions, version functions)
+   - Implements virtual table mechanism to satisfy SELECT syntax completeness requirements
+   - Allows direct execution of functions and expressions without relying on actual data tables
+
+
+(1)PostgreSQL: Completely no need for FROM dual, table-less queries are written directly, e.g.: Scalar query: `SELECT 1;` -- Directly returns constant 1
+@dialect2sql@
+
+@dialect2sql@
+1.12 BETWEEN Conditional Operator
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Numeric range filtering (e.g., "Students aged between 18 and 22", "Products priced between 100 and 200 yuan")
+   - Date/Time range queries (e.g., "Orders from 1990 to 1993", "Customers registered in 2020", "Log records within this week")
+   - String lexicographical range matching (e.g., "Users whose username starts with A to C", "Students whose last name is between Li and Zhang")
+   - Reverse range filtering (e.g., "Products not priced between 100 and 200 yuan", "Students not aged between 18 and 22")
+   - Business indicator range queries (e.g., "Employees with salary between 5000 and 8000 yuan", "Products with stock not between 10 and 50")
+   - Time granularity range statistics (e.g., "Sales from Q1 to Q2 2023", "Access records from 9 AM to 6 PM daily")
+   - Reverse filtering with quantity limit (e.g., "Top 10 sales records where amount is not between 1000 and 5000")
+
+2. Relevant Function Description:
+   - Implements closed interval range filtering, directly matching the natural language requirement of "between X and Y"
+   - Supports range comparison for multiple data types like numeric, date, string, adapting to different business field types
+   - Implements reverse range query "not between X and Y" via NOT BETWEEN, meeting exclusion filtering needs
+   - Combines with date formatting/type conversion functions (e.g., TO_DATE, strftime) to adapt to different database date range query logic
+   - Supports string lexicographical range matching, meeting interval filtering scenarios for text fields
+   - Can combine with TOP/LIMIT clauses to implement range filtering with quantity limits
+   - Adapts to different database implicit/explicit type conversion rules, ensuring accuracy in date, string, and numeric range comparisons
+   - Meets interval statistics and filtering needs for business indicators like salary, stock, sales, supporting business analysis scenarios
+
+-- PostgreSQL:
+Method:
+   BETWEEN is a closed interval (includes both bounds);
+   Date/Time types must match the range value type (strings need explicit conversion to date type, otherwise compared lexicographically as strings);
+   NOT BETWEEN supports reverse range query, syntax symmetric with BETWEEN.
+   eg:
+      Date range filtering (explicit type conversion): `SELECT * FROM events WHERE event_date BETWEEN TO_DATE('1990-01-01', 'YYYY-MM-DD') AND TO_DATE('1993-12-31', 'YYYY-MM-DD');`
+      String lexicographical comparison: `SELECT * FROM users WHERE username BETWEEN 'A' AND 'C';` (matches usernames starting from A to C)
+      NOT BETWEEN application: `SELECT * FROM sales WHERE amount NOT BETWEEN 500 AND 1000;` (amount <500 OR> 1000)
+@dialect2sql@
+
+
+@dialect2sql@
+II. Data Types: Underlying Differences in Basic Storage Definitions
+
+2.1 Numeric Types: Precision, Range, and Storage Optimization
+
+2.1.1 Integer Types:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query integer data within a specific range (e.g., "Query users aged between 18 and 25")
+   - Count or sum integer types (e.g., "Calculate the number of orders with total amount exceeding 1000")
+   - Compare integer size relationships (e.g., "Find products with stock quantity less than 50")
+   - Perform integer operations and conversions (e.g., "Convert user points to levels")
+
+2. Relevant Function Description:
+   - Supports querying and filtering integer ranges (e.g., BETWEEN, comparison operators)
+   - Provides integer aggregate functions (e.g., COUNT, SUM, AVG for statistical calculations)
+   - Implements integer comparison and sorting operations (e.g., greater than, less than, equal to)
+   - Supports integer type conversion and arithmetic operations (e.g., addition, subtraction, multiplication, division, type conversion functions)
+
+
+(1)PostgreSQL: Tiny Integer SMALLINT, Standard Small Integer SMALLINT, Standard Integer INT/INTEGER, Big Integer BIGINT
+
+@dialect2sql@
+
+
+@dialect2sql@
+2.1.2 Exact Decimal Types:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Precise calculation of monetary amounts (e.g., "What is the price of this product after discount?" where "price" implies precision)
+   - Statistical precision of financial data (e.g., "This month's sales rounded to two decimal places" where "rounded to two decimal places" implies fixed scale)
+   - Processing scientific calculation data (e.g., "Experimental data needs to be precise to four decimal places" where "precise to four decimal places" implies high precision)
+   - Calculating percentages or ratios (e.g., "Calculate profit margin precise to three decimal places" where "precise to three decimal places" implies fixed scale)
+
+2. Relevant Function Description:
+   - Supports specifying precision and scale (e.g., DECIMAL(10,2) means total 10 digits, 2 decimal places)
+   - Ensures precision in numerical calculations, avoiding floating-point precision errors
+   - Provides high-precision numerical storage, suitable for financial, scientific computing, etc.
+   - Supports special handling for currency types, such as rounding and formatted output
+
+  -- PostgreSQL
+
+  DECIMAL(10, 2) -- Total 10 digits, 2 decimal places
+
+  NUMERIC(10, 2)  -- Same as DECIMAL
+
+@dialect2sql@
+
+@dialect2sql@
+2.2 String Types: Fixed-length, Variable-length, and Encoding Handling
+
+2.2.1 CHAR vs VARCHAR Behavior Comparison:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query fixed-length encoded information (e.g., "Query employee IDs, required to display as 5 digits" where "display as 5 digits" implies fixed length)
+   - Process data sensitive to trailing spaces (e.g., "Find all department codes ending with 'ABC '" where "ending with 'ABC '" implies trailing spaces matter)
+   - Storage space optimization scenarios (e.g., "Store user remarks, requiring space saving" where "space saving" implies variable length)
+   - Exact matching of character data (e.g., "Exactly find the customer named 'Smith '" where "exactly find" implies exact string match including potential spaces)
+
+2. Relevant Function Description:
+   - Fixed-length storage guarantee (ensures all values have the same byte length)
+   - Trailing space handling control (supports preserving or automatically removing trailing spaces)
+   - Variable-length storage optimization (dynamically allocates storage space based on actual data length)
+   - Character comparison semantics definition (defines rules for comparing strings with and without spaces)
+
+-- PostgreSQL:
+   Method:Mandatory Constraint: CHAR(N)/CHARACTER(N) uses character count as length unit, fixed-length storage; pads with trailing spaces if input length < N, strictly retains trailing spaces in retrieval/comparison, max N=10485760 (no N equals CHAR(1)); VARCHAR(N)/CHARACTER VARYING(N) uses character count as length unit, variable-length storage (no N means unlimited length), retains trailing spaces in retrieval/comparison, strict matching for comparison (including spaces);Error Scenario: Ignoring trailing spaces in CHAR comparison (expecting match without spaces); inserting data exceeding explicit VARCHAR(N) length limit;Solution: Strictly match trailing spaces for CHAR comparison; ensure inserted data length ≤ VARCHAR(N) if N is defined; use VARCHAR without N for unlimited length needs.eg:Error example (CHAR comparison ignores trailing spaces, no matching result):CREATE TABLE emp (emp_id CHAR(5)); INSERT INTO emp VALUES ('123 '); SELECT * FROM emp WHERE emp_id = '123';Error example (VARCHAR exceeds length limit, triggers "value too long" error):CREATE TABLE dept (dept_code VARCHAR(10)); INSERT INTO dept VALUES ('12345678901');Correct example (CHAR strict matching with trailing spaces):CREATE TABLE emp (emp_id CHAR(5)); INSERT INTO emp VALUES ('123'); SELECT * FROM emp WHERE emp_id = '123 ';Correct example (VARCHAR without N for unlimited length):CREATE TABLE dept (dept_code VARCHAR); INSERT INTO dept VALUES ('ABC '); SELECT * FROM dept WHERE dept_code = 'ABC ';
+@dialect2sql@
+
+@dialect2sql@
+2.2.2 Large Object (LOB) Types:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Store very long article content (e.g., "Save the full text of this novel over 100,000 words")
+   - Record detailed product description information (e.g., "Upload the complete technical specification document for this product")
+   - Store user-generated long content (e.g., "Save the long comment content submitted by the user")
+   - Handle file content storage (e.g., "Store the entire log file content into the database")
+
+2. Relevant Function Description:
+   - Supports storing very large capacity text data (from MB to TB level)
+   - Provides specialized read/write operation methods (e.g., stream reading, segmented writing)
+   - Implements text content integrity and consistency guarantees
+   - Supports large text storage with different character set encodings
+
+
+    (1)PostgreSQL: Small text extension TEXT(no preset size), TEXT(TB level)
+
+@dialect2sql@
+
+
+@dialect2sql@
+2.2.3 Fixed-Length String:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query fixed-length codes or identifiers (e.g., "Query employee ID, must be 6 digits" where "must be 6 digits" implies fixed length)
+   - Process fixed-format data validation (e.g., "Is the ID card number in the correct format?" where "correct format" implies specific length and pattern)
+   - Match strings of specific length (e.g., "Find all 3-letter country codes" where "3-letter" implies fixed length)
+   - Generate fixed-length output results (e.g., "Generate a fixed 8-digit order number" where "fixed 8-digit" implies fixed length)
+
+2. Relevant Function Description:
+   - Defines fixed-length string storage structure
+   - Automatically pads with spaces to the specified length
+   - Validates if input data length meets requirements
+   - Ensures consistent length during data storage and comparison
+
+(1)PostgreSQL: character(n) / char(n), n is 1~10485760; if n is not specified, defaults to character(1)
+
+
+@dialect2sql@
+
+
+@dialect2sql@
+2.2.4 Variable-Length String:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Query user-input variable length information (e.g., "Find all users whose username contains 'Zhang'" where "username contains" implies variable content)
+   - Process variable-length text fields like addresses, remarks (e.g., "Count records where the address field length exceeds 50 characters" where "field length exceeds" implies variable length)
+   - Store long text data like product descriptions, comments (e.g., "Query products whose description contains 'discount'" where "description contains" implies searching within variable content)
+   - Process strings of uncertain length like names, titles (e.g., "Find documents whose title ends with 'Report'" where "title ends with" implies variable length matching)
+
+2. Relevant Function Description:
+   - Supports storing variable-length character data, allocating storage based on actual space used
+   - Provides string matching and search functions (e.g., LIKE operation, regular expression matching)
+   - Implements string length calculation and substring operations
+   - Supports basic text processing functions like string concatenation, replacement
+
+(1)PostgreSQL: character varying(n) / varchar(n), n is 1~10485760, if n is not specified then no length limit; can also be text, no limit (limited by overall database storage size)
+
+@dialect2sql@
+
+
+@dialect2sql@
+2.3 Date and Time Types: Differences in Time Representation Precision
+
+2.3.1 Basic Date and Time Type Comparison:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying data within a specific time range (e.g., "today" in "query all orders for today")
+   - Comparing data at different time points (e.g., "this month" and "last month" in "compare this month's sales with last month's")
+   - Aggregating statistics by time dimension (e.g., "per hour" in "count visits per hour")
+   - Handling timezone-related queries (e.g., "convert to" in "convert Beijing time to New York time")
+
+2. Relevant Function Description:
+   - Supports storage and formatted output of date and time types
+   - Provides date and time extraction and conversion functions (e.g., extract hour, convert to different timezone)
+   - Implements comparison and filtering for date and time ranges
+   - Supports time interval calculation and date-time arithmetic operations
+
+
+ 	(1)PostgreSQL: Date only DATE, Time only TIME[(p)], Date+Time TIMESTAMP[(p)], Timezone support TIMESTAMPTZ
+
+
+@dialect2sql@
+
+@dialect2sql@
+2.3.2 Important Parameters for Time Precision:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Recording timestamps with millisecond precision (e.g., "record the exact time of the operation, precise to milliseconds")
+   - Controlling timestamp precision (e.g., "store the current time, including microsecond precision")
+   - Precise measurement of time intervals (e.g., "calculate the time difference between two events, precise to nanoseconds")
+   - Formatted output of time data (e.g., "display time, keeping three decimal places")
+
+2. Relevant Function Description:
+   - Supports definition of fractional seconds precision (e.g., storage of milliseconds, microseconds)
+   - Controls storage precision and display format of time types
+   - Implements high-precision time calculation and comparison
+   - Manages the balance between storage space and precision for time data
+
+-- PostgreSQL:
+   Method:
+      Mandatory Constraint: Uses p (Precision) for TIME/TIMESTAMP/TIMESTAMPTZ types, p range 0-6 (represents fractional seconds precision, only affects storage space as stated); default p=6 if not specified; DATE type does not support p; inserting data with precision exceeding defined p will be truncated to p digits; p >6 triggers syntax error;
+      Error Scenario: Setting p >6 (e.g., TIMESTAMP(7)); adding p to DATE type (e.g., DATE(2)); misunderstanding that p does not affect storage (expecting full precision retention for data exceeding p);
+      Solution: Restrict p to 0-6; only apply p to TIME/TIMESTAMP/TIMESTAMPTZ (not DATE); ensure input data precision matches defined p before insertion.
+   eg:
+      Error example (p exceeds limit, triggers "precision must be between 0 and 6" error):
+      CREATE TABLE err_ts (occur_time TIMESTAMP(7));
+      Error example (p applied to DATE type, triggers "type date does not accept precision" error):
+      CREATE TABLE err_dt (record_date DATE(2));
+      Correct example (TIMESTAMP(3) stores millisecond precision):
+      CREATE TABLE event_log (occur_time TIMESTAMP(3));
+      INSERT INTO event_log VALUES ('2025-12-07 10:00:00.123');
+      Correct example (TIME(6) stores microsecond precision):
+      CREATE TABLE task_log (run_time TIME(6));
+      INSERT INTO task_log VALUES ('08:30:15.123456');
+@dialect2sql@
+
+
+@dialect2sql@
+2.5 Type Conversion
+
+2.5.1 LIKE Operator:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying data for a specific year (e.g., "find all orders from 1991")
+   - Searching for information for a specific month (e.g., "find sales records for October")
+   - Matching patterns with date prefixes (e.g., "query all dates starting with 1991-10")
+   - Filtering records by date pattern (e.g., "filter employees whose birthday is in October")
+
+2. Relevant Function Description:
+   - Supports string pattern matching on date fields
+   - Implements fuzzy queries by time dimensions like year/month
+   - Provides conversion functions from date type to string type
+   - Allows partial date matching using wildcards
+
+
+ 	(1)PostgreSQL: Requires converting the DATE type to string via TO_CHAR, then using LIKE to match the format, TO_CHAR("t2"."date", 'YYYY-MM-DD') LIKE '1991-10-%'
+
+@dialect2sql@
+
+@dialect2sql@
+2.5.2 Comparison Rules for Date/Time and Strings:
+
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying data records for a specific date (e.g., "October 1, 2023" in "query sales data for October 1, 2023")
+   - Filtering records within a time range (e.g., "last 7 days" in "find orders from the last 7 days")
+   - Aggregating statistics by time period (e.g., "each month of this quarter" in "aggregate sales for each month of this quarter")
+   - Comparing chronological relationships (e.g., "earlier than a certain date" in "find contracts earlier than a certain date")
+
+2. Relevant Function Description:
+   - Supports implicit or explicit conversion comparison between date/time types and strings
+   - Provides date format parsing functions to adapt to different string input formats
+   - Implements date range queries and interval filtering
+   - Supports partial date matching (e.g., comparing by year, month, day separately)
+
+
+ 	(1)PostgreSQL: DATE/TIME types can be directly compared with strings conforming to the default format (PostgreSQL will attempt implicit conversion of the string to the corresponding date-time type); If the string format is complex (e.g., non-ISO format), can explicitly convert via the TO_DATE function, eg: TO_DATE('2023-10-01', 'YYYY-MM-DD')
+
+@dialect2sql@
+
+
+@dialect2sql@
+2.5.3 General Type Conversion:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Numeric strings participating in calculations (e.g., "convert the string '100' to a number for calculation")
+   - Date format conversion for display (e.g., "display the current date as 'YYYY year MM month DD day' format")
+   - Handling type compatibility (e.g., "convert text field to number for sorting")
+   - Data formatting output (e.g., "convert amount number to a string with thousand separators")
+
+2. Relevant Function Description:
+   - Supports mutual conversion between strings and numeric types
+   - Provides formatted output functions for date-time types
+   - Implements explicit conversion operations between different data types
+   - Supports data conversion with custom format templates
+
+(1)PostgreSQL: Supports concise :: type conversion, e.g., "t2"."doc"::integer = 54, also supports CAST('100' AS INTEGER)
+
+
+@dialect2sql@
+
+@dialect2sql@
+2.5.4 Explicit Field Type Conversion (Non-Basic Types):
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Conditional filtering after converting text to numeric (e.g., "records where the DOC field converted to integer equals 54 and the SOC field converted to integer equals 62", "filter data where the text field converted to numeric is greater than 100", "query the result of converting non-pure-numeric text to numeric")
+   Operations and filtering after converting text to date (e.g., "convert '2023-10-01' to date type", "convert text to date according to MM/DD/YYYY format", "filter records where the text date converted to standard date is within a specified range")
+   Handling conversion of malformed data (e.g., "get the result of converting text containing non-numeric characters to numeric", "handle the result of converting text that does not conform to standard format to date", "requirement to return a default value when invalid text is converted to numeric")
+   Type conversion with specified format (e.g., "convert text to numeric with decimals according to '999.99' format", "convert text to date according to YYYY/MM/DD format")
+
+2. Relevant Function Description:
+   Diverse conversion syntax support (PostgreSQL exclusive ::target_type syntax, CAST/CONVERT for MySQL/SQLite/SQL Server, TO_NUMBER/TO_DATE functions for Oracle, meeting the syntactic habits of different databases)
+   Differentiated format validation rules (PostgreSQL/Oracle/SQL Server have strict validation, non-standard formats directly report errors; MySQL in loose mode automatically truncates valid parts, strict mode reports errors; SQLite validation is very loose, invalid conversions return default values)
+   Error tolerance and default value mechanism (SQLite/MySQL in loose mode, text to numeric returns 0 if no valid digits, text to date returns NULL for non-standard formats, avoiding query interruption)
+   Multi-format adaptation capability (MySQL compatible with YYYY/MM/DD and other non-standard date formats, SQL Server supports multiple date formats like MM/DD/YYYY via format codes, Oracle requires explicit format string specification for matching conversion)
+   Coverage of non-basic type conversions (Supports conversion of text to integer/date/numeric and other non-basic types, meeting conversion needs for heterogeneous data types in business)
+   Syntax priority and conciseness (PostgreSQL's :: syntax has higher priority than function conversion, syntax is more concise; Oracle relies on dedicated conversion functions, allowing finer format control)
+
+-- PostgreSQL:
+   Method:
+      Supports exclusive ::target_type syntax (equivalent to CAST(expression AS target_type)), can achieve non-basic type conversions like text to integer, text to date;
+      Strict format validation: When converting text to numeric, the string must be in pure numeric format (including signs, decimal point), if it contains non-numeric characters (e.g., '54a') it directly reports an error; Text to date must conform to standard format (YYYY-MM-DD), otherwise reports an error;
+      Supports ::integer/::DATE/::numeric etc. conversions, syntax is concise and has higher priority than function conversion.
+   eg:
+      Text to integer (corresponding to scenario 87): SELECT * FROM table WHERE T2.DOC::integer = 54 AND T2.SOC::integer = 62;
+      Text to date: SELECT '2023-10-01'::DATE; (successful conversion)
+      Format error example: SELECT '54a'::integer; (Error: invalid input syntax for type integer: "54a")
+
+@dialect2sql@
+
+
+@dialect2sql@
+III. Functional Features: Performance and Support for Complex Business
+
+**3.1 Window Functions:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Calculating rankings and ordering (e.g., "rank" in "rank employees by sales")
+   - Analyzing changes in adjacent data (e.g., "compared to last month" in "see how much sales grew each month compared to last month")
+   - Calculating cumulative values and moving averages (e.g., "cumulative sum" in "calculate the cumulative sum of salaries by department")
+   - Performing data bucket analysis (e.g., "divide into levels" in "divide student grades into 4 levels")
+
+2. Relevant Function Description:
+   - Supports sorting and numbering within data partitions (e.g., ranking functions like ROW_NUMBER, RANK)
+   - Provides access to preceding and following row data (e.g., offset functions like LAG, LEAD)
+   - Implements aggregate calculations within window frames (e.g., aggregate functions like SUM, AVG combined with window frame clauses)
+   - Supports data equi-frequency bucketing (e.g., bucketing function like NTILE)
+
+1) **Syntax Structure: function_name([expression]) OVER ([PARTITION BY partition_expression, ... ][ORDER BY sort_expression [ASC | DESC], ... ][frame_clause] -- e.g., ROWS/RANGE BETWEEN...)**
+2) **MySQL 8.0+, PostgreSQL, Oracle, SQL Server, SQLite all have these functions:
+Ranking: ROW_NUMBER(), RANK(), DENSE_RANK(); Offset: LAG(), LEAD(); First/Last Value: FIRST_VALUE(); Bucketing: NTILE()
+
+-- PostgreSQL:
+   Method:
+      Mandatory Constraint: Window functions supported in all modern versions (9.0+); OVER() clause is mandatory; PARTITION BY/ORDER BY/frame_clause fully supported (frame_clause supports ROWS/RANGE/GROUPS); NTILE(n) requires n ≥1 (n=0 triggers "NTILE argument must be at least 1" error); FIRST_VALUE()/LAST_VALUE() rely on frame_clause (default frame only includes up to current row for LAST_VALUE(), need to adjust frame to UNBOUNDED FOLLOWING);
+      Error Scenario: Setting NTILE(0); using LAST_VALUE() without adjusting frame_clause (expecting last value of partition); invalid frame_clause (e.g., GROUPS BETWEEN 2 FOLLOWING AND 1 PRECEDING);
+      Solution: Set NTILE(n) with n ≥1; adjust frame_clause for LAST_VALUE() (e.g., ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING); follow valid frame_clause order and syntax.
+   eg:
+      Error example (NTILE(0) invalid, triggers "ntile argument must be greater than zero" error):
+      SELECT student_id, score, NTILE(0) OVER (ORDER BY score DESC) AS grade_level FROM student_scores;
+      Error example (LAST_VALUE() default frame, returns current row instead of partition last value):
+      SELECT dept_id, emp_id, salary, LAST_VALUE(salary) OVER (PARTITION BY dept_id ORDER BY salary) AS max_salary FROM emp_salary;
+      Correct example (LAST_VALUE() with adjusted frame for max salary per department):
+      SELECT dept_id, emp_id, salary, LAST_VALUE(salary) OVER (PARTITION BY dept_id ORDER BY salary ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS max_salary FROM emp_salary;
+      Correct example (NTILE(4) to bucket student grades into 4 levels):
+      SELECT student_id, score, NTILE(4) OVER (ORDER BY score DESC) AS grade_level FROM student_scores;
+
+@dialect2sql@
+
+@dialect2sql@
+3.1.1 Aggregate: SUM(Conditional Expression):
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Counting the number of records satisfying specific conditions (e.g., "how many employees have a salary over 10,000")
+   - Calculating the proportion of data meeting conditions (e.g., "the proportion of orders with sales over 100,000 to total orders")
+   - Summarizing data entries with specific statuses (e.g., "how many orders are in completed status")
+   - Counting data volume within a specific time range (e.g., "how many new registered users this month")
+
+2. Relevant Function Description:
+   - Supports conditional counting statistics (by converting Boolean values to 1 and 0 for summation)
+   - Implements conditional ratio calculation (combining SUM and COUNT functions)
+   - Provides multi-condition grouped statistics capability (used with GROUP BY)
+   - Supports direct participation of Boolean expressions in aggregate operations (some database dialects)
+
+
+(1)PostgreSQL: PostgreSQL supports SUM(conditional expression) shorthand (returns 1 when condition is TRUE, 0 when FALSE)
+
+@dialect2sql@
+
+
+@dialect2sql@
+3.2 Common Table Expressions (CTE) and Recursive Queries:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying organizational hierarchy (e.g., "find all subordinates of a certain employee")
+   - Traversing category tree structures (e.g., "get all subcategories of a certain category")
+   - Analyzing path dependencies (e.g., "find the complete assembly path of a product")
+   - Handling graph data traversal (e.g., "find all indirect relationships of a person")
+
+2. Relevant Function Description:
+   - Supports recursive query definition, connecting initial query and recursive part via UNION ALL
+   - Implements infinite level traversal of tree-like structures, can set recursion depth control
+   - Provides path tracking capability, recording the complete path from root node to current node
+   - Supports cycle detection to prevent performance issues caused by infinite recursion
+
+* Basic CTE Syntax (Universal):
+
+  WITH cte_name (col1, col2) AS (
+
+      SELECT ...
+
+      FROM ...
+
+      WHERE ...
+
+  )
+
+  SELECT * FROM cte_name ...
+
+  
+
+* Recursive CTE Capability:
+
+  (1)All platforms support it, it is the ideal choice for handling tree structures (organizational charts, category directories), graph traversal.
+
+       Example: Find employee and all their subordinates (recursive infinite levels):
+
+   	WITH RECURSIVE EmployeeHierarchy AS (
+
+      		-- Anchor member(s)
+
+      		SELECT id, name, manager_id, 0 AS level
+
+      		FROM employees WHERE manager_id IS NULL
+
+      		UNION ALL
+
+      		-- Recursive member
+
+      		SELECT e.id, e.name, e.manager_id, eh.level + 1
+
+      		FROM employees e
+
+      		INNER JOIN EmployeeHierarchy eh ON e.manager_id = eh.id
+
+   	)
+
+   	SELECT * FROM EmployeeHierarchy ORDER BY level, name;
+
+  
+
+  (2)SQL Server uses the keyword WITH and includes recursive capability by default, no need to explicitly add RECURSIVE.
+@dialect2sql@
+
+
+@dialect2sql@
+  3.3 JSON Support: Comparison of Semi-Structured Data Processing Capabilities
+
+  3.3.1 Basic JSON Operation Function Comparison:
+
+  3.3.1.1  Construct JSON Object:
+  1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Querying complete user information and packaging as JSON (e.g., "get all information of user Zhang San and form a JSON object")
+   - Building nested configuration data (e.g., "build system configuration items into JSON format and return")
+   - Combining multiple fields into structured data (e.g., "form product name, price, inventory into a JSON object")
+   - Generating response data needed by API interfaces (e.g., "return order details JSON, containing order number, amount, status")
+
+2. Relevant Function Description:
+   - Supports combining multiple key-value pairs into a JSON object (e.g., field names as keys, field values as values)
+   - Supports nested JSON structure construction (e.g., object containing arrays, arrays containing objects)
+   - Supports automatic data type conversion (e.g., numbers, strings, Boolean values automatically converted to corresponding JSON types)
+   - Supports NULL handling and special character escaping (e.g., NULL value handling, quote escaping, etc.)
+  
+  1)PostgreSQL: json_build_object(), to_json() 
+-- PostgreSQL:
+   Method:
+      Mandatory Constraint: json_build_object() (returns json type) / to_json() (converts row/value to json) are supported in PostgreSQL 9.3+; json_build_object() accepts arbitrary key-value pairs (no strict even argument check, but odd count results in NULL value for the last key); special characters are automatically escaped; NULL values are converted to JSON null; nested JSON is supported by nesting json_build_object()/json_build_array(); distinction between json (text-based) and jsonb (binary, faster query) types (json_build_object() returns json, jsonb_build_object() returns jsonb);
+      Error Scenario: Misusing to_json() on non-serializable data (e.g., to_json(bytea_column)); expecting json_build_object() to throw error for odd arguments (instead the last key maps to NULL); mixing json and jsonb types without conversion;
+      Solution: Use json_build_object() for key-value construction and to_json() for row/value conversion; handle odd arguments explicitly (ensure valid key-value pairs); use jsonb_build_object() for jsonb type if performance is required; convert non-serializable data before using to_json().
+   eg:
+      Error example (odd arguments for json_build_object(), last key maps to NULL (logical error)):
+      SELECT json_build_object('name', 'Zhang San', 'age') AS user_info; -- Result: {"name":"Zhang San","age":null}
+      Error example (to_json() on bytea type, triggers "cannot cast type bytea to json" error):
+      SELECT to_json(E'\\x0123'::bytea) AS invalid_json;
+      Correct example (basic json_build_object() usage):
+      SELECT json_build_object('name', 'Zhang San', 'age', 30, 'is_vip', TRUE) AS user_info;
+      Correct example (to_json() converts row to JSON):
+      CREATE TABLE users (name text, age int); INSERT INTO users VALUES ('Zhang San', 30);
+      SELECT to_json(users) AS user_info FROM users; -- Result: {"name":"Zhang San","age":30}
+
+@dialect2sql@
+
+@dialect2sql@
+  3.3.1.2  Path Extraction:
+  1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Extracting user information from JSON documents (e.g., "mobile number in the user profile" in "get the mobile number in the user profile")
+   - Querying specific attributes of nested objects (e.g., "price of the product in the order" in "find the price of the product in the order")
+   - Getting specific fields of array elements (e.g., "first comment content in the comment list" in "view the first comment content in the comment list")
+   - Accessing data values in deep nesting (e.g., "department manager's email address in the company" in "get the department manager's email address in the company")
+
+2. Relevant Function Description:
+   - Supports extracting specific field values from JSON documents via path expressions
+   - Capable of handling queries for nested objects and multi-level paths
+   - Provides indexed access and field extraction capabilities for array elements
+   - Implements direct access and retrieval of data at any depth in JSON documents
+  
+  1)PostgreSQL: column->>'key', #>> 
+
+-- PostgreSQL:
+   Method:
+      Mandatory Constraint: Path extraction via ->> (returns unquoted text value) / #>> (returns unquoted text from array path) is supported in PostgreSQL 9.3+; -> returns json/jsonb type (raw JSON), ->> returns text type (direct comparison); #>> accepts an array of path segments (e.g., #>> array['obj', 'key']) for nested fields; array access uses [index] (0-based); non-existent path returns NULL; jsonb type (binary JSON) has better extraction performance than json (text-based);
+      Error Scenario: Using #>> with JSONPath string (e.g., #>> '$.obj.key' instead of array); using 1-based array index (PostgreSQL uses 0-based); mixing -> (json type) with plain text comparison (e.g., WHERE user_info->'name' = 'Zhang San');
+      Solution: Use ->> for text values (supports direct string comparison); use #>> with array of path segments (not JSONPath string); ensure array indexes are 0-based; use jsonb column type for frequent path extraction;
+   eg:
+      Error example (invalid #>> syntax, triggers "operator does not exist: json #>> unknown" error):
+      SELECT order_info#>>'$.items[0].price' FROM orders WHERE order_id=1001;
+      Error example (1-based array index, returns NULL (logical error)):
+      SELECT user_info->>'$.comments[1].content' FROM users WHERE user_id=1; -- first comment is at index 0
+      Correct example (basic ->> extraction for nested field):
+      SELECT user_info->>'$.mobile' AS mobile_number FROM users WHERE user_id=1;
+      Correct example (#>> for multi-level path):
+      SELECT company_info#>>array['dept', 'sales', 'manager', 'email'] AS manager_email FROM company WHERE id=1;
+      Correct example (array + nested extraction):
+      SELECT order_info->'items'->>0->>'price' AS first_product_price FROM orders WHERE order_id=1001;
+@dialect2sql@
+
+@dialect2sql@
+  3.3.1.3  Existence Check:
+  1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   - Checking if a specific key exists in a JSON field (e.g., "whether the user information contains a mobile number field")
+   - Verifying if an array contains a specific element (e.g., "whether the order product list contains a laptop")
+   - Judging if a path exists in a nested structure (e.g., "whether there is address information in the user profile")
+   - Confirming the validity of a JSON document (e.g., "whether this JSON data format is correct")
+
+2. Relevant Function Description:
+   - Supports checking the existence of specified paths in JSON documents
+   - Capable of verifying if JSON arrays contain specific values
+   - Provides multi-level path query capability for nested structures
+   - Implements validity verification of JSON document format
+  
+    (1)PostgreSQL：
+      Key existence: ? (single key), ?& (multiple keys all exist) operators (suitable for jsonb type)
+      Array element containment: JSONB_CONTAINS(jsonb_doc, value)
+      Example: SELECT * FROM orders WHERE products ? 'laptop' (Check if products array contains this element)
+@dialect2sql@
+
+@dialect2sql@
+3.3.1.4 Modifying Properties
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Modify specific property values in JSON objects (e.g., "change to" in "change the theme in user configuration to dark mode")
+       - Update element content in arrays (e.g., "change to" in "change the quantity of the second item in the shopping cart to 3")
+       - Add or replace fields in nested objects (e.g., "add" in "add zip code information to the user address")
+       - Adjust values of configuration parameters (e.g., "modify to" in "modify the timeout in system settings to 30 minutes")
+
+    2. Relevant Function Description:
+       - Supports modifying property values at specified paths in JSON documents
+       - Capable of adding new property fields to existing JSON objects
+       - Provides replacement or update of specific elements in nested structures
+       - Implements modification operations on elements at specified positions in JSON arrays
+
+
+      (1) PostgreSQL:
+          Core Functions: jsonb_set() (Modify / Add properties), jsonb_insert() (Insert array elements / object properties), jsonb_delete() (Delete properties)
+          Function Description: Based on jsonb type (recommended), supports precise path-level modification, arrays support specified insertion positions
+          Example 1 (Modify object property): UPDATE configs SET settings = jsonb_set(settings, '$.timeout', '30') WHERE user_id = 1
+          Example 2 (Update array element): UPDATE carts SET goods = jsonb_set(goods, '{1, quantity}', '3') WHERE cart_id = 1 (Modifies the quantity field of the 2nd element in the array)
+
+@dialect2sql@
+
+
+@dialect2sql@
+3.3.2 Deep Differences in Storage Methods
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Query specific property values in JSON fields (e.g., "find the theme setting in user configuration")
+       - Verify if data conforms to JSON format (e.g., "check if this field is valid JSON")
+       - Update partial content of a JSON document (e.g., "change the city in the user address to Beijing")
+       - Search for elements in JSON arrays (e.g., "find employees with Python skills")
+
+    2. Relevant Function Description:
+       - Supports JSON path expression queries (e.g., $.user.name)
+       - Provides JSON format validation functions (e.g., ISJSON())
+       - Implements partial updates of JSON fields (e.g., jsonb_set, JSON_MODIFY)
+       - Supports retrieval and manipulation of JSON array elements (e.g., array unnesting, element existence check)
+
+      (1) PostgreSQL: The jsonb (Binary JSON) type is its forte. Stored in an optimized binary format, supports GIN (inverted) indexes, search and update efficiency is far higher than plain text. The json type is only used for storage validation.
+@dialect2sql@
+
+@dialect2sql@
+    3.4 Stored Procedures and Custom Functions: Programming Interface Capabilities
+
+    3.4.1 Language Ecosystem Differences
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Execute data update operations (e.g., "increase" in "increase Zhang San's monthly salary by 1000 yuan")
+       - Handle conditional judgments in business logic (e.g., "if...then" in "if stock is insufficient, automatically replenish")
+       - Implement complex data processing workflows (e.g., "statistics...generate" in "statistically generate sales reports by month")
+       - Handle exceptions during program execution (e.g., "when...prompt" in "prompt an error message when inserting duplicate data")
+
+    2. Relevant Function Description:
+       - Supports creation and invocation of stored procedures and functions
+       - Provides conditional branching and loop control structures
+       - Implements explicit or implicit control of transactions
+       - Includes exception handling mechanisms (e.g., TRY-CATCH or EXCEPTION blocks)
+
+      (1) PostgreSQL: Supports multiple languages (core is PL/pgSQL, supports Python, Perl, Tcl, etc.), high flexibility but requires additional plugin installation. Transaction behavior within functions defaults to depending on the outer context.
+        CREATE OR REPLACE FUNCTION update_salary(emp_id INT, increase NUMERIC)
+        RETURNS VOID AS $$
+        BEGIN
+            UPDATE employees SET salary = salary + increase WHERE id = emp_id;
+            -- Transaction control lies with the outer caller
+        END;
+        $$ LANGUAGE plpgsql;
+
+@dialect2sql@
+
+
+@dialect2sql@
+    IV. Behavioral Characteristics: Fundamental Differences in Execution Mechanisms and Security Practices
+
+    4.1 Transaction Isolation and Locking Mechanisms
+
+    4.1.1 Default Isolation Level Comparison
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Query the default transaction isolation level of the database (e.g., "What is MySQL's default isolation level?")
+       - Compare isolation level differences between databases (e.g., "Which has a higher default isolation level, Oracle or PostgreSQL?")
+       - Analyze data consistency issues under specific isolation levels (e.g., "Will phantom reads occur under the default isolation level?")
+       - Choose a database suitable for the business scenario (e.g., "Which database's default isolation level can prevent dirty reads?")
+
+    2. Relevant Function Description:
+       - Supports querying the database's default transaction isolation level configuration
+       - Provides comparison of concurrency control mechanisms for different isolation levels
+       - Implements MVCC-based multi-version data access control
+       - Ensures the performance of transaction ACID properties under different isolation levels
+
+     (1) PostgreSQL: Default is READ COMMITTED, also supports efficient MVCC. SERIALIZABLE provides true serializability.
+
+@dialect2sql@
+
+
+@dialect2sql@
+    4.1.2 Lock Contention Handling Strategies
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Query current lock wait situations in the database (e.g., "view which sessions are blocked by locks")
+       - Handle deadlock or lock timeout issues (e.g., "how to resolve database deadlocks?")
+       - Optimize lock contention in high-concurrency scenarios (e.g., "how to reduce lock waits during update operations?")
+       - Set session lock wait behavior (e.g., "set query to return immediately without waiting for lock")
+
+    2. Relevant Function Description:
+       - Provides lock monitoring and diagnostic views (e.g., query lock wait chains, blocking sessions)
+       - Supports automatic deadlock detection and transaction rollback mechanisms
+       - Implements row-level locks and gap locks to prevent phantom reads
+       - Provides non-blocking lock acquisition options like NOWAIT, SKIP LOCKED
+
+     (1) PostgreSQL: System-level row-level locks, MVCC naturally handles read concurrency. FOR UPDATE NOWAIT / SKIP LOCKED are application-layer solutions.
+
+@dialect2sql@
+
+
+@dialect2sql@
+    4.2 Role Management and Permission System
+
+    4.2.1 Authorization Model
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Create new permission roles (e.g., "create a read-only report role")
+       - Assign data access permissions to roles (e.g., "grant query permission on sales data to the report role")
+       - Assign roles to specific users (e.g., "assign the report role to user Mike")
+       - Manage user permission hierarchies (e.g., "which users have data query permissions?")
+
+    2. Relevant Function Description:
+       - Supports creating and managing database roles
+       - Implements table-level permission control (e.g., granting operations like SELECT, INSERT, UPDATE)
+       - Provides permission assignment mechanism from roles to users
+       - Establishes a multi-level permission management system
+
+      -- PostgreSQL:
+      CREATE ROLE report_reader;
+      GRANT SELECT ON sales_data TO report_reader;
+      GRANT report_reader TO user_mike;
+
+
+@dialect2sql@
+
+
+@dialect2sql@
+    4.2.2 Permission Inheritance Behavior Differences
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Query user permission scope (e.g., "which tables can user A access?" in "can access which tables")
+       - Verify operation permissions (e.g., "does this role have permission to delete data?" in "has delete permission")
+       - Manage permission inheritance relationships (e.g., "grant all permissions of role A to role B" in "grant all permissions")
+       - Analyze permission impact scope (e.g., "which users will be affected by modifying role permissions?" in "affect which users")
+
+    2. Relevant Function Description:
+       - Supports role hierarchy nesting and automatic permission inheritance
+       - Provides permission verification mechanism (check user's operation permissions on specific objects)
+       - Implements permission transfer and batch granting functions
+       - Supports permission impact scope analysis (tracking permission inheritance paths)
+
+      (1) PostgreSQL: Roles can be nested (ROLE A can have ROLE B), permissions are automatically inherited.
+@dialect2sql@
+
+
+@dialect2sql@
+    4.3 Database Internal Mechanisms
+
+    4.3.1 Sequence (Sequence) or Auto-increment Mechanisms
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       - Get the next available unique identifier (e.g., "what is the next order number?")
+       - Automatically generate primary keys when creating new records (e.g., "automatically assign user ID when adding a new user")
+       - Consecutive numbering during batch data insertion (e.g., "import 100 product records and auto-number them")
+       - Reset the starting value of a sequence (e.g., "restart employee numbers from 1000")
+
+    2. Relevant Function Description:
+       - Supports automatically generating unique, incrementing numerical sequences
+       - Provides methods to get the next sequence value (e.g., NEXTVAL, AUTO_INCREMENT)
+       - Allows customizing sequence start value, step size, and cache size
+       - Supports resetting and cycling sequence values
+
+      -- PostgreSQL: Primarily use SEQUENCE objects (independent sequence generators).
+          CREATE SEQUENCE order_id_seq;
+          INSERT INTO orders (id, ...) VALUES (order_id_seq.NEXTVAL, ...);
+
+@dialect2sql@
+
+@dialect2sql@
+    V. Supplementary Syntax
+    5.1 COUNT (DISTINCT column) Deduplication Aggregation Syntax:
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       Single-column unique value count (e.g., "Count distinct patient IDs", "Calculate the number of distinct customer IDs in orders", "Query the total number of distinct course IDs in the course selection system")
+       Multi-dimensional combination deduplication count (e.g., "Count the number of unique user + product purchase combinations", "Calculate the number of unique department + job combinations", "Query the number of unique doctor + patient consultation combinations")
+       Deduplication statistics under grouping dimensions (e.g., "Count monthly new distinct users by month", "Count distinct customers by region", "Count distinct students enrolled per semester by semester", "Count distinct users placing orders per year by year")
+       NULL value related counting (e.g., "Count the number of distinct non-NULL values in a column", "Query the result when NULL values participate in distinct count")
+       Unique entity statistics in business scenarios (e.g., "Count distinct patients treated by each department", "Calculate the number of distinct product SKUs in inventory")
+
+    2. Relevant Function Description:
+       Supports single-column COUNT(DISTINCT) for deduplication counting, accurately统计 the number of unique values in a single dimension
+       Multi-column combination deduplication count (natively supported by some databases, requires string concatenation / CONCAT in others), meeting multi-dimensional unique entity statistics needs
+       Combined with GROUP BY, performs deduplication counting on the target column after grouping by specified dimensions, supporting time-period / regional distinct analysis
+       Automatically ignores NULL values (COUNT(DISTINCT NULL) returns 0), ensuring counting result accuracy
+       Adapts to syntax characteristics of different databases (e.g., concatenation implementation in SQLite/Oracle, native multi-column support in PostgreSQL/MySQL), compatible with multi-environment deduplication counting
+       Can combine with WHERE filter conditions, filter data first then perform deduplication counting, meeting refined statistical needs
+       Supports combination with time formatting functions (e.g., DATE_FORMAT, YEAR) to achieve distinct statistics in time dimensions
+
+    -- PostgreSQL:
+        Methods:
+        Supports single-column and multi-column COUNT(DISTINCT col1, col2) deduplication counting;
+        When combined with GROUP BY, performs deduplication counting on the target column per group dimension;
+        COUNT(DISTINCT NULL) returns 0, can be used with aggregate filter conditions.
+        Examples:
+        Single-column distinct count (Count distinct order numbers): SELECT COUNT(DISTINCT order_id) FROM sales;
+        Multi-column distinct count (Count unique department + job combinations): SELECT COUNT(DISTINCT department_id, job_id) FROM employees;
+        Combined with GROUP BY (Count distinct customers per region): SELECT region, COUNT(DISTINCT customer_id) FROM customers GROUP BY region;
+        NULL value handling: SELECT COUNT(DISTINCT NULL) FROM generate_series(1,5); (Returns 0)
+
+@dialect2sql@
+
+
+@dialect2sql@
+    5.2 SUBSTR String Substring Function:
+    1. Common Scenarios for Using This Syntax in Natural Language Queries:
+       Partial extraction from date strings (e.g., "Extract year from date string", "Extract month/date part from date", "Get the last two digits representing the day from a date string")
+       Segment extraction from fixed-format strings (e.g., "Extract the first four digits as identifier from a code", "Get the last two characters of a string")
+       Filtering based on extracted content (e.g., "Query records from the year 2012", "Filter data where the month is October")
+       Handling strings with abnormal length (e.g., "When substring length exceeds actual string length", "Omit length parameter to extract remaining all characters")
+       Substring combined with date conversion (e.g., "Extract current month from system date converted string")
+
+    2. Relevant Function Description:
+       Supports extracting substring from a specified start index (start index defaults to 1, some databases support negative index counting from the end)
+       Flexible handling of length parameter: returns remaining characters if exceeds string length; some databases support omitting length parameter to extract to the end
+       Adapts to TEXT/VARCHAR string types and date-converted strings, enabling extraction of time fragments like year/month/day
+       Negative index function allows directly extracting specified length content from the end of the string (e.g., last two characters)
+       Can combine with WHERE clause to filter data based on extraction result (e.g., filter records by extracted year)
+       Compatible with TO_CHAR and other date conversion functions, extracting specified time dimension from formatted date strings
+       Supports alias usage of SUBSTR/SUBSTRING, adapting to syntax habits of different databases
+       Automatically returns remaining characters when length exceeds boundary, avoiding abnormal substring results
+
+    -- PostgreSQL:
+        Methods:
+        Supports SUBSTR(string, start_index, length) or SUBSTRING(...), start index defaults to 1;
+        Supports negative index (counting from the end of the string, e.g., -1 is the last character);
+        Returns remaining characters if length parameter exceeds remaining length; can be used for year/month extraction from TEXT dates.
+        Examples:
+        Extract year: SELECT SUBSTR('2012-11-30', 1, 4); (Returns '2012')
+        Negative index extract from end: SELECT SUBSTR('2023-08', -2); (Returns '08', omitting length takes to the end)
+        Extract day from date: SELECT SUBSTR('2025-01-19', 9, 2); (Returns '19')
+
+@dialect2sql@
+
+
+@dialect2sql@
+5.3 Subquery (IN Subquery, Scalar Subquery) Syntax:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Set matching filtering with IN subqueries (e.g., "Filter patients with lab test HCT≥52 and count≥2", "Query Table1 records where ID is in Table2 with value≥100", "Get patient information belonging to a specific ID set")
+   Numerical calculation / single value extraction with scalar subqueries (e.g., "Calculate the average order amount", "Get the earliest year/year-month from records", "Calculate the total exam score for a student", "Query the average price for the electronics category")
+   Group extreme value filtering with correlated subqueries (e.g., "Filter the employee with the highest salary in each department", "Get the latest order for each user", "Find the student with the lowest score in each class", "Filter the most recently hired employee in each department")
+   Row-level filtering with correlated subqueries combined with extended syntax (e.g., "Get the top 3 orders for each customer", "Correlated query for the latest transaction record for each user")
+   Multi-level filtering with nested IN subqueries (e.g., "Filter target records through multi-level ID matching", "Record query for multi-level set membership")
+
+2. Relevant Function Description:
+   IN subqueries support multi-row result matching, fulfilling the filtering requirement of "belonging to a set" (some databases have limits on IN constant lists, but subquery results are not subject to this restriction)
+   Scalar subqueries return a single value, used for conditional comparison, field assignment, or aggregate calculation (different databases handle multi-row returns differently: PostgreSQL/Oracle/SQL Server report errors, MySQL/SQLite take the first row)
+   Correlated subqueries depend on outer table fields, enabling grouped filtering by outer dimensions (e.g., matching extreme values by department, class, etc.)
+   Combined with LATERAL (PostgreSQL)/APPLY (SQL Server) syntax, supports row-level calculation for correlated tables (e.g., getting the latest / top N records for each user)
+   Non-correlated subqueries execute independently, suitable for matching fixed sets; correlated subqueries execute row-by-row, adapting to dynamic correlation filtering
+   Performance optimization adaptation: For large result set IN subqueries, it's recommended to use JOIN/EXISTS instead to improve query efficiency
+   Supports nested IN subqueries, enabling multi-level set matching filtering
+   Combined with aggregate functions (MAX/MIN/AVG/SUM), implements statistical calculations by grouping dimensions through subqueries
+
+-- PostgreSQL:
+   Method:
+      IN Subquery: Supports multi-row matching; for performance optimization, it's recommended to use EXISTS instead of IN for large result sets;
+      Scalar Subquery: Must return a single value; if multiple rows are returned, it directly reports an error (more than one row returned by a subquery used as an expression);
+      Strictly distinguishes between correlated / non-correlated subqueries; correlated subqueries can be combined with LATERAL to achieve correlated calculation.
+   eg:
+      IN Subquery Filtering Patients:
+      SELECT * FROM Patients p WHERE p.ID IN (SELECT l.ID FROM Laboratory l WHERE l.HCT>=52 GROUP BY l.ID HAVING COUNT(*)>=2);
+      Scalar Subquery Getting Earliest Year (corresponding to scenario for question 884):
+      SELECT (SELECT MIN(SUBSTR(date,1,4)) FROM Records) AS earliest_year;
+      Correlated Subquery + LATERAL (Correlated get latest order per user):
+      SELECT u.name, o.order_id FROM Users u LEFT JOIN LATERAL (SELECT order_id FROM Orders WHERE user_id = u.id ORDER BY create_time DESC LIMIT 1) o ON true;
+
+@dialect2sql@
+
+
+@dialect2sql@
+5.4 TEXT Type Date Processing Rules:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Time dimension extraction from TEXT dates (e.g., "Extract birth year from player birthday (TEXT type)", "Get the month from the game attribute record date (TEXT type)")
+   Range filtering for TEXT dates (e.g., "Query players born after 1990", "Filter game attribute records from the year 2012")
+   Processing non-standard format TEXT dates (e.g., "Process TEXT date in YYYY/MM/DD format, extract year", "Convert slash-separated TEXT date to standard date")
+   Comparison of TEXT dates (e.g., "Find players born before 2000", "Filter attribute records with date later than 2012-01-01")
+   Compatible processing of TEXT dates in different formats (e.g., "Unified processing of TEXT dates in YYYY-MM-DD and YYYYMMDD formats")
+
+2. Relevant Function Description:
+   Supports implicit conversion for TEXT dates conforming to standard format (MySQL), allowing direct use of date functions (DATE_FORMAT/YEAR) to extract time dimensions
+   Explicit conversion adaptation for non-standard format TEXT dates (PostgreSQL/Oracle/SQL Server require specifying format, SQLite requires manual parsing)
+   Direct comparison of standard format TEXT dates (SQLite can compare directly because string order matches date order; other databases require conversion for logical date comparison)
+   Combined use of date functions (strftime/TO_CHAR/EXTRACT) with TEXT dates to extract dimensions like year/month/day
+   Compatible with various TEXT date storage formats (YYYY-MM-DD/YYYYMMDD/YYYY/MM/DD), adapted through format conversion functions for different scenarios
+   Avoid errors from string dictionary order comparison by using explicit conversion to ensure TEXT dates are filtered according to actual date logic
+   Error tolerance handling for illegal format TEXT dates (MySQL converts to NULL, Oracle/PostgreSQL report error for format mismatch)
+
+-- PostgreSQL:
+   Method:
+      TEXT type dates have no implicit conversion; using date functions directly will process them as strings (error or incorrect result), requires explicit CAST(text_date AS DATE);
+      Only supports standard date format (YYYY-MM-DD); non-standard formats (e.g., YYYY/MM/DD) require specifying the format during conversion;
+      Comparing TEXT dates requires conversion first, otherwise uses string dictionary order (e.g., '2023-12-01' > '2023-2-01' string comparison is false, after conversion it's true).
+   eg:
+      Explicit conversion extracting month (Player_Attributes.date being TEXT scenario): SELECT TO_CHAR(CAST(date AS DATE), '%m') FROM Player_Attributes;
+      Format conversion (compatible with / separator): SELECT CAST(to_date('2023/10/01', 'YYYY/MM/DD') AS DATE);
+      Comparison after conversion: SELECT * FROM Player WHERE CAST(birthday AS DATE) < '2000-01-01';
+
+@dialect2sql@
+
+
+
+@dialect2sql@
+5.5 SQLite Exclusive IIF Function and Equivalent Implementations in Other Databases:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Simple conditional judgment returning specified values (e.g., "Judge if birth year is earlier than 1985 and laps greater than 50, return 1 if satisfied otherwise 0", "Judge if date year is 2010, return 1 if yes otherwise 0", "Judge if creation date year is 2011 and reputation value greater than 1000, return 1 if satisfied otherwise 0")
+   Multi-condition nested grading / classification (e.g., "Grade based on score: A for 90 and above, B for 80-89, C for 60-79, F below 60", "Group by age: senior for 60 and above, adult for 18-59, minor below 18", "Categorize by order quantity: bulk for greater than 100, regular for 10-100, small for less than or equal to 10", "Grade by salary: high for greater than 10000, medium for 5000-10000, low below 5000")
+   NULL condition handling (e.g., "Return invalid when condition is NULL, return valid when not NULL")
+   Simple equality judgment (e.g., "Judge if date year is 2010, return corresponding identifier")
+   Complex combined condition judgment (e.g., "Filter and return identifier combining year and numerical conditions")
+
+2. Relevant Function Description:
+   Supports conditional branch return (IIF/IF/CASE/DECODE can implement "if... then... else..." logic, returning specified values based on condition truth)
+   Multi-condition nesting capability (Through nested IIF/IF/CASE expressions, implements multi-layer progressive condition judgment, meeting grading/classification needs)
+   NULL condition error tolerance handling (When condition is NULL, treated as false, uniformly returns else/val_false branch value, avoiding result anomalies caused by NULL)
+   Cross-database equivalent implementation adaptation (SQLite/SQL Server natively support IIF, MySQL supports IF function, PostgreSQL/Oracle rely on standard CASE expression, Oracle additionally provides DECODE for simple equality scenarios)
+   Compatible with standard CASE expression (All databases support CASE WHEN THEN ELSE END, as a universal replacement for IIF/IF, adapting to complex combined conditions)
+   Syntax simplification and performance balance (IIF/IF only simplify conditional judgment syntax, performance is close to CASE expression, complex conditions recommend using CASE for better readability)
+   Covers equality and range conditions (DECODE is suitable for simple equality judgment, CASE/IIF/IF support complex scenarios like ranges, multi-condition combinations)
+
+-- SQLite:
+   Method:
+      Supports exclusive IIF(condition, val_true, val_false) function; returns val_true if condition is true, val_false if false (equivalent to CASE WHEN condition THEN val_true ELSE val_false END, syntax is more concise);
+      When condition is NULL, treated as false, returns val_false; supports nesting for multi-condition judgment;
+      Performance is close to CASE expression, only simplifies syntax, no significant performance difference.
+   eg:
+      Basic condition judgment: SELECT IIF(STRFTIME('%Y', T3.dob) < '1985' AND T1.laps > 50, 1, 0) FROM competition;
+      Date filtering: SELECT IIF(STRFTIME('%Y', Date) = '2010', 1, 0) AS is_year_2010 FROM sales;
+      Nested IIF multi-condition: SELECT IIF(score >= 90, 'A', IIF(score >= 80, 'B', IIF(score >= 60, 'C', 'F'))) AS grade FROM exams;
+      NULL condition handling: SELECT IIF(NULL, 'valid', 'invalid'); (Returns 'invalid')
+
+-- PostgreSQL:
+   Method:
+      Does not support IIF function, requires using standard CASE expression for conditional judgment;
+      When condition is NULL, CASE treats it as false, executes ELSE branch; complex conditions can be implemented via CASE multi-layer branches.
+   eg:
+      SELECT CASE WHEN STRFTIME('%Y', T3.dob) < '1985' AND T1.laps > 50 THEN 1 ELSE 0 END FROM athletes;
+      Multi-condition branch: SELECT CASE WHEN score >= 90 THEN 'A' WHEN score >= 80 THEN 'B' ELSE 'C' END AS grade FROM student_scores;
+
+@dialect2sql@
+
+
+@dialect2sql@
+5.6 Syntax Specification for Ratio and Growth Rate Calculation:
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Ratio calculation scenarios (e.g., "Calculate the proportion of affirmative votes in voting", "Calculate the proportion of a certain type of data in the total", "Get the proportion of records meeting conditions")
+   Fixed period average calculation (e.g., "Calculate the monthly average of annual link counts", "Monthly average amount of annual sales", "Daily average value of quarterly indicators")
+   Growth rate calculation requirements (e.g., "Calculate the growth rate of loan amount", "Year-over-year growth rate of sales", "Growth percentage of current period vs. previous period indicators")
+   Percentage difference analysis (e.g., "Percentage difference between this year's and last year's sales", "Percentage change between current and previous period data", "Percentage gap between two sets of data")
+   Result presentation with precision/format requirements (e.g., "Loan growth rate rounded to two decimal places", "Formatted percentage ratio result", "Mean calculation with decimal places")
+
+2. Relevant Function Description:
+   Type conversion to prevent truncation (Via CAST(...) AS DECIMAL/REAL/FLOAT, ::FLOAT or *1.0 etc., convert integers to floating-point/high-precision numeric types, avoiding result truncation from integer division, ensuring calculation precision)
+   Division by zero error avoidance (Use NULLIF(denominator, 0) function to handle scenarios where denominator is 0, preventing division operation errors, ensuring robust calculation logic)
+   Fixed period calculation adaptation (Convert total to floating-point type then divide by fixed period number (e.g., 12 months), achieving accurate average/apportioned calculation)
+   Standardized growth rate calculation (Supports the universal growth rate formula (current_period_value - previous_period_value)/previous_period_value*100, implemented adapting to different database syntax characteristics)
+   Precision and formatting control (Use ROUND function to retain specified decimal places, TO_CHAR/FORMAT functions to format percentage results, improving data readability)
+   Aggregated data linkage calculation (Combined with COUNT/SUM etc. aggregate functions, implements ratio, average calculation based on aggregate results, supporting statistical analysis needs)
+   Cross-database syntax compatibility (Adapts to MySQL's DECIMAL, PostgreSQL's ::FLOAT, Oracle's NUMBER, SQL Server's FORMAT etc. characteristics, ensuring calculation logic universality)
+
+-- PostgreSQL:
+   Method:
+      Ratio calculation: Integer division truncates by default, requires conversion to floating-point using ::FLOAT/DECIMAL or 1.0*aggregate_value;
+      Fixed number division: Supports SUM(value)/fixed_number.0 to directly get floating-point result (e.g., SUM(links)/12.0);
+      Growth rate calculation: (current_period_value - previous_period_value)/NULLIF(previous_period_value,0)::FLOAT*100, can use ROUND to retain decimal places.
+   eg:
+      Vote ratio: SELECT COUNT(CASE WHEN vote=1 THEN 1 END)::FLOAT/COUNT(*) AS vote_ratio FROM votes;
+      Monthly average links: SELECT SUM(links)/12.0 AS monthly_avg_links FROM site_metrics;
+      Loan growth rate: SELECT ROUND((current_loan-prev_loan)/NULLIF(prev_loan,0)::FLOAT*100, 2) AS loan_growth_rate FROM loan_stats;
+      Percentage difference: SELECT (this_year_sales-last_year_sales)/last_year_sales::FLOAT*100 AS sales_percent_diff FROM annual_sales;
+
+@dialect2sql@
+
+
+@dialect2sql@
+5.7 Multi-Condition Combination Filtering (OR + Date Range):
+1. Common Scenarios for Using This Syntax in Natural Language Queries:
+   Date filtering with multiple OR conditions (e.g., "Schools where the open date year is greater than 1991 or the close date year is less than 2000", "Orders where the order date is between 2000-2005 or the amount is greater than 10000", "Log records where the log date is earlier than 2000 or later than 2020 or the level is error")
+   Combined conditional queries with priority (e.g., "Schools where the open date is greater than 1991 or the close date is less than 2000 and the status is active", "Sales records where the sale date is between 2010-2015 or the total amount is greater than 5000", "Records where (date is earlier than 2000 or later than 2020) and the region is north")
+   Performance optimization needs for OR conditions (e.g., "Solving full table scan issues caused by multiple OR conditions", "Rewriting OR conditions with UNION/UNION ALL to improve query efficiency", "Optimizing index utilization for single-field multiple OR conditions")
+   Combined queries of text dates and OR+BETWEEN (e.g., "Filtering orders where the text format date is in the 2000-2005 range or the amount exceeds 1000", "Performing OR range filtering after unifying text date formats via strftime")
+   Queries avoiding AND/OR priority ambiguity (e.g., "Explicitly using parentheses to clarify conditional logic, preventing result errors due to priority")
+
+2. Relevant Function Description:
+   Conditional priority control (AND has higher priority than OR, supports explicit parentheses to adjust logical order, avoids ambiguity, ensures query logic aligns with business requirements)
+   OR condition optimization mechanism (MySQL supports index merge, PostgreSQL supports BitmapOr bitmap OR, Oracle supports OR-expansion, databases with weaker optimization like SQLite can rewrite OR conditions via UNION/UNION ALL to solve full table scan issues)
+   Syntax adaptation for OR and BETWEEN (Supports mixing date range BETWEEN with other conditions using OR; text dates require format unification through formatting/conversion to avoid string lexicographical comparison errors)
+   Type consistency guarantee (When combining date fields with OR conditions, ensure field types match; text dates require explicit conversion/formatting to avoid index failure caused by implicit conversion)
+   Cross-database feature compatibility (Adapts to different databases' OR optimization strategies, such as MySQL's index_merge, PostgreSQL's Bitmap Merge, SQL Server's index merge, ensuring effective execution of OR conditions across multiple environments)
+   Complex logic splitting capability (Splits multiple OR conditions via UNION/UNION ALL, converting full table scans to index scans, improving large table query performance)
+   Date format fault tolerance (When combining text dates with OR conditions, supports format conversion/standardization to ensure accuracy of date range filtering)
+
+-- PostgreSQL:
+   Method:
+      Conditional Priority: AND has higher priority than OR; complex logic requires grouping with parentheses (e.g., (date < '2000' OR date > '1991') AND region = 'north');
+      OR Condition Optimization: The optimizer converts OR to BitmapOr (bitmap OR), combining with field indexes for fast matching; single-field multiple range OR (e.g., date > '2020' OR date < '2000') can efficiently utilize B-tree indexes;
+      OR+BETWEEN Syntax: When connecting date ranges with other conditions using OR, supports mixing BETWEEN with ordinary comparisons without additional conversion (e.g., date BETWEEN '2000-01-01' AND '2005-12-31' OR amount > 1000).
+   eg:
+      OR Date Condition + Explicit Parentheses: SELECT * FROM schools WHERE (EXTRACT(YEAR FROM OpenDate) > 1991 OR EXTRACT(YEAR FROM ClosedDate) < 2000) AND city = 'New York';
+      OR+BETWEEN Combination: SELECT * FROM sales WHERE sale_date BETWEEN '2010-01-01' AND '2015-12-31' OR total > 5000;
+      Single-Field Multiple OR Conditions: SELECT * FROM logs WHERE log_date < '2000-01-01' OR log_date > '2020-01-01' OR level = 'error';
+
+@dialect2sql@

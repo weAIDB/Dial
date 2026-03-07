@@ -1,8 +1,0 @@
-├── config.py          # 全局配置（路径、API、数据库配置等）
-├── utils.py           # 通用工具函数（目录管理、文本处理、数据加载等）
-├── api_client.py      # ModelScope API调用封装
-├── db_operations.py   # 数据库连接与SQL执行（含超时检测）
-├── rag_retrieval.py   # RAG检索相关（二次检索核心逻辑）
-├── prompt_builder.py  # Prompt构造（首次/二次生成逻辑）
-├── result_saver.py    # 结果保存（JSON/文本/完整报告）
-└── main.py            # 主程序（整合所有模块，实现完整流程）
