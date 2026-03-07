@@ -13,8 +13,9 @@ The project is organized into three main workflows:
 1. **Dial pipeline** (`Dial/`): End-to-end NL → LQP → dialect-aware tagging → RAG retrieval → SQL translation with execution and semantic verification. It produces per-dialect SQL from natural language questions and schema.
 2. **Dataset migration** (`dataset/`): Migrates SQLite databases (e.g. from `duckdb_sqlite_databases.zip`) to MySQL, PostgreSQL, SQL Server, and DuckDB so that the same schema and data are available on multiple engines for evaluation.
 3. **Evaluation** (`evaluation/`): Executes generated SQL on target engines, compares results to gold answers, and computes accuracy, executability, and DFC; outputs per-task per-engine metrics and an Excel summary.
+4. **Knowledge Process** (`knowledge_process/`): Converts official documentation from **any** dialect (DuckDB, PostgreSQL, Oracle, etc.) into the dialect knowledge format used by Dial. Extracts from Git repos or local doc directories, then uses vector retrieval + LLM to produce Functional and Rule-based dialect knowledge files for RAG.
 
-The main entry points are unified at the repository root: `run_dial_pipeline.py`, `run_migration.py`, and `run_evaluation.py`.
+The main entry points are unified at the repository root: `run_dial_pipeline.py`, `run_migration.py`, and `run_evaluation.py`. Knowledge conversion is run via `python knowledge_process/knowledge_create.py`, `tide_functional_knowledge.py`, and `tide_rule.py`.
 
 ## Directory Structure
 
@@ -46,6 +47,11 @@ The main entry points are unified at the repository root: `run_dial_pipeline.py`
 │   │   └── translation/     # rag2sql, execution check, semantic validation
 │   ├── run_dial_pipeline.py # Step 1–4 launcher (also via root run_dial_pipeline.py)
 │   └── README.md            # Dial pipeline usage
+├── knowledge_process/
+│   ├── knowledge_create.py       # Extract docs from Git/local into @dialect2sql@ blocks
+│   ├── tide_functional_knowledge.py  # Match template + source → Functional dialect
+│   ├── tide_rule.py              # Three-phase: Functional + Rule + Residual → Rule/Functional
+│   └── README.md                 # Knowledge conversion usage
 ├── run_dial_pipeline.py     # Root launcher for Dial pipeline
 ├── run_migration.py         # Root launcher for dataset migration
 ├── run_evaluation.py        # Root launcher for evaluation pipeline
@@ -78,6 +84,7 @@ Install DB and driver packages as needed for your target engines (MySQL, Postgre
 - **Dial pipeline**: All paths and API/DB settings are in `Dial/conf/settings.py`. Use `DIAL_*` environment variables to override.
 - **Dataset migration**: `dataset/config.py` defines `DATA_SOURCES`, `MIGRATION_TARGETS`, `DB_CONFIG`, `DUCKDB_STORAGE_PATH`, `REUSE_EXISTING_DB`, etc.
 - **Evaluation**: `evaluation/config.py` defines `DB_CONFIG`, `EXECUTE_ENGINES`, `PIPELINE_TASKS`, `GOLD_RESULT_FILE`, `FINAL_EXCEL_PATH`.
+- **Knowledge Process**: Use environment variables (`KNOWLEDGE_*`, `TIDE_*`, `OPENAI_*`) or edit CONFIG in each script. See `knowledge_process/README.md`.
 
 ## Usage
 
@@ -120,6 +127,16 @@ python run_evaluation.py
 
 This runs Step1 (execute SQL per engine), Step2 (accuracy evaluation), Step3 (DFC), and writes the summary Excel. Configure tasks and gold file in `evaluation/config.py`. See `evaluation/README.md` for details.
 
+### Knowledge Process (Dialect Knowledge Base Conversion)
+
+Build dialect knowledge from official docs (DuckDB, PostgreSQL, Oracle, etc.):
+
+1. **Extract docs**: `python knowledge_process/knowledge_create.py` — config `TARGET_DIALECT`, `SOURCE_TYPE` (git/local), paths.
+2. **Functional conversion**: `python knowledge_process/tide_functional_knowledge.py` — config `TEMPLATE_DIALECT`, `SOURCE_DIALECT`, paths.
+3. **Rule + Functional conversion**: `python knowledge_process/tide_rule.py` — three-phase LLM conversion.
+
+Output files are placed in `Dial/src/knowledge/knowledge/Functional_dialect/` and `Rule_based_dialect/` for RAG. See `knowledge_process/README.md` for full configuration.
+
 ### Alternative entry points
 
 - Dial pipeline from `Dial` folder: `cd Dial` then `python run_dial_pipeline.py`
@@ -134,5 +151,8 @@ This runs Step1 (execute SQL per engine), Step2 (accuracy evaluation), Step3 (DF
 - **`Dial/run_dial_pipeline.py`**: Parses `--steps` / `--step1` … `--step4`, and runs the corresponding modules (`generate_nl_lqp`, `tag_dialect_aware_lqp`, `runner`, `translation.main`).
 - **`dataset/db_manager.py`**: Creates MySQL/Postgres/SQL Server databases and DuckDB files from SQLite; supports smart migration (essential rows) and reuse of existing DBs.
 - **`evaluation/run_pipeline.py`**: Loads gold results and task configs; for each task and engine runs `step1_executor.run_execution`, `step2_evaluator.get_evaluation_scores`, and `step3_dfc.calculate_dfc_entry`; aggregates and writes Excel.
+- **`knowledge_process/knowledge_create.py`**: Extracts official docs (Git or local) for any dialect into `@dialect2sql@` blocks.
+- **`knowledge_process/tide_functional_knowledge.py`**: Matches template dialect templates with source dialect chunks via vector retrieval; LLM merges into Functional dialect knowledge.
+- **`knowledge_process/tide_rule.py`**: Three-phase (Functional + Rule-based + Residual) conversion from source docs to Rule + Functional dialect knowledge.
 
-For more detail, see the README in each subfolder: `dataset/README.md`, `evaluation/README.md`, and `Dial/README.md`.
+For more detail, see the README in each subfolder: `dataset/README.md`, `evaluation/README.md`, `knowledge_process/README.md`, and `Dial/README.md`.
