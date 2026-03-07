@@ -1,4 +1,4 @@
-# Dial: Multi-Dialect NL-to-SQL Pipeline and Evaluation
+# Dial: A Knowledge-Grounded Dialect-Specific NL2SQL System
 
 This repository contains the implementation for a multi-dialect natural language to SQL (NL2SQL) pipeline and evaluation framework. It supports generating dialect-agnostic logical query plans (LQP), tagging dialect-sensitive operators, RAG-based retrieval of dialect knowledge, and translation to SQL for multiple engines (MySQL, PostgreSQL, SQL Server, DuckDB, Oracle). The evaluation module runs generated SQL on target databases, scores accuracy and executability, and computes Dialect Feature Coverage (DFC).
 
