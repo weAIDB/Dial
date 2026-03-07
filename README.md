@@ -21,7 +21,6 @@ The main entry points are unified at the repository root: `run_dial_pipeline.py`
 
 ```
 .
-├── conf/                    # (optional; Dial uses Dial/conf)
 ├── dataset/
 │   ├── config.py            # Data sources, DB credentials, migration targets
 │   ├── db_manager.py        # SQLite → MySQL/Postgres/SQL Server/DuckDB migration
