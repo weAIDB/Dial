@@ -1,5 +1,6 @@
 # run_dial_pipeline.py
 # Master script: runs the full Dial pipeline in order (paper flow).
+# 0. Schema linking (optional): if true_tables_columns missing, LLM selects relevant tables.columns from full DB schema.
 # 1. Generate NL-LQP from natural language and schema.
 # 2. Tag dialect-aware LQP (cascaded operator labeling + functional category mapping).
 # 3. RAG retrieval on tagged NL-LQP for dialect knowledge.
@@ -16,6 +17,14 @@ DIAL_ROOT = Path(__file__).resolve().parent
 if str(DIAL_ROOT) not in sys.path:
     sys.path.insert(0, str(DIAL_ROOT))
 os.chdir(DIAL_ROOT)
+
+
+def run_step0_schema_linking():
+    """Schema linking: fill true_tables_columns via LLM when missing in input."""
+    from src.schema_linking.schema_linking import main_async
+    import asyncio
+    print("\n=== Step 0: Schema linking ===\n")
+    asyncio.run(main_async())
 
 
 def run_step1_generate_nl_lqp():
@@ -49,12 +58,17 @@ def run_step4_translation():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run Dial pipeline: NL-LQP -> Tag -> RAG -> Translation")
+    parser = argparse.ArgumentParser(description="Run Dial pipeline: Schema linking -> NL-LQP -> Tag -> RAG -> Translation")
     parser.add_argument(
         "--steps",
         type=str,
-        default="1,2,3,4",
-        help="Comma-separated step numbers to run (e.g. 1,2,3,4 or 3,4)",
+        default="0,1,2,3,4",
+        help="Comma-separated step numbers to run (e.g. 0,1,2,3,4 or 1,2,3,4)",
+    )
+    parser.add_argument(
+        "--step0",
+        action="store_true",
+        help="Run only step 0 (Schema linking)",
     )
     parser.add_argument(
         "--step1",
@@ -79,7 +93,9 @@ def main():
     args = parser.parse_args()
 
     steps_to_run = []
-    if args.step1 or args.step2 or args.step3 or args.step4:
+    if args.step0 or args.step1 or args.step2 or args.step3 or args.step4:
+        if args.step0:
+            steps_to_run.append(0)
         if args.step1:
             steps_to_run.append(1)
         if args.step2:
@@ -92,9 +108,11 @@ def main():
         steps_to_run = [int(s.strip()) for s in args.steps.split(",") if s.strip()]
 
     if not steps_to_run:
-        print("No steps selected. Use --steps 1,2,3,4 or --step1 --step2 etc.")
+        print("No steps selected. Use --steps 0,1,2,3,4 or --step0 --step1 etc.")
         return
 
+    if 0 in steps_to_run:
+        run_step0_schema_linking()
     if 1 in steps_to_run:
         run_step1_generate_nl_lqp()
     if 2 in steps_to_run:

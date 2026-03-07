@@ -1,8 +1,11 @@
 # Dial Source Modules
 
-Source code for the Dial pipeline: NL-LQP generation, tagging, RAG retrieval, and translation.
+Source code for the Dial pipeline: schema linking, NL-LQP generation, tagging, RAG retrieval, and translation.
 
 ## Subpackages
+
+- **schema_linking/**  
+  - Step 0: When input items lack `true_tables_columns`, fetch full schema from target DB (by `db_id`) and use LLM to select relevant Table.Column for downstream.
 
 - **nl_lqp/**  
   - `generate_nl_lqp.py`: Generate dialect-agnostic NL-LQP from questions and schema.  

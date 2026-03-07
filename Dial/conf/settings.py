@@ -13,9 +13,10 @@ SQLITE_DB_DIR = os.environ.get("DIAL_SQLITE_DB_DIR", os.path.join(BASE_DATA_DIR,
 DUCKDB_DIR = os.environ.get("DIAL_DUCKDB_DIR", os.path.join(BASE_DATA_DIR, "duckdb_databases"))
 
 # =============================================================================
-# Pipeline file paths (order: generate NL-LQP -> tag dialect-aware LQP -> RAG -> translation)
+# Pipeline file paths (order: schema linking -> generate NL-LQP -> tag -> RAG -> translation)
 # =============================================================================
 PIPELINE_INPUT_JSON = os.environ.get("DIAL_PIPELINE_INPUT_JSON", os.path.join(BASE_DATA_DIR, "filtered_Dialects.json"))
+SCHEMA_LINKING_OUTPUT_JSON = os.environ.get("DIAL_SCHEMA_LINKING_OUTPUT_JSON", os.path.join(BASE_DATA_DIR, "pipeline_input_with_schema.json"))
 NL_LQP_OUTPUT_JSON = os.environ.get("DIAL_NL_LQP_OUTPUT_JSON", os.path.join(BASE_DATA_DIR, "nl_lqp.json"))
 DIALECT_AWARE_LQP_OUTPUT_JSON = os.environ.get("DIAL_DIALECT_AWARE_LQP_OUTPUT_JSON", os.path.join(BASE_DATA_DIR, "dialect_aware_lqp.json"))
 PROMPT_CACHE_DIR = os.environ.get("DIAL_PROMPT_CACHE_DIR", os.path.join(BASE_DATA_DIR, "prompt_cache"))
@@ -115,6 +116,11 @@ OPENAI_MODEL_NAME = os.environ.get("DIAL_LLM_MODEL", "gpt-4o")
 API_KEY = os.environ.get("DIAL_API_KEY", OPENAI_API_KEY)
 API_BASE_URL = os.environ.get("DIAL_API_BASE_URL", OPENAI_BASE_URL)
 MODEL_NAME = os.environ.get("DIAL_MODEL_NAME", OPENAI_MODEL_NAME)
+
+# =============================================================================
+# Schema linking (Step 0): dialect used to fetch full schema when true_tables_columns is missing
+# =============================================================================
+SCHEMA_LINKING_DIALECT = os.environ.get("DIAL_SCHEMA_LINKING_DIALECT", "sqlite").strip().lower()
 
 # =============================================================================
 # Execution and concurrency

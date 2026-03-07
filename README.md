@@ -10,8 +10,8 @@ The following sections detail the structure of the codebase, setup instructions,
 
 The project is organized into three main workflows:
 
-1. **Dial pipeline** (`Dial/`): End-to-end NL → LQP → dialect-aware tagging → RAG retrieval → SQL translation with execution and semantic verification. It produces per-dialect SQL from natural language questions and schema.
-2. **Dataset migration** (`dataset/`): Migrates SQLite databases (e.g. from `duckdb_sqlite_databases.zip`) to MySQL, PostgreSQL, SQL Server, and DuckDB so that the same schema and data are available on multiple engines for evaluation.
+1. **Dial pipeline** (`Dial/`): End-to-end NL → (optional) Schema linking → LQP → dialect-aware tagging → RAG retrieval → SQL translation with execution and semantic verification. It produces per-dialect SQL from natural language questions and schema. **Schema linking (Step 0)** is an optional component and falls outside our primary research scope, which centers on the intricacies of dialect-specific NL2SQL translation. The bundled **DS-NL2SQL** dataset already provides `true_tables_columns`; for other data without this field, you may run Step 0 to infer relevant tables/columns via LLM.
+2. **Dataset migration** (`dataset/`): Migrates SQLite databases (e.g. from `duckdb_sqlite_databases`) to MySQL, PostgreSQL, SQL Server, and DuckDB so that the same schema and data are available on multiple engines for evaluation. The **duckdb_sqlite_databases** package is hosted on Hugging Face (see [Data Preparation](#data-preparation)) because it is too large for GitHub.
 3. **Evaluation** (`evaluation/`): Executes generated SQL on target engines, compares results to gold answers, and computes accuracy, executability, and DFC; outputs per-task per-engine metrics and an Excel summary.
 4. **Knowledge Process** (`knowledge_process/`): Converts official documentation from **any** dialect (DuckDB, PostgreSQL, Oracle, etc.) into the dialect knowledge format used by Dial. Extracts from Git repos or local doc directories, then uses vector retrieval + LLM to produce Functional and Rule-based dialect knowledge files for RAG.
 
@@ -43,9 +43,10 @@ The main entry points are unified at the repository root: `run_dial_pipeline.py`
 │   ├── src/
 │   │   ├── nl_lqp/          # NL-LQP generation and dialect-aware tagging
 │   │   ├── knowledge/       # RAG retriever and runner (HINT-KB)
+│   │   ├── schema_linking/   # Step 0: optional schema linking when true_tables_columns missing
 │   │   ├── schema/          # DDL fetcher
 │   │   └── translation/     # rag2sql, execution check, semantic validation
-│   ├── run_dial_pipeline.py # Step 1–4 launcher (also via root run_dial_pipeline.py)
+│   ├── run_dial_pipeline.py # Step 0–4 launcher (also via root run_dial_pipeline.py)
 │   └── README.md            # Dial pipeline usage
 ├── knowledge_process/
 │   ├── knowledge_create.py       # Extract docs from Git/local into @dialect2sql@ blocks
@@ -75,8 +76,8 @@ Install DB and driver packages as needed for your target engines (MySQL, Postgre
 
 ### Data Preparation
 
-1. **Dial pipeline**: Place input JSON (e.g. `filtered_Dialects.json`) and schema/DB paths as specified in `Dial/conf/settings.py`. Set `BASE_DATA_DIR`, `SQLITE_DB_DIR`, `DUCKDB_DIR`, and pipeline input/output paths (or use environment variables).
-2. **Dataset migration**: Extract `duckdb_sqlite_databases.zip` and set `SQLITE_BASE_DIR` (or per-source `sqlite_db_dir`) in `dataset/config.py`. Configure `DB_CONFIG` for MySQL, Postgres, SQL Server.
+1. **Dial pipeline**: Place input JSON (e.g. `filtered_Dialects.json` or the bundled `dataset/DS-NL2SQL.json`) and schema/DB paths as specified in `Dial/conf/settings.py`. Set `BASE_DATA_DIR`, `SQLITE_DB_DIR`, `DUCKDB_DIR`, and pipeline input/output paths (or use environment variables). The repo includes **DS-NL2SQL.json** with `true_tables_columns`; in that case **Schema linking (Step 0) is skipped**. For your own data without `true_tables_columns`, you can optionally run Step 0 (see [Schema linking (Step 0)](#schema-linking-step-0)).
+2. **Dataset migration**: The **duckdb_sqlite_databases** (SQLite + DuckDB databases) are too large to host on GitHub. Download from Hugging Face: **[duckdb_sqlite_databases](https://huggingface.co/datasets/zhangxiang666/DS-NL2SQL)** (link to be updated; replace `YOUR_ORG` with the actual repo). After download, extract and set `SQLITE_BASE_DIR` (or per-source `sqlite_db_dir`) in `dataset/config.py`. Configure `DB_CONFIG` for MySQL, Postgres, SQL Server.
 3. **Evaluation**: Set `GOLD_RESULT_FILE`, `PIPELINE_TASKS` (input_sql / output_exec paths), and `EXECUTE_ENGINES` in `evaluation/config.py`. Ensure gold result JSON and generated SQL files exist.
 
 ## Configuration
@@ -95,17 +96,30 @@ All three workflows can be started from the repository root.
 From the project root:
 
 ```bash
+python run_dial_pipeline.py --steps 0,1,2,3,4
+```
+
+To skip **Schema linking** (recommended when your input already has `true_tables_columns`, e.g. DS-NL2SQL):
+
+```bash
 python run_dial_pipeline.py --steps 1,2,3,4
 ```
 
 Or run specific steps:
 
 ```bash
+python run_dial_pipeline.py --step0
 python run_dial_pipeline.py --step1 --step2
 python run_dial_pipeline.py --step3 --step4
 ```
 
-Steps: 1 = Generate NL-LQP, 2 = Tag dialect-aware LQP, 3 = RAG retrieval, 4 = Translation and feedback iteration. Configure paths and API in `Dial/conf/settings.py`.
+**Steps**: 0 = Schema linking (optional), 1 = Generate NL-LQP, 2 = Tag dialect-aware LQP, 3 = RAG retrieval, 4 = Translation and feedback iteration. Configure paths and API in `Dial/conf/settings.py`.
+
+#### Schema linking (Step 0)
+
+- **When it runs**: Only for input items that **do not** have a non-empty `true_tables_columns` field. If every item has it, Step 0 just copies the input to the schema-linking output and exits.
+- **When to skip**: Schema linking is **not the focus of this project**. The bundled **DS-NL2SQL** dataset already includes `true_tables_columns`, so for standard use you can run `--steps 1,2,3,4` and skip Step 0.
+- **When to use**: For your own datasets or benchmarks that lack ground-truth table/column annotations, you can run Step 0 so that the pipeline infers relevant `Table.Column` from the question and full DB schema via an LLM; the result is then used as `true_tables_columns` in downstream steps.
 
 ### Run dataset migration (SQLite → multi-engine)
 
@@ -145,10 +159,10 @@ Output files are placed in `Dial/src/knowledge/knowledge/Functional_dialect/` an
 
 ## Key Code Components
 
-- **`run_dial_pipeline.py` (root)**: Adds `Dial/` to `sys.path`, changes working directory to `Dial/`, and invokes `Dial/run_dial_pipeline.main()` so that steps 1–4 run with correct paths and imports.
+- **`run_dial_pipeline.py` (root)**: Adds `Dial/` to `sys.path`, changes working directory to `Dial/`, and invokes `Dial/run_dial_pipeline.main()` so that steps 0–4 run with correct paths and imports.
 - **`run_migration.py` (root)**: Adds project root to `sys.path` and calls `dataset.run_migration.main()` to discover DBs, find SQLite paths, and run `DBManager.setup_and_migrate()` for each.
 - **`run_evaluation.py` (root)**: Adds project root to `sys.path` and calls `evaluation.run_pipeline.main()` to run the Execute → Evaluate → DFC pipeline and generate the Excel report.
-- **`Dial/run_dial_pipeline.py`**: Parses `--steps` / `--step1` … `--step4`, and runs the corresponding modules (`generate_nl_lqp`, `tag_dialect_aware_lqp`, `runner`, `translation.main`).
+- **`Dial/run_dial_pipeline.py`**: Parses `--steps` / `--step0` … `--step4`, and runs the corresponding modules (`schema_linking.main_async`, `generate_nl_lqp`, `tag_dialect_aware_lqp`, `runner`, `translation.main`). Step 0 (schema linking) is optional and skipped when input already has `true_tables_columns` (e.g. DS-NL2SQL).
 - **`dataset/db_manager.py`**: Creates MySQL/Postgres/SQL Server databases and DuckDB files from SQLite; supports smart migration (essential rows) and reuse of existing DBs.
 - **`evaluation/run_pipeline.py`**: Loads gold results and task configs; for each task and engine runs `step1_executor.run_execution`, `step2_evaluator.get_evaluation_scores`, and `step3_dfc.calculate_dfc_entry`; aggregates and writes Excel.
 - **`knowledge_process/knowledge_create.py`**: Extracts official docs (Git or local) for any dialect into `@dialect2sql@` blocks.

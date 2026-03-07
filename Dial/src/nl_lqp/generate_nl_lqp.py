@@ -25,6 +25,7 @@ from conf import (
     GLOBAL_DB_CONFIG,
     TARGET_DIALECTS,
     PIPELINE_INPUT_JSON,
+    SCHEMA_LINKING_OUTPUT_JSON,
     NL_LQP_OUTPUT_JSON,
     PROMPT_CACHE_DIR,
     TEMP_NL_LQP_DIR,
@@ -494,13 +495,21 @@ async def process_single_item(item, client, ddl_loader, semaphore):
             json.dump(item, f, ensure_ascii=False, indent=2)
 
 
+def _get_effective_pipeline_input_path():
+    """Use schema linking output if present, else raw pipeline input."""
+    if os.path.isfile(SCHEMA_LINKING_OUTPUT_JSON):
+        return SCHEMA_LINKING_OUTPUT_JSON
+    return PIPELINE_INPUT_JSON
+
+
 async def main_async():
     """Build prompt cache (DDL), run NL-LQP generation, merge and save output."""
     os.makedirs(TEMP_NL_LQP_DIR, exist_ok=True)
     os.makedirs(PROMPT_CACHE_DIR, exist_ok=True)
     ddl_loader = AsyncDDLLoader(GLOBAL_DB_CONFIG)
     client = AsyncOpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
-    with open(PIPELINE_INPUT_JSON, "r", encoding="utf-8") as f:
+    input_path = _get_effective_pipeline_input_path()
+    with open(input_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     finished_qids = {
         f.replace(".json", "")
